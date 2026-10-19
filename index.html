@@ -24,7 +24,10 @@
 </header>
 
 <div class="sample-banner" role="note">
-  <strong>SAMPLE DATA:</strong> All 5 players below are invented for this prototype. Names, teams within the sample, and metrics are fictional — no real players are used. Sample players have no photos, so their cards show the Antonelli logo.
+  <strong>SAMPLE DATA:</strong> All 5 players below are invented for this prototype. Names, teams within the sample, and metrics are fictional — no real players are used. Sample players have no photos, so their cards show the Antonelli logo. Hitter grades use Blast Motion ranges by age group.
+</div>
+<div id="migrationBanner" class="sample-banner migration-banner" hidden>
+  <strong>Hitting metrics moved to Blast.</strong> Saved hitter cards used the older exit-velocity formula. Bat speed was kept when it was between 25 and 95 mph. The other hitting numbers were set to the middle of the published Blast window for that age group — replace them with real Blast readings. Pitcher metrics were kept.
 </div>
 
 <main class="container">
@@ -35,7 +38,7 @@
         <img class="hero-logo" src="assets/antonelli-script.png" alt="Antonelli script logo">
         <p class="eyebrow">DEVELOPMENT • METRICS • GRADES</p>
         <h1>Every rep moves the card.</h1>
-        <p class="hero-text">Track what a hitter or pitcher does well, what to work on next, and how their metrics translate into an overall grade — just like MLB The Show. Edit a metric and the card upgrades live.</p>
+        <p class="hero-text">Track what a hitter or pitcher does well, what to work on next, and how their metrics translate into an overall grade — just like MLB The Show. Hitters are graded on Blast Motion swing metrics for their age group. Edit a metric or age group and the card updates live.</p>
       </div>
       <div class="hero-stats" id="heroStats"></div>
     </div>
@@ -101,7 +104,18 @@
       <input type="hidden" id="f-id">
       <div class="form-grid">
         <div class="field grow2"><label for="f-name">Full name *</label><input id="f-name" required placeholder="e.g. Alex Morgan"></div>
-        <div class="field"><label for="f-age">Age</label><input id="f-age" type="number" min="8" max="25" step="1" value="16"></div>
+        <div class="field"><label for="f-age">Age</label><input id="f-age" type="number" min="8" max="40" step="1" value="16"></div>
+        <div class="field"><label for="f-ageGroup">Age group</label>
+          <select id="f-ageGroup">
+            <option value="10U">10U</option>
+            <option value="12U">12U</option>
+            <option value="14U">14U — Middle School</option>
+            <option value="16U" selected>16U — HS JV</option>
+            <option value="18U">18U — HS Varsity</option>
+            <option value="College">College</option>
+            <option value="Pro">Pro</option>
+          </select>
+        </div>
         <div class="field"><label for="f-class">Class / Grade</label><input id="f-class" placeholder="e.g. Junior / 11th"></div>
         <div class="field"><label for="f-team">Team</label><input id="f-team" placeholder="e.g. Antonelli 16U"></div>
         <div class="field"><label for="f-position">Position</label><input id="f-position" placeholder="e.g. SS, OF, RHP, C"></div>
@@ -129,7 +143,7 @@
       </div>
 
       <h3 class="form-section">Metrics — drag or type. Overall updates live.</h3>
-      <p class="muted small">On Save, changed metrics are appended to that player's history so the sparkline and “previous” value show progress.</p>
+      <p class="muted small">Hitting grades use the age group above and the published Blast windows in <code>BLAST_BENCHMARKS</code>. Changing the age group recalculates the card without changing the raw numbers. On Save, changed metrics are appended to history.</p>
       <div id="metricFields"></div>
 
       <div class="live-preview" id="livePreview"></div>
