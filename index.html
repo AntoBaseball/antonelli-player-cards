@@ -78,7 +78,7 @@
         <h2>Roster <span id="rosterCount" class="count"></span></h2>
         <p class="muted">Click any player or card to open the full profile.</p>
       </div>
-      <button class="btn btn-red" id="showdownBtn" type="button">Showdown</button>
+      <button class="btn btn-red" id="showdownBtn" type="button">SHOWDOWN</button>
     </div>
     <div id="rosterGrid" class="roster-grid"></div>
     <div id="emptyState" class="empty" hidden>
@@ -249,7 +249,7 @@
 
 <div id="showdown" class="showdown" hidden role="dialog" aria-modal="true" aria-labelledby="showdownTitle">
   <div class="sd-pick" id="showdownPick">
-    <h2 id="showdownTitle">Showdown</h2>
+    <h2 id="showdownTitle" class="sd-display">SHOWDOWN</h2>
     <p class="sd-note">Current season cards only. Retired cards stay in the collection.</p>
     <label for="sd-a">Player A</label>
     <select id="sd-a"></select>
@@ -258,13 +258,18 @@
     <p id="sd-warn" class="sd-warn" hidden>Pick two different players.</p>
     <div class="sd-actions">
       <button class="btn btn-ghost" type="button" id="sd-cancel">Cancel</button>
-      <button class="btn btn-red" type="button" id="sd-start">Start Showdown</button>
+      <button class="btn btn-red" type="button" id="sd-start">Start SHOWDOWN</button>
     </div>
   </div>
   <div class="sd-face" id="showdownFace" hidden>
-    <div class="sd-card sd-left" id="sd-card-a"></div>
-    <div class="sd-vs" aria-hidden="true"><span class="sd-vs-star"></span><b>VS</b></div>
-    <div class="sd-card sd-right" id="sd-card-b"></div>
+    <h2 class="sd-title sd-display">SHOWDOWN</h2>
+    <div class="sd-stage">
+      <div class="sd-lane sd-left"><div class="sd-card" id="sd-card-a"></div></div>
+      <div class="sd-lane sd-right"><div class="sd-card" id="sd-card-b"></div></div>
+      <div class="sd-vs" aria-hidden="true"><span class="sd-vs-star"></span><b>VS</b></div>
+      <div class="sd-flash" aria-hidden="true"></div>
+      <div class="sd-sparks" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    </div>
     <button class="btn btn-ghost sd-skip" type="button" id="sd-skip">Skip</button>
   </div>
   <div class="sd-results" id="showdownResults" hidden></div>

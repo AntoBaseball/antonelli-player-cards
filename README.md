@@ -327,7 +327,7 @@ The Collection tab lists seasons with Antonelli, the best overall, and how many 
 
 Showdown puts two **current-season** cards against each other. Retired collection cards are not in it. Open it from **Showdown** on the roster, or **Challenge in Showdown** on a profile (that player is already Player A). The same player cannot be picked twice.
 
-The intro slides Player A in from the left and Player B from the right, then pops an Antonelli star **VS** badge and a short clash. It lasts about two seconds. **Skip** jumps to the results. `prefers-reduced-motion` skips the slide and opens the results immediately.
+The intro slams a huge **SHOWDOWN** title, then the cards rush in from off-screen and collide in the center. A flash, sparks, and a short shake mark the hit. The cards settle side by side with the Antonelli star **VS** badge between them and square up once more before the results. It lasts about two and a half seconds. **Skip** jumps to the results. `prefers-reduced-motion` skips the battle and opens the results immediately. Buttons and headings use the word SHOWDOWN in capitals.
 
 Each shared category shows both grades, the raw reading when there is one, and the gap. The center says `A +5` or `B +3`. The leader’s chip is `+N` and the trailer’s chip is `-N`. A tie says `EVEN`. Overall and tier are always shared. Tool grades (BAT, PWR, PLANE, QUICK, CONN, VEL, BRK, CNTL, STM) and metric grades are shared only when both cards have that category. A hitter against a pitcher still compares overall and tier. Hitting rows show the hitter’s number and a dash for the pitcher, and those dashes are not losses. A two-way player brings both sets; the opponent is scored only on the rows they also have.
 

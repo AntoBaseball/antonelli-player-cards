@@ -2599,7 +2599,7 @@ function openProfile(id, opts) {
           <button class="btn btn-red" type="button" id="editProfileBtn">Edit Metrics / Profile</button>
           <button class="btn btn-ghost" type="button" id="previewOverallBtn">Preview overall-up</button>
           <button class="btn btn-ghost" type="button" id="previewTierBtn">Preview tier-up</button>
-          <button class="btn btn-ghost" type="button" id="showdownProfileBtn">Challenge in Showdown</button>
+          <button class="btn btn-ghost" type="button" id="showdownProfileBtn">Challenge in SHOWDOWN</button>
           <button class="btn btn-ghost" type="button" id="rolloverBtn">Start New Season (Sept 1 Rollover)</button>
           <button class="btn btn-ghost" type="button" id="deleteProfileBtn">Delete Player</button>
         </div>
@@ -3187,7 +3187,7 @@ function buildShowdown(a, b) {
     rows, aWins, bWins, ties, compared: scored.length,
     tally: sdTally(a, b, aWins, bWins, scored.length),
     overallWinner,
-    headline: overallWinner === "tie" ? "Dead Even Showdown" : `${overallWinner === "a" ? an : bn} leads the showdown`,
+    headline: overallWinner === "tie" ? "Dead Even SHOWDOWN" : `${overallWinner === "a" ? an : bn} leads the SHOWDOWN`,
     note,
     chaseA: sdChase(rows, "a", a, b),
     chaseB: sdChase(rows, "b", b, a),
@@ -3351,8 +3351,7 @@ function runShowdownFaceoff() {
     return;
   }
   requestAnimationFrame(() => box.classList.add("is-go"));
-  showdownTimers.push(setTimeout(() => box.classList.add("is-clash"), 720));
-  showdownTimers.push(setTimeout(revealShowdownResults, 2000));
+  showdownTimers.push(setTimeout(revealShowdownResults, 2700));
 }
 
 function bindApp() {
