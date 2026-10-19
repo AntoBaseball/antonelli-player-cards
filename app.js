@@ -1,52 +1,265 @@
-/* Antonelli Baseball — Player Profiles & Baseball Cards (Prototype v2, black & gold)
+/* Antonelli Baseball — Player Profiles & Baseball Cards
    No backend. Data persists in localStorage. All players below are SAMPLE / invented.
 
-   HOW THE OVERALL GRADE WORKS (transparent formula)
-   -------------------------------------------------
-   1) Each raw metric is normalized to a 20-99 tool grade against an
-      age-appropriate benchmark range for roughly ages 14-18 travel / HS baseball.
-      Example: exit velocity 65 mph -> 20, 102 mph -> 99, linearly in between.
-      Lower-is-better metrics (60-yard dash) are inverted.
-      These ranges are coaching benchmarks for this prototype, NOT national
-      percentile data — a coach should tune them by age group in METRICS below.
-   2) Tool sub-grades combine 1-2 normalized metrics:
-      Hitter:  CON = contact% + bat speed, PWR = exit velo + max distance,
-               SPD = 60 time, FLD = fielding score, ARM = arm velo
-      Pitcher: VEL = fastball velo, BRK = spin + whiff%, CNTL = strike%,
-               STM = pitch capacity
-      Two-way: both sets are shown; overall is the average of hitter + pitcher overall.
-   3) Overall is a weighted average of the sub-grades (weights in SUBGRADES),
-      rounded and clamped to 20-99.
-   4) Tier from overall: Bronze <70, Silver 70-79, Gold 80-89, Diamond 90+.
+   HOW THE OVERALL GRADE WORKS
+   ----------------------------
+   Hitters and the hitting half of two-way players use Blast Motion swing metrics.
+   Published windows live in BLAST_BENCHMARKS (edit that table). The 20–99 scale,
+   the five band names, and any cut Blast does not print are Antonelli — see the
+   comments on BLAST_BENCHMARKS and gradeBlastMetric. Do not treat those cuts as
+   official Blast numbers.
+
+   Pitchers still use the linear METRICS low/high ranges (not Blast).
+
+   1) Each raw metric becomes a 20–99 grade.
+   2) Hitter sub-grades (weights in SUBGRADES.hitter — bat speed is 40%):
+        BAT  = bat speed                         40%
+        PWR  = power 60% + peak hand speed 40%   22%
+        PLANE = on-plane 50% + attack angle 30% + vertical bat angle 20%   18%
+        QUICK = time to contact 55% + rotational acceleration 45%   14%
+        CONN = early connection 50% + connection at impact 50%   6%
+      Pitcher: VEL 30, BRK 25, CNTL 30, STM 15.
+      Two-way overall is the average of the hitter overall and the pitcher overall.
+   3) Overall is rounded and clamped to 20–99.
+   4) Tier: Bronze <70, Silver 70–79, Gold 80–89, Diamond 90+.
+
+   Bands from the grade (Antonelli names, not a Blast scale):
+     <50 Below Average, 50–64 Average, 65–79 Good, 80–89 Great, 90–99 Elite.
 */
 
-const STORAGE_KEY = "antonelli-player-cards-v1";
+const STORAGE_KEY = "antonelli-player-cards-v2";
+const LEGACY_STORAGE_KEY = "antonelli-player-cards-v1";
+
+const AGE_GROUP_ORDER = ["10U", "12U", "14U", "16U", "18U", "College", "Pro"];
+
+/* Official pages used as the source of truth. support.blastmotion.com had no
+   benchmark articles when searched (October 2026). */
+const BLAST_SOURCES = {
+  product: "https://blastmotion.com/products/baseball/",
+  faq: "https://blastmotion.com/faq/",
+  batSpeedAge: "https://blastmotion.com/blog/what-is-bat-speed-in-baseball/",
+  glossary: "https://blastmotion.com/blog/what-does-blast-motion-measure/",
+  rotational: "https://blastmotion.com/blog/what-is-rotational-acceleration-in-baseball/",
+  handSpeedBlog: "https://blastmotion.com/blog/what-is-hand-speed-in-a-baseball-swing/",
+};
+
+const BLAST_KEYS = [
+  "batSpeed", "peakHandSpeed", "attackAngle", "verticalBatAngle", "timeToContact",
+  "powerKw", "rotationalAcceleration", "onPlaneEfficiency", "earlyConnection", "connectionAtImpact",
+];
+const PITCHER_KEYS = ["fastballVelo", "spinRate", "strikePct", "whiffPct", "pitchCapacity"];
+
+/*
+ * BLAST_BENCHMARKS — published Blast windows by Antonelli age group.
+ * lo/hi (and target, where Blast states one) are copied from the pages above.
+ * They are NOT 20–99 grades. gradeBlastMetric turns each window into a grade.
+ *
+ * Age-group map (ours): 10U ages ≤10, 12U 11–12, 14U 13–14 = Middle School,
+ * 16U 15–16 = HS JV, 18U 17–18 = HS Varsity, College 19–22, Pro 23+.
+ * "Amateur All Levels" on the product page is not one of these groups, so that
+ * column is not used.
+ *
+ * Gaps (Antonelli, not Blast-official) — do not present these as published:
+ *   - Five band names and every 20–99 cut inside or beyond a published window.
+ *   - Scores above a published high, or faster than a published fast end.
+ *   - On-plane cuts at 78 and Elite from 85 up.
+ *   - Rotational-acceleration split of the 10–14.99 "medium" bucket at 12.5,
+ *     and Elite as the value approaches 20 g.
+ *   - Ideal-range peak placement (96 at the target, ~70 at either published edge).
+ *     Attack angle and vertical bat angle use the center of the window because
+ *     Blast does not print a single peak. Connection metrics use Blast's 90° target.
+ *   - Applying the product-page Youth column to BOTH 10U and 12U for every
+ *     metric except bat speed. Blast does not split those metrics by 10U vs 12U.
+ *     The numbers are the Youth column; the age assignment is ours (sharedYouth).
+ *
+ * Conflicts kept out of the graded numbers (still official, just not used):
+ *   - HS JV bat speed: product page prints 55–56. FAQ and the age blog print 55–65.
+ *     Graded window is 55–65.
+ *   - College bat speed: product page and FAQ print 66–75. The age blog prints 65–75.
+ *     Graded window is 66–75.
+ *   - Peak hand speed blog (handSpeedBlog) prints a wider table
+ *     (Youth 17–23, MS 18–24, HS JV 19–25, HS Varsity 20–26, College 21–27,
+ *     MiLB 22–28, Pro 23–29). Graded windows are the product-page chart so one
+ *     table stays consistent. Those blog ranges are not averaged in.
+ *   - Rotational acceleration: FAQ / brochure MLB average 15.1 g vs the June 2026
+ *     article's 17 g. Graded anchors are the article's buckets (<10 / 10–14.99 / 15+),
+ *     not either average.
+ *   - Product-page college power prints 5.074 kW. Stored as 5.074.
+ *   - Blast iQ Rotation Score (20–80, 50 = average) is not raw rotational
+ *     acceleration in g and is not graded.
+ */
+const Y = true; // sharedYouth marker, repeated below for readability
+const BLAST_BENCHMARKS = {
+  batSpeed: {
+    mode: "higher",
+    sources: [BLAST_SOURCES.batSpeedAge, BLAST_SOURCES.product, BLAST_SOURCES.faq],
+    bands: {
+      // Age blog only — finer than the product-page Youth bucket (40–56).
+      "10U": { lo: 30, hi: 45 },
+      "12U": { lo: 40, hi: 52 },
+      // Product + FAQ + age blog agree.
+      "14U": { lo: 46, hi: 62 },
+      // FAQ + age blog 55–65. Product page cell "55–56" is not used.
+      "16U": { lo: 55, hi: 65, note: "FAQ + age blog; product page prints 55–56" },
+      "18U": { lo: 60, hi: 70 },
+      // Product + FAQ 66–75. Age blog 65–75 is not used.
+      "College": { lo: 66, hi: 75, note: "product page + FAQ; age blog prints 65–75" },
+      "Pro": { lo: 66, hi: 78 },
+    },
+  },
+  peakHandSpeed: {
+    mode: "higher",
+    // Product page chart. The hand-speed blog table is intentionally not used.
+    sources: [BLAST_SOURCES.product, BLAST_SOURCES.glossary],
+    bands: {
+      "10U": { lo: 15, hi: 21, sharedYouth: Y },
+      "12U": { lo: 15, hi: 21, sharedYouth: Y },
+      "14U": { lo: 17, hi: 21 },
+      "16U": { lo: 17, hi: 21 },
+      "18U": { lo: 19, hi: 23 },
+      "College": { lo: 21, hi: 25 },
+      "Pro": { lo: 23, hi: 29 },
+    },
+  },
+  attackAngle: {
+    mode: "ideal",
+    sources: [BLAST_SOURCES.product, BLAST_SOURCES.glossary],
+    // target = center of the published window (Antonelli). MLB avg 8.7° is not the target.
+    bands: {
+      "10U": { lo: 0, hi: 15, target: 7.5, sharedYouth: Y },
+      "12U": { lo: 0, hi: 15, target: 7.5, sharedYouth: Y },
+      "14U": { lo: 0, hi: 15, target: 7.5 },
+      "16U": { lo: 0, hi: 15, target: 7.5 },
+      "18U": { lo: 2, hi: 15, target: 8.5 },
+      "College": { lo: 2, hi: 15, target: 8.5 },
+      "Pro": { lo: 5, hi: 15, target: 10 },
+    },
+  },
+  verticalBatAngle: {
+    mode: "ideal",
+    sources: [BLAST_SOURCES.product, BLAST_SOURCES.glossary],
+    // One window at every level. target -25 is the center (Antonelli); Blast says VBA depends on pitch location.
+    bands: {
+      "10U": { lo: -40, hi: -10, target: -25 },
+      "12U": { lo: -40, hi: -10, target: -25 },
+      "14U": { lo: -40, hi: -10, target: -25 },
+      "16U": { lo: -40, hi: -10, target: -25 },
+      "18U": { lo: -40, hi: -10, target: -25 },
+      "College": { lo: -40, hi: -10, target: -25 },
+      "Pro": { lo: -40, hi: -10, target: -25 },
+    },
+  },
+  timeToContact: {
+    mode: "lower",
+    sources: [BLAST_SOURCES.product, BLAST_SOURCES.glossary],
+    // lo is the fast (better) end. hi is the slow end.
+    bands: {
+      "10U": { lo: 0.17, hi: 0.23, sharedYouth: Y },
+      "12U": { lo: 0.17, hi: 0.23, sharedYouth: Y },
+      "14U": { lo: 0.16, hi: 0.21 },
+      "16U": { lo: 0.15, hi: 0.20 },
+      "18U": { lo: 0.15, hi: 0.18 },
+      "College": { lo: 0.14, hi: 0.17 },
+      "Pro": { lo: 0.13, hi: 0.17 },
+    },
+  },
+  powerKw: {
+    mode: "higher",
+    sources: [BLAST_SOURCES.product, BLAST_SOURCES.glossary],
+    bands: {
+      "10U": { lo: 0.90, hi: 2.50, sharedYouth: Y },
+      "12U": { lo: 0.90, hi: 2.50, sharedYouth: Y },
+      "14U": { lo: 1.40, hi: 3.20 },
+      "16U": { lo: 2.17, hi: 3.45 },
+      "18U": { lo: 2.81, hi: 4.09 },
+      // Product page prints 5.074.
+      "College": { lo: 3.83, hi: 5.074 },
+      "Pro": { lo: 3.65, hi: 5.65 },
+    },
+  },
+  rotationalAcceleration: {
+    mode: "ra",
+    sources: [BLAST_SOURCES.rotational, BLAST_SOURCES.faq],
+    // Same buckets at every age. lo/hi are the published medium-band edges (10 and 15).
+    bands: {
+      "10U": { lo: 10, hi: 15 },
+      "12U": { lo: 10, hi: 15 },
+      "14U": { lo: 10, hi: 15 },
+      "16U": { lo: 10, hi: 15 },
+      "18U": { lo: 10, hi: 15 },
+      "College": { lo: 10, hi: 15 },
+      "Pro": { lo: 10, hi: 15 },
+    },
+  },
+  onPlaneEfficiency: {
+    mode: "ope",
+    sources: [BLAST_SOURCES.product, BLAST_SOURCES.glossary, BLAST_SOURCES.faq],
+    // Published anchors: range 65–85, aim 70%+. Same window at every age.
+    bands: {
+      "10U": { lo: 65, hi: 85, target: 70 },
+      "12U": { lo: 65, hi: 85, target: 70 },
+      "14U": { lo: 65, hi: 85, target: 70 },
+      "16U": { lo: 65, hi: 85, target: 70 },
+      "18U": { lo: 65, hi: 85, target: 70 },
+      "College": { lo: 65, hi: 85, target: 70 },
+      "Pro": { lo: 65, hi: 85, target: 70 },
+    },
+  },
+  earlyConnection: {
+    mode: "ideal",
+    sources: [BLAST_SOURCES.product, BLAST_SOURCES.glossary],
+    // target 90 is Blast's stated aim. The 96-at-target scoring curve is Antonelli.
+    bands: {
+      "10U": { lo: 80, hi: 105, target: 90 },
+      "12U": { lo: 80, hi: 105, target: 90 },
+      "14U": { lo: 80, hi: 105, target: 90 },
+      "16U": { lo: 80, hi: 105, target: 90 },
+      "18U": { lo: 80, hi: 105, target: 90 },
+      "College": { lo: 80, hi: 105, target: 90 },
+      "Pro": { lo: 80, hi: 105, target: 90 },
+    },
+  },
+  connectionAtImpact: {
+    mode: "ideal",
+    sources: [BLAST_SOURCES.product, BLAST_SOURCES.glossary],
+    bands: {
+      "10U": { lo: 80, hi: 95, target: 90 },
+      "12U": { lo: 80, hi: 95, target: 90 },
+      "14U": { lo: 80, hi: 95, target: 90 },
+      "16U": { lo: 80, hi: 95, target: 90 },
+      "18U": { lo: 80, hi: 95, target: 90 },
+      "College": { lo: 80, hi: 95, target: 90 },
+      "Pro": { lo: 80, hi: 95, target: 90 },
+    },
+  },
+};
 
 const METRICS = {
-  // Hitter metrics: low/high = benchmark range mapped to 20..99
-  exitVelocity: { label: "Exit Velocity", unit: " mph", low: 65, high: 102, step: 0.5, help: "Hardest / typical top exit velo off bat" },
-  batSpeed:     { label: "Bat Speed", unit: " mph", low: 55, high: 82, step: 0.5, help: "Peak bat speed through the zone" },
-  contactPct:   { label: "Contact %", unit: "%", low: 50, high: 95, step: 1, help: "Swings that put the ball in play / foul" },
-  launchAngle:  { label: "Avg Launch Angle", unit: "°", low: 4, high: 28, step: 0.5, help: "Average launch angle — shown for context, target ~10-20°" },
-  maxDistance:  { label: "Max Distance", unit: " ft", low: 260, high: 420, step: 1, help: "Farthest batted ball" },
-  sixtyTime:    { label: "60-Yard Dash", unit: " sec", low: 6.4, high: 7.8, step: 0.01, invert: true, help: "Lower is faster" },
-  fieldingScore:{ label: "Fielding Score", unit: "/100", low: 40, high: 98, step: 1, help: "Coach-evaluated range, hands, footwork (0-100)" },
-  armVelocity:  { label: "Arm Velocity", unit: " mph", low: 55, high: 92, step: 0.5, help: "Top throwing velocity from position" },
-  // Pitcher metrics
+  batSpeed: { label: "Bat Speed", unit: " mph", step: 0.5, blast: true, entryMin: 20, entryMax: 95, help: "Sweet-spot speed at impact, about 6 in from the barrel tip. Higher is better." },
+  peakHandSpeed: { label: "Peak Hand Speed", unit: " mph", step: 0.1, blast: true, entryMin: 8, entryMax: 36, help: "Fastest the hands move during the swing. Higher is better." },
+  attackAngle: { label: "Attack Angle", unit: "°", step: 0.5, blast: true, entryMin: -15, entryMax: 35, help: "Bat path at impact. Positive is uphill. Inside the published window scores best." },
+  verticalBatAngle: { label: "Vertical Bat Angle", unit: "°", step: 0.5, blast: true, entryMin: -55, entryMax: 5, help: "Barrel vs horizontal at impact. Negative means the barrel is below the hands." },
+  timeToContact: { label: "Time to Contact", unit: " s", step: 0.001, blast: true, entryMin: 0.08, entryMax: 0.35, help: "Downswing time from the load to impact. Faster (lower) is better." },
+  powerKw: { label: "Power", unit: " kW", step: 0.01, blast: true, entryMin: 0.3, entryMax: 8, help: "Bat mass × acceleration × bat speed. Higher is better." },
+  rotationalAcceleration: { label: "Rotational Acceleration", unit: " g", step: 0.1, blast: true, entryMin: 1, entryMax: 35, help: "How fast the bat accelerates out of the load, in g. Higher is better unless the swing is casting." },
+  onPlaneEfficiency: { label: "On-Plane Efficiency", unit: "%", step: 1, blast: true, entryMin: 30, entryMax: 100, help: "Share of the swing on the plane set by vertical bat angle. Blast's aim is 70%+." },
+  earlyConnection: { label: "Early Connection", unit: "°", step: 1, blast: true, entryMin: 40, entryMax: 140, help: "Body tilt vs bat angle as the downswing starts. Blast's target is 90°." },
+  connectionAtImpact: { label: "Connection at Impact", unit: "°", step: 1, blast: true, entryMin: 40, entryMax: 140, help: "Body tilt vs bat angle at contact. Blast's target is 90°." },
+  // Pitcher metrics — coach benchmarks, not Blast ranges.
   fastballVelo: { label: "Fastball Velocity", unit: " mph", low: 68, high: 96, step: 0.5, help: "Typical top fastball velocity" },
-  spinRate:     { label: "Fastball Spin Rate", unit: " rpm", low: 1600, high: 2600, step: 10, help: "Fastball spin efficiency / carry" },
-  strikePct:    { label: "Strike % (Command)", unit: "%", low: 45, high: 76, step: 1, help: "Pitches in / around the strike zone" },
-  whiffPct:     { label: "Offspeed Whiff %", unit: "%", low: 10, high: 46, step: 1, help: "Swings-and-misses on breaking / offspeed" },
-  pitchCapacity:{ label: "Pitch Capacity (Stamina)", unit: " pitches", low: 40, high: 110, step: 1, help: "Pitches before velocity / command drops" },
+  spinRate: { label: "Fastball Spin Rate", unit: " rpm", low: 1600, high: 2600, step: 10, help: "Fastball spin efficiency / carry" },
+  strikePct: { label: "Strike % (Command)", unit: "%", low: 45, high: 76, step: 1, help: "Pitches in / around the strike zone" },
+  whiffPct: { label: "Offspeed Whiff %", unit: "%", low: 10, high: 46, step: 1, help: "Swings-and-misses on breaking / offspeed" },
+  pitchCapacity: { label: "Pitch Capacity (Stamina)", unit: " pitches", low: 40, high: 110, step: 1, help: "Pitches before velocity / command drops" },
 };
 
 const SUBGRADES = {
   hitter: [
-    { key: "CON", label: "Contact", metrics: ["contactPct", "batSpeed"], weights: [0.7, 0.3], overallWeight: 0.25 },
-    { key: "PWR", label: "Power", metrics: ["exitVelocity", "maxDistance"], weights: [0.65, 0.35], overallWeight: 0.25 },
-    { key: "SPD", label: "Speed", metrics: ["sixtyTime"], weights: [1], overallWeight: 0.15 },
-    { key: "FLD", label: "Fielding", metrics: ["fieldingScore"], weights: [1], overallWeight: 0.15 },
-    { key: "ARM", label: "Arm", metrics: ["armVelocity"], weights: [1], overallWeight: 0.20 },
+    { key: "BAT", label: "Bat Speed", metrics: ["batSpeed"], weights: [1], overallWeight: 0.40 },
+    { key: "PWR", label: "Power", metrics: ["powerKw", "peakHandSpeed"], weights: [0.60, 0.40], overallWeight: 0.22 },
+    { key: "PLANE", label: "Plane", metrics: ["onPlaneEfficiency", "attackAngle", "verticalBatAngle"], weights: [0.50, 0.30, 0.20], overallWeight: 0.18 },
+    { key: "QUICK", label: "Quickness", metrics: ["timeToContact", "rotationalAcceleration"], weights: [0.55, 0.45], overallWeight: 0.14 },
+    { key: "CONN", label: "Connection", metrics: ["earlyConnection", "connectionAtImpact"], weights: [0.50, 0.50], overallWeight: 0.06 },
   ],
   pitcher: [
     { key: "VEL", label: "Velocity", metrics: ["fastballVelo"], weights: [1], overallWeight: 0.30 },
@@ -63,11 +276,11 @@ const ARCHETYPES = {
 };
 
 const ARCHETYPE_INFO = {
-  "Power Hitter": "Built to drive the ball in the air with authority. Exit velocity and distance lead the profile; the plan is damage on pitches in the zone, even if swing-and-miss comes with it.",
-  "Contact / Leadoff": "Sets the table. Short, quick swing, high contact, works counts and puts pressure on the defense. Power develops later — on-base skills come first.",
-  "Gap-to-Gap Hitter": "Line-drive hitter who uses both gaps. Balanced contact and power with a repeatable, level-to-uphill path.",
+  "Power Hitter": "Built to drive the ball. Bat speed and power lead the profile; the plan is damage on pitches in the zone, even if swing-and-miss comes with it.",
+  "Contact / Leadoff": "Sets the table. Short, quick swing, finds the barrel, works counts and puts pressure on the defense. Power develops later — on-base skills come first.",
+  "Gap-to-Gap Hitter": "Line-drive hitter who uses both gaps. Balanced contact and power with a repeatable path through the zone.",
   "Speed / Table-Setter": "Speed changes games. Gets on, steals bases, goes first-to-third, and covers ground defensively.",
-  "Middle-of-the-Order Bat": "Run producer in the heart of the lineup. Combines contact and power to drive in runs in big spots.",
+  "Middle-of-the-Order Bat": "Run producer in the heart of the lineup. Combines barrel control and power to drive in runs in big spots.",
   "Ace": "Front-of-the-rotation arm. Velocity, pitch quality, and command to handle a lineup multiple times through the order.",
   "Closer": "Short-burst, high-leverage arm. Best stuff in one inning — velocity and a swing-and-miss secondary pitch play up.",
   "Workhorse Starter": "Eats innings efficiently. Pounds the zone, mixes pitches, and stays strong deep into outings.",
@@ -79,39 +292,40 @@ const ARCHETYPE_INFO = {
 };
 
 function metricHistory(current, prior) {
-  // prior: array of earlier values (oldest -> newest before current)
   return [...prior, current];
 }
 
 const SAMPLE_PLAYERS = [
   {
-    id: "sample-mason-carter", name: "Mason Carter", age: 17, classYear: "Junior / 11th",
+    id: "sample-mason-carter", name: "Mason Carter", age: 17, ageGroup: "18U", classYear: "Junior / 11th",
     team: "Antonelli 17U", position: "OF / 1B", bats: "L", throws: "L", type: "hitter", archetype: "Power Hitter", photo: "",
-    strengths: ["Drives the ball in the air to the pull side with real carry", "Strong, physical swing — top exit velocities on the team", "Patient in hitter's counts; hunts fastballs he can lift"],
-    improvements: ["Improve contact on breaking balls down and away", "Shorten two-strike approach without giving up power", "First-step quickness on outfield reads"],
-    metrics: { exitVelocity: 96, batSpeed: 74, contactPct: 82, launchAngle: 16, maxDistance: 395, sixtyTime: 6.90, fieldingScore: 85, armVelocity: 87 },
+    strengths: ["Drives the ball in the air to the pull side with real carry", "Strong, physical swing — top bat speed on the team", "Patient in hitter's counts; hunts pitches he can lift"],
+    improvements: ["Stay on plane against breaking balls down and away", "Shorten the two-strike swing without giving up bat speed", "First-step quickness on outfield reads"],
+    metrics: { batSpeed: 69, peakHandSpeed: 22, attackAngle: 12, verticalBatAngle: -28, timeToContact: 0.155, powerKw: 3.9, rotationalAcceleration: 16, onPlaneEfficiency: 76, earlyConnection: 92, connectionAtImpact: 88 },
     history: {
-      exitVelocity: metricHistory(96, [88, 91, 94]), batSpeed: metricHistory(74, [68, 70, 72]),
-      contactPct: metricHistory(82, [74, 77, 80]), launchAngle: metricHistory(16, [12, 14, 15]),
-      maxDistance: metricHistory(395, [350, 368, 382]), sixtyTime: metricHistory(6.90, [7.25, 7.12, 7.00]),
-      fieldingScore: metricHistory(85, [74, 79, 82]), armVelocity: metricHistory(87, [80, 83, 85]),
+      batSpeed: metricHistory(69, [63, 65, 67]), peakHandSpeed: metricHistory(22, [19, 20, 21]),
+      attackAngle: metricHistory(12, [8, 9, 11]), verticalBatAngle: metricHistory(-28, [-22, -24, -26]),
+      timeToContact: metricHistory(0.155, [0.175, 0.168, 0.160]), powerKw: metricHistory(3.9, [3.2, 3.4, 3.7]),
+      rotationalAcceleration: metricHistory(16, [12, 13.5, 15]), onPlaneEfficiency: metricHistory(76, [68, 71, 74]),
+      earlyConnection: metricHistory(92, [84, 87, 90]), connectionAtImpact: metricHistory(88, [82, 84, 86]),
     },
   },
   {
-    id: "sample-eli-ramirez", name: "Eli Ramirez", age: 15, classYear: "Sophomore / 10th",
+    id: "sample-eli-ramirez", name: "Eli Ramirez", age: 15, ageGroup: "16U", classYear: "Sophomore / 10th",
     team: "Antonelli 15U", position: "SS / 2B", bats: "R", throws: "R", type: "hitter", archetype: "Contact / Leadoff", photo: "",
-    strengths: ["Short, quick swing with consistent barrel contact", "Advanced strike-zone awareness for his age", "Instinctive base runner; quick first step out of the box"],
-    improvements: ["Add strength to turn singles into gap power", "Keep bat path flatter on high fastballs", "Arm strength on throws from deep shortstop"],
-    metrics: { exitVelocity: 85, batSpeed: 68, contactPct: 90, launchAngle: 11, maxDistance: 330, sixtyTime: 6.68, fieldingScore: 88, armVelocity: 78 },
+    strengths: ["Short, quick swing that finds the barrel", "Advanced strike-zone awareness for his age", "Instinctive base runner; quick first step out of the box"],
+    improvements: ["Add strength so bat speed can climb toward varsity range", "Keep the bat on plane against high fastballs", "Stay connected when he tries to drive a pitch"],
+    metrics: { batSpeed: 58, peakHandSpeed: 19, attackAngle: 8, verticalBatAngle: -22, timeToContact: 0.17, powerKw: 2.4, rotationalAcceleration: 11, onPlaneEfficiency: 72, earlyConnection: 90, connectionAtImpact: 89 },
     history: {
-      exitVelocity: metricHistory(85, [76, 80, 83]), batSpeed: metricHistory(68, [61, 64, 66]),
-      contactPct: metricHistory(90, [84, 87, 89]), launchAngle: metricHistory(11, [9, 10, 11]),
-      maxDistance: metricHistory(330, [285, 305, 320]), sixtyTime: metricHistory(6.68, [6.95, 6.84, 6.75]),
-      fieldingScore: metricHistory(88, [80, 84, 86]), armVelocity: metricHistory(78, [69, 73, 76]),
+      batSpeed: metricHistory(58, [52, 54, 56]), peakHandSpeed: metricHistory(19, [16, 17, 18]),
+      attackAngle: metricHistory(8, [5, 6, 7]), verticalBatAngle: metricHistory(-22, [-18, -19, -21]),
+      timeToContact: metricHistory(0.17, [0.19, 0.185, 0.178]), powerKw: metricHistory(2.4, [1.9, 2.1, 2.25]),
+      rotationalAcceleration: metricHistory(11, [8, 9, 10]), onPlaneEfficiency: metricHistory(72, [66, 68, 70]),
+      earlyConnection: metricHistory(90, [82, 85, 88]), connectionAtImpact: metricHistory(89, [83, 85, 87]),
     },
   },
   {
-    id: "sample-noah-bennett", name: "Noah Bennett", age: 16, classYear: "Junior / 11th",
+    id: "sample-noah-bennett", name: "Noah Bennett", age: 16, ageGroup: "16U", classYear: "Junior / 11th",
     team: "Antonelli 16U", position: "RHP", bats: "R", throws: "R", type: "pitcher", archetype: "Ace", photo: "",
     strengths: ["Fastball carries through the top of the zone", "Repeats delivery and pounds the strike zone", "Breaking ball lands for strikes and chase swings"],
     improvements: ["Hold velocity deeper into outings (5th-6th inning)", "Develop a firm changeup vs. left-handed hitters", "Quicker move to hold runners at first"],
@@ -123,7 +337,7 @@ const SAMPLE_PLAYERS = [
     },
   },
   {
-    id: "sample-connor-walsh", name: "Connor Walsh", age: 17, classYear: "Senior / 12th",
+    id: "sample-connor-walsh", name: "Connor Walsh", age: 17, ageGroup: "18U", classYear: "Senior / 12th",
     team: "Antonelli 17U", position: "RHP", bats: "R", throws: "R", type: "pitcher", archetype: "Closer", photo: "",
     strengths: ["Electric one-inning stuff; fastball jumps on hitters", "Slider generates swing-and-miss in leverage counts", "Attacks hitters — not afraid of contact in the zone"],
     improvements: ["Command can scatter when he overthrows", "Throw first-pitch strikes more consistently", "Build routine for back-to-back days"],
@@ -135,19 +349,20 @@ const SAMPLE_PLAYERS = [
     },
   },
   {
-    id: "sample-dylan-brooks", name: "Dylan Brooks", age: 14, classYear: "Freshman / 9th",
+    id: "sample-dylan-brooks", name: "Dylan Brooks", age: 14, ageGroup: "14U", classYear: "Freshman / 9th",
     team: "Antonelli 14U", position: "C / RHP", bats: "R", throws: "R", type: "two-way", archetype: "Two-Way Player", photo: "",
     strengths: ["Strong arm behind the plate and on the mound", "Competitive at-bats; battles with two strikes", "Athletic frame with room to add strength"],
     improvements: ["Receiving and blocking consistency behind the plate", "Bat speed — stay connected through the turn", "Pitching mechanics: stay closed longer to improve command"],
     metrics: {
-      exitVelocity: 78, batSpeed: 62, contactPct: 74, launchAngle: 12, maxDistance: 295, sixtyTime: 7.30, fieldingScore: 72, armVelocity: 76,
+      batSpeed: 51, peakHandSpeed: 17, attackAngle: 6, verticalBatAngle: -25, timeToContact: 0.19, powerKw: 1.8, rotationalAcceleration: 8.5, onPlaneEfficiency: 64, earlyConnection: 78, connectionAtImpact: 84,
       fastballVelo: 76, spinRate: 1950, strikePct: 58, whiffPct: 22, pitchCapacity: 62,
     },
     history: {
-      exitVelocity: metricHistory(78, [72, 75, 77]), batSpeed: metricHistory(62, [58, 60, 61]),
-      contactPct: metricHistory(74, [70, 72, 73]), launchAngle: metricHistory(12, [10, 11, 12]),
-      maxDistance: metricHistory(295, [265, 280, 290]), sixtyTime: metricHistory(7.30, [7.50, 7.42, 7.36]),
-      fieldingScore: metricHistory(72, [66, 69, 71]), armVelocity: metricHistory(76, [71, 73, 75]),
+      batSpeed: metricHistory(51, [46, 48, 50]), peakHandSpeed: metricHistory(17, [15, 15.5, 16.5]),
+      attackAngle: metricHistory(6, [3, 4, 5]), verticalBatAngle: metricHistory(-25, [-18, -20, -23]),
+      timeToContact: metricHistory(0.19, [0.21, 0.205, 0.198]), powerKw: metricHistory(1.8, [1.3, 1.5, 1.65]),
+      rotationalAcceleration: metricHistory(8.5, [6, 7, 8]), onPlaneEfficiency: metricHistory(64, [58, 60, 62]),
+      earlyConnection: metricHistory(78, [70, 73, 76]), connectionAtImpact: metricHistory(84, [78, 80, 82]),
       fastballVelo: metricHistory(76, [71, 73, 75]), spinRate: metricHistory(1950, [1800, 1880, 1920]),
       strikePct: metricHistory(58, [52, 55, 57]), whiffPct: metricHistory(22, [17, 19, 21]),
       pitchCapacity: metricHistory(62, [50, 55, 59]),
@@ -158,19 +373,111 @@ const SAMPLE_PLAYERS = [
 /* ---------- Grade math ---------- */
 function clamp(n, lo, hi) { return Math.min(hi, Math.max(lo, n)); }
 
-function normalizeMetric(key, value) {
+function ageGroupFromAge(age) {
+  const n = Number(age);
+  if (!Number.isFinite(n) || n <= 10) return "10U";
+  if (n <= 12) return "12U";
+  if (n <= 14) return "14U";
+  if (n <= 16) return "16U";
+  if (n <= 18) return "18U";
+  if (n <= 22) return "College";
+  return "Pro";
+}
+
+function activeAgeGroup(player) {
+  const g = player && player.ageGroup;
+  if (AGE_GROUP_ORDER.includes(g)) return g;
+  return ageGroupFromAge(player && player.age);
+}
+
+function bandForGrade(grade) {
+  if (grade == null || Number.isNaN(grade)) return null;
+  if (grade < 50) return { key: "below", label: "Below Average" };
+  if (grade < 65) return { key: "average", label: "Average" };
+  if (grade < 80) return { key: "good", label: "Good" };
+  if (grade < 90) return { key: "great", label: "Great" };
+  return { key: "elite", label: "Elite" };
+}
+
+/* Higher-better. Published lo starts Average (50). Midpoint starts Good (65).
+   Published hi starts Great (80). One full span above hi reaches 99.
+   The cuts past the published anchors are Antonelli. */
+function gradeHigher(v, lo, hi) {
+  const span = hi - lo;
+  const mid = (lo + hi) / 2;
+  if (!(span > 0)) return 60;
+  if (v < lo) return clamp(20 + clamp((v - (lo - span)) / span, 0, 1) * 29, 20, 49);
+  if (v < mid) return 50 + ((v - lo) / (mid - lo)) * 14;
+  if (v < hi) return 65 + ((v - mid) / (hi - mid)) * 14;
+  return clamp(80 + clamp((v - hi) / span, 0, 1) * 19, 80, 99);
+}
+
+/* Lower-better. `fast` is the published quick end and scores like a published high. */
+function gradeLower(v, fast, slow) {
+  const span = slow - fast;
+  const mid = (fast + slow) / 2;
+  if (!(span > 0)) return 60;
+  if (v > slow) return clamp(49 - clamp((v - slow) / span, 0, 1) * 29, 20, 49);
+  if (v > mid) return 50 + ((slow - v) / (slow - mid)) * 14;
+  if (v > fast) return 65 + ((mid - v) / (mid - fast)) * 14;
+  return clamp(80 + clamp((fast - v) / span, 0, 1) * 19, 80, 99);
+}
+
+/* Ideal window. 96 at the target, ~70 at either published edge, then down to 20
+   one full span outside. Peak placement is Antonelli; lo/hi/target are not. */
+function gradeIdeal(v, lo, hi, target) {
+  const span = Math.max(hi - lo, 0.0001);
+  const center = target == null ? (lo + hi) / 2 : target;
+  if (v >= lo && v <= hi) {
+    const edge = v < center ? (center - lo) : (hi - center);
+    const t = edge === 0 ? 0 : Math.abs(v - center) / edge;
+    return clamp(96 - t * 26, 70, 96);
+  }
+  const outside = v < lo ? (lo - v) : (v - hi);
+  return clamp(69 - (outside / span) * 49, 20, 69);
+}
+
+/* On-plane. Official anchors are 65, 70, and 85. The 78 cut and Elite from 85
+   upward are Antonelli. Same function at every age. */
+function gradeOnPlane(v) {
+  if (v < 65) return clamp(20 + clamp((v - 45) / 20, 0, 1) * 29, 20, 49);
+  if (v < 70) return 50 + ((v - 65) / 5) * 14;
+  if (v < 78) return 65 + ((v - 70) / 8) * 14;
+  if (v < 85) return 80 + ((v - 78) / 7) * 9;
+  return clamp(90 + clamp((v - 85) / 10, 0, 1) * 9, 90, 99);
+}
+
+function gradeBlastMetric(key, value, ageGroup) {
+  const spec = BLAST_BENCHMARKS[key];
+  if (!spec || value == null || Number.isNaN(Number(value))) return { grade: null, band: null, window: null };
+  const group = AGE_GROUP_ORDER.includes(ageGroup) ? ageGroup : "16U";
+  const window = spec.bands[group];
+  const v = Number(value);
+  let raw;
+  if (spec.mode === "ope") raw = gradeOnPlane(v);
+  else if (spec.mode === "ra") raw = gradeHigher(v, window.lo, window.hi);
+  else if (spec.mode === "lower") raw = gradeLower(v, window.lo, window.hi);
+  else if (spec.mode === "ideal") raw = gradeIdeal(v, window.lo, window.hi, window.target);
+  else raw = gradeHigher(v, window.lo, window.hi);
+  const grade = clamp(Math.round(raw), 20, 99);
+  return { grade, band: bandForGrade(grade), window };
+}
+
+function normalizeMetric(key, value, ageGroup) {
   const m = METRICS[key];
-  if (!m || value == null || isNaN(value)) return null;
+  if (!m || value == null || Number.isNaN(Number(value))) return null;
+  if (m.blast) return gradeBlastMetric(key, value, ageGroup).grade;
   let pct = (Number(value) - m.low) / (m.high - m.low);
   if (m.invert) pct = 1 - pct;
   return Math.round(clamp(20 + pct * 79, 20, 99));
 }
 
 function subGradesFor(player, kind) {
+  const ageGroup = activeAgeGroup(player);
   return SUBGRADES[kind].map((sg) => {
     let totalWeight = 0, sum = 0;
     sg.metrics.forEach((mk, i) => {
-      const g = normalizeMetric(mk, player.metrics[mk]);
+      const g = normalizeMetric(mk, player.metrics && player.metrics[mk], ageGroup);
       if (g != null) { sum += g * sg.weights[i]; totalWeight += sg.weights[i]; }
     });
     const grade = totalWeight ? Math.round(sum / totalWeight) : null;
@@ -207,11 +514,62 @@ function tierFor(overall) {
 }
 
 function metricKeysFor(type) {
-  const hitterKeys = ["exitVelocity", "batSpeed", "contactPct", "launchAngle", "maxDistance", "sixtyTime", "fieldingScore", "armVelocity"];
-  const pitcherKeys = ["fastballVelo", "spinRate", "strikePct", "whiffPct", "pitchCapacity"];
-  if (type === "pitcher") return pitcherKeys;
-  if (type === "two-way") return [...hitterKeys, ...pitcherKeys];
-  return hitterKeys;
+  if (type === "pitcher") return PITCHER_KEYS;
+  if (type === "two-way") return [...BLAST_KEYS, ...PITCHER_KEYS];
+  return BLAST_KEYS;
+}
+
+function defaultBlastMetrics(ageGroup) {
+  const group = AGE_GROUP_ORDER.includes(ageGroup) ? ageGroup : "16U";
+  const out = {};
+  BLAST_KEYS.forEach((k) => {
+    const spec = BLAST_BENCHMARKS[k];
+    const b = spec.bands[group];
+    if (spec.mode === "ideal") out[k] = b.target;
+    else if (spec.mode === "ope") out[k] = 70;
+    else if (spec.mode === "ra") out[k] = 12.5;
+    else if (spec.mode === "lower") out[k] = Math.round(((b.lo + b.hi) / 2) * 1000) / 1000;
+    else out[k] = Math.round(((b.lo + b.hi) / 2) * 100) / 100;
+  });
+  return out;
+}
+
+function defaultPitcherMetrics() {
+  return { fastballVelo: 78, spinRate: 2000, strikePct: 58, whiffPct: 22, pitchCapacity: 60 };
+}
+
+function defaultMetrics(type, ageGroup) {
+  const blast = defaultBlastMetrics(ageGroup || "16U");
+  const pitch = defaultPitcherMetrics();
+  const out = {};
+  metricKeysFor(type).forEach((k) => { out[k] = BLAST_KEYS.includes(k) ? blast[k] : pitch[k]; });
+  return out;
+}
+
+function benchmarkCaption(key, ageGroup) {
+  const m = METRICS[key];
+  if (!m.blast) return `Benchmark ${m.low}–${m.high}${m.unit}`;
+  const spec = BLAST_BENCHMARKS[key];
+  const b = spec.bands[ageGroup] || spec.bands["16U"];
+  const bits = [`Blast ${ageGroup}: ${formatMetric(key, b.lo)}–${formatMetric(key, b.hi)}${m.unit}`];
+  if (b.sharedYouth) bits.push("Youth column for both 10U and 12U");
+  if (spec.mode === "ideal") bits.push(`peak at ${formatMetric(key, b.target)} is Antonelli`);
+  if (spec.mode === "ope") bits.push("78 and Elite-above-85 cuts are Antonelli");
+  if (spec.mode === "ra") bits.push("12.5 and Elite near 20 are Antonelli");
+  if (b.note) bits.push(b.note);
+  return bits.join(" · ");
+}
+
+function formatMetric(key, value) {
+  if (value == null || value === "" || Number.isNaN(Number(value))) return "—";
+  const n = Number(value);
+  if (key === "timeToContact") return n.toFixed(3);
+  if (key === "powerKw") {
+    const rounded = Math.round(n * 1000) / 1000;
+    return String(rounded);
+  }
+  if (Number.isInteger(n)) return String(n);
+  return String(Math.round(n * 100) / 100);
 }
 
 function typeLabel(type) { return { hitter: "Hitter", pitcher: "Pitcher", "two-way": "Two-Way" }[type] || type; }
@@ -220,37 +578,108 @@ function teamCode(team) {
   const code = parts.map((w) => (/^\d/.test(w) ? w : w[0])).join("").toUpperCase();
   return code.slice(0, 4) || "AB";
 }
-// Clean Antonelli star (white star, black outline, gold inner outline) redrawn as SVG —
-// the source banner contained sponsor text, so the banner itself is not used on cards.
 function starSVG(cls) {
   return `<svg class="${cls || "card-star"}" viewBox="0 0 100 100" aria-hidden="true"><polygon points="50,3 62,37 98,37 69,58 80,96 50,73 20,96 31,58 2,37 38,37" fill="#ffffff" stroke="#0a0a0a" stroke-width="5" stroke-linejoin="round"/><polygon points="50,3 62,37 98,37 69,58 80,96 50,73 20,96 31,58 2,37 38,37" transform="translate(50 50) scale(0.8) translate(-50 -50)" fill="none" stroke="#d4af37" stroke-width="3" stroke-linejoin="round"/></svg>`;
 }
-// No uploaded photo: the Antonelli A-star sits in the card's photo area.
 function logoPlaceholder() {
   return `<img class="card-logo" src="assets/antonelli-a-star.png" alt="Antonelli Baseball">`;
 }
-function initials(name) { return name.trim().split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase() || "AB"; }
 function esc(s) { return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
 function linesToArray(text) { return String(text || "").split(/\n|,/).map((s) => s.trim()).filter(Boolean); }
 
 /* ---------- Storage ---------- */
+function hittingLooksLegacy(p) {
+  if (!p || p.type === "pitcher") return false;
+  const m = p.metrics || {};
+  return m.onPlaneEfficiency == null || m.powerKw == null || m.exitVelocity != null || m.contactPct != null;
+}
+
+function migratePlayer(p) {
+  const copy = structuredClone(p);
+  copy.ageGroup = AGE_GROUP_ORDER.includes(copy.ageGroup) ? copy.ageGroup : ageGroupFromAge(copy.age);
+  if (copy.type === "pitcher") return copy;
+  const old = copy.metrics || {};
+  const oldHist = copy.history || {};
+  // Old formula stored exit velocity / contact. Those cards are rebuilt.
+  // A partial Blast card (no exit velocity) keeps any Blast keys it already has.
+  const legacyFormula = old.exitVelocity != null || old.contactPct != null;
+  const metrics = defaultBlastMetrics(copy.ageGroup);
+  const history = {};
+  BLAST_KEYS.forEach((k) => {
+    const numeric = old[k] != null && !Number.isNaN(Number(old[k]));
+    const keepBat = k === "batSpeed" && numeric && Number(old.batSpeed) >= 25 && Number(old.batSpeed) <= 95;
+    const keepExisting = !legacyFormula && numeric;
+    if (keepBat || keepExisting) metrics[k] = Number(old[k]);
+    if (keepBat && Array.isArray(oldHist.batSpeed) && oldHist.batSpeed.length) {
+      history.batSpeed = oldHist.batSpeed.map(Number).filter((n) => !Number.isNaN(n));
+      if (history.batSpeed[history.batSpeed.length - 1] !== metrics.batSpeed) history.batSpeed.push(metrics.batSpeed);
+    } else if (keepExisting && Array.isArray(oldHist[k]) && oldHist[k].length) {
+      history[k] = oldHist[k].map(Number).filter((n) => !Number.isNaN(n));
+    } else {
+      history[k] = [metrics[k]];
+    }
+  });
+  if (copy.type === "two-way") {
+    const pitchDefaults = defaultPitcherMetrics();
+    PITCHER_KEYS.forEach((k) => {
+      metrics[k] = old[k] != null && !Number.isNaN(Number(old[k])) ? Number(old[k]) : pitchDefaults[k];
+      history[k] = Array.isArray(oldHist[k]) && oldHist[k].length ? oldHist[k] : [metrics[k]];
+    });
+  }
+  copy.metrics = metrics;
+  copy.history = history;
+  return copy;
+}
+
 function loadPlayers() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) { const parsed = JSON.parse(raw); if (Array.isArray(parsed) && parsed.length) return parsed; }
-  } catch (e) { /* fall through to sample data */ }
-  return structuredClone(SAMPLE_PLAYERS);
+    const rawV2 = localStorage.getItem(STORAGE_KEY);
+    if (rawV2) {
+      const parsed = JSON.parse(rawV2);
+      if (Array.isArray(parsed) && parsed.length) {
+        if (parsed.some(hittingLooksLegacy)) return { players: parsed.map(migratePlayer), migrated: true };
+        return { players: parsed, migrated: false };
+      }
+    }
+    const rawV1 = localStorage.getItem(LEGACY_STORAGE_KEY);
+    if (rawV1) {
+      const parsed = JSON.parse(rawV1);
+      if (Array.isArray(parsed) && parsed.length) return { players: parsed.map(migratePlayer), migrated: true };
+    }
+  } catch (e) { /* sample data */ }
+  return { players: structuredClone(SAMPLE_PLAYERS), migrated: false };
 }
+
+const loadedState = loadPlayers();
+let players = loadedState.players;
+let migrationNotice = loadedState.migrated;
+if (migrationNotice) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(players)); } catch (e) { /* banner still explains the in-memory reset */ }
+}
+let selectedId = null;
+
 function savePlayers() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(players)); }
   catch (e) { alert("Could not save — browser storage is full. Try a smaller photo, or clear a photo and save again."); }
 }
 
-let players = loadPlayers();
-let selectedId = null;
-
 /* ---------- Sparkline ---------- */
-function sparkline(values, invert) {
+function metricImproved(key, before, after, ageGroup) {
+  const m = METRICS[key];
+  if (!m) return after > before;
+  if (m.blast) {
+    const spec = BLAST_BENCHMARKS[key];
+    if (spec.mode === "lower") return after < before;
+    if (spec.mode === "ideal") {
+      const target = (spec.bands[ageGroup] || spec.bands["16U"]).target;
+      return Math.abs(after - target) < Math.abs(before - target);
+    }
+    return after > before;
+  }
+  return m.invert ? after < before : after > before;
+}
+
+function sparkline(values, key, ageGroup) {
   if (!values || values.length < 2) return '<span class="muted">—</span>';
   const w = 92, h = 28, pad = 3;
   const min = Math.min(...values), max = Math.max(...values), range = (max - min) || 1;
@@ -259,21 +688,31 @@ function sparkline(values, invert) {
     const y = h - pad - ((v - min) / range) * (h - pad * 2);
     return `${x.toFixed(1)},${y.toFixed(1)}`;
   }).join(" ");
-  const improved = invert ? values[values.length - 1] < values[0] : values[values.length - 1] > values[0];
-  const color = improved ? "#14804a" : (values[values.length - 1] === values[0] ? "#667085" : "#c8102e");
-  return `<svg class="spark" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-hidden="true"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${pts.split(" ").pop().split(",")[0]}" cy="${pts.split(" ").pop().split(",")[1]}" r="3" fill="${color}"/></svg>`;
+  const first = values[0], last = values[values.length - 1];
+  const improved = metricImproved(key, first, last, ageGroup);
+  const flat = first === last || !metricImproved(key, first, last, ageGroup) && !metricImproved(key, last, first, ageGroup);
+  const color = flat ? "#667085" : (improved ? "#14804a" : "#c8102e");
+  const end = pts.split(" ").pop().split(",");
+  return `<svg class="spark" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-hidden="true"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${end[0]}" cy="${end[1]}" r="3" fill="${color}"/></svg>`;
 }
 
-function deltaHTML(key, history) {
+function deltaHTML(key, history, ageGroup) {
   if (!history || history.length < 2) return '<span class="delta-flat">—</span>';
   const cur = history[history.length - 1], prev = history[history.length - 2];
-  const diff = Math.round((cur - prev) * 100) / 100;
+  const diff = Math.round((cur - prev) * 1000) / 1000;
   if (diff === 0) return '<span class="delta-flat">0</span>';
-  const good = METRICS[key].invert ? diff < 0 : diff > 0;
+  const good = metricImproved(key, prev, cur, ageGroup);
   return `<span class="${good ? "delta-up" : "delta-down"}">${diff > 0 ? "▲ +" : "▼ "}${diff}</span>`;
 }
 
-/* ---------- Card rendering (v2 portrait card) ---------- */
+function bandHTML(key, value, ageGroup) {
+  if (!METRICS[key] || !METRICS[key].blast) return "—";
+  const scored = gradeBlastMetric(key, value, ageGroup);
+  if (!scored.band) return "—";
+  return `<span class="band-chip band-${scored.band.key}">${esc(scored.band.label)}</span>`;
+}
+
+/* ---------- Card rendering ---------- */
 function cardHTML(player, large) {
   const { subs, overall } = gradesFor(player);
   const tier = tierFor(overall);
@@ -281,6 +720,7 @@ function cardHTML(player, large) {
   const visual = player.photo
     ? `<img class="card-photo" src="${esc(player.photo)}" alt="Photo of ${esc(player.name)}">`
     : logoPlaceholder();
+  const group = activeAgeGroup(player);
   return `
   <div class="bb-card tier-${tier.key} ${large ? "large" : ""} ${player.photo ? "" : "logo-placeholder"}">
     <div class="card-visual">${visual}</div>
@@ -293,7 +733,7 @@ function cardHTML(player, large) {
           <span class="archetype">${esc(player.archetype)}</span>
           <${large ? "h2" : "h3"}>${esc(player.name)}</${large ? "h2" : "h3"}>
           <span class="pos-bar">${esc(player.position)} - ${esc(player.bats)}/${esc(player.throws)}</span>
-          <span class="card-teamline">${esc(player.team)} • Age ${esc(player.age)} • ${esc(player.classYear)}</span>
+          <span class="card-teamline">${esc(player.team)} • Age ${esc(player.age)} • ${esc(group)} • ${esc(player.classYear)}</span>
         </div>
       </div>
       <div class="subgrades">${shownSubs.map((x) => `<div class="subgrade"><b>${x.grade ?? "—"}</b><span>${x.key}</span></div>`).join("")}</div>
@@ -329,7 +769,7 @@ function renderRoster() {
     if (tf !== "all" && p.type !== tf) return false;
     if (team !== "all" && p.team !== team) return false;
     if (q) {
-      const hay = `${p.name} ${p.position} ${p.archetype} ${p.team} ${p.classYear} ${typeLabel(p.type)}`.toLowerCase();
+      const hay = `${p.name} ${p.position} ${p.archetype} ${p.team} ${p.classYear} ${typeLabel(p.type)} ${activeAgeGroup(p)}`.toLowerCase();
       if (!hay.includes(q)) return false;
     }
     return true;
@@ -350,7 +790,7 @@ function renderRoster() {
       ${cardHTML(p, false)}
       <div class="roster-info">
         <h3>${esc(p.name)}</h3>
-        <div class="meta">${esc(p.position)} • ${esc(p.team)} • Age ${esc(p.age)} • ${esc(p.classYear)}<br>Bats ${esc(p.bats)} / Throws ${esc(p.throws)} • Overall ${overall}</div>
+        <div class="meta">${esc(p.position)} • ${esc(p.team)} • Age ${esc(p.age)} • ${esc(activeAgeGroup(p))} • ${esc(p.classYear)}<br>Bats ${esc(p.bats)} / Throws ${esc(p.throws)} • Overall ${overall}</div>
         <div class="pills"><span class="pill red">${esc(p.archetype)}</span><span class="pill">${typeLabel(p.type)}</span><span class="pill">${tierFor(overall).label}</span></div>
         <p class="snippet"><strong>Does well:</strong> ${esc((p.strengths || [])[0] || "—")}</p>
         <p class="snippet"><strong>Work on:</strong> ${esc((p.improvements || [])[0] || "—")}</p>
@@ -366,21 +806,27 @@ function renderRoster() {
 /* ---------- Profile ---------- */
 function metricsTable(player) {
   const keys = metricKeysFor(player.type);
+  const ageGroup = activeAgeGroup(player);
   const rows = keys.map((k) => {
-    const m = METRICS[k], hist = (player.history && player.history[k]) || [player.metrics[k]];
-    const prev = hist.length > 1 ? hist[hist.length - 2] : "—";
-    const grade = normalizeMetric(k, player.metrics[k]);
+    const m = METRICS[k];
+    const hist = (player.history && player.history[k]) || [player.metrics[k]];
+    const prev = hist.length > 1 ? hist[hist.length - 2] : null;
+    const grade = normalizeMetric(k, player.metrics[k], ageGroup);
     return `<tr>
       <td><strong>${m.label}</strong><br><span class="muted" style="font-size:12px">${esc(m.help)}</span></td>
-      <td><strong>${esc(player.metrics[k])}${esc(m.unit)}</strong></td>
-      <td>${prev === "—" ? "—" : esc(prev) + esc(m.unit)}</td>
-      <td>${deltaHTML(k, hist)}</td>
-      <td>${sparkline(hist, m.invert)}</td>
+      <td><strong>${formatMetric(k, player.metrics[k])}${esc(m.unit)}</strong></td>
+      <td>${prev == null ? "—" : formatMetric(k, prev) + esc(m.unit)}</td>
+      <td>${deltaHTML(k, hist, ageGroup)}</td>
+      <td>${sparkline(hist, k, ageGroup)}</td>
+      <td>${bandHTML(k, player.metrics[k], ageGroup)}</td>
       <td><span class="grade-chip">${grade ?? "—"}</span></td>
     </tr>`;
   }).join("");
-  return `<table><thead><tr><th>Metric</th><th>Current</th><th>Previous</th><th>Change</th><th>History</th><th>Grade</th></tr></thead><tbody>${rows}</tbody></table>
-  <p class="muted small">Grade = each metric normalized to 20–99 against the benchmark ranges in app.js (see README). History updates when you save an edited metric.</p>`;
+  const note = player.type === "pitcher"
+    ? "Pitcher grades are 20–99 against the coach benchmarks in METRICS. Those ranges are not published Blast numbers."
+    : `Hitting bands use the published Blast window for <strong>${esc(ageGroup)}</strong> in BLAST_BENCHMARKS. Below Average / Average / Good / Great / Elite, and the 20–99 cuts, are Antonelli. Coaches edit the windows in that table and the curves in gradeBlastMetric.`;
+  return `<div class="table-scroll"><table><thead><tr><th>Metric</th><th>Current</th><th>Previous</th><th>Change</th><th>History</th><th>Band</th><th>Grade</th></tr></thead><tbody>${rows}</tbody></table></div>
+  <p class="muted small">${note}</p>`;
 }
 
 function openProfile(id) {
@@ -389,6 +835,12 @@ function openProfile(id) {
   selectedId = id;
   const { subs, overall } = gradesFor(p);
   const tier = tierFor(overall);
+  const group = activeAgeGroup(p);
+  const built = p.type === "pitcher"
+    ? "Pitcher overall uses velocity 30%, breaking stuff 25%, command 30%, and stamina 15%."
+    : p.type === "two-way"
+      ? `Hitting half is graded at <strong>${esc(group)}</strong> on Blast windows. Bat speed is 40% of that half. Overall is the average of the hitter grade and the pitcher grade.`
+      : `Graded at <strong>${esc(group)}</strong> on Blast Motion windows. Bat speed is 40% of the hitter overall — the largest weight.`;
   $("rosterView").hidden = true;
   $("profileView").hidden = false;
   $("profileContent").innerHTML = `
@@ -400,16 +852,16 @@ function openProfile(id) {
       </div>
       <div class="panel" style="margin-top:16px">
         <h3>How this grade is built</h3>
-        <p class="small" style="line-height:1.6">Overall <strong>${overall} (${tier.label})</strong> is a weighted average of these tool grades (each 20–99):</p>
+        <p class="small" style="line-height:1.6">Overall <strong>${overall} (${tier.label})</strong>. ${built}</p>
         <div class="pills">${subs.map((s) => `<span class="pill">${s.key} ${s.grade ?? "—"} — ${esc(s.label)}</span>`).join("")}</div>
-        <p class="muted small">Bronze &lt;70 • Silver 70–79 • Gold 80–89 • Diamond 90+. Edit metrics to see this card upgrade live.</p>
+        <p class="muted small">Bronze &lt;70 • Silver 70–79 • Gold 80–89 • Diamond 90+. Edit a metric or the age group and this card updates live.</p>
       </div>
     </div>
     <div class="profile-main">
       <div class="panel">
-        <p class="eyebrow" style="color:var(--red)">${esc(p.archetype.toUpperCase())} • ${typeLabel(p.type).toUpperCase()}</p>
+        <p class="eyebrow" style="color:var(--red)">${esc(p.archetype.toUpperCase())} • ${typeLabel(p.type).toUpperCase()} • ${esc(group)}</p>
         <h2 style="margin-bottom:6px">${esc(p.name)}</h2>
-        <p class="muted">${esc(p.position)} • ${esc(p.team)} • Age ${esc(p.age)} • ${esc(p.classYear)} • Bats ${esc(p.bats)} / Throws ${esc(p.throws)}</p>
+        <p class="muted">${esc(p.position)} • ${esc(p.team)} • Age ${esc(p.age)} • ${esc(group)} • ${esc(p.classYear)} • Bats ${esc(p.bats)} / Throws ${esc(p.throws)}</p>
         <h3>What type of ${p.type === "pitcher" ? "pitcher" : "player"} is he?</h3>
         <p style="line-height:1.65">${esc(ARCHETYPE_INFO[p.archetype] || "A developing player whose archetype will sharpen as metrics and game performance grow.")}</p>
       </div>
@@ -456,7 +908,6 @@ function handlePhotoFile(file) {
   reader.onload = () => {
     const img = new Image();
     img.onload = () => {
-      // Downscale to max 800px so localStorage does not fill up
       const max = 800, scale = Math.min(1, max / Math.max(img.width, img.height));
       if (scale < 1) {
         const canvas = document.createElement("canvas");
@@ -477,27 +928,35 @@ function fillArchetypes(type, selected) {
   $("f-archetype").innerHTML = opts.map((a) => `<option ${a === selected ? "selected" : ""}>${esc(a)}</option>`).join("");
 }
 
-function defaultMetrics(type) {
-  const base = { exitVelocity: 80, batSpeed: 64, contactPct: 75, launchAngle: 12, maxDistance: 300, sixtyTime: 7.1, fieldingScore: 70, armVelocity: 72, fastballVelo: 78, spinRate: 2000, strikePct: 58, whiffPct: 22, pitchCapacity: 60 };
-  const out = {};
-  metricKeysFor(type).forEach((k) => { out[k] = base[k]; });
-  return out;
+function sliderBounds(key) {
+  const m = METRICS[key];
+  if (m.blast) return { min: m.entryMin, max: m.entryMax };
+  const sliderMin = m.invert ? m.low - 0.4 : Math.floor(m.low - (m.high - m.low) * 0.15);
+  const sliderMax = m.invert ? m.high + 0.4 : Math.ceil(m.high + (m.high - m.low) * 0.08);
+  return { min: sliderMin, max: sliderMax };
 }
 
 function renderMetricFields(playerLike) {
   const keys = metricKeysFor(playerLike.type);
+  const ageGroup = activeAgeGroup(playerLike);
+  const defaults = defaultMetrics(playerLike.type, ageGroup);
   $("metricFields").innerHTML = keys.map((k) => {
-    const m = METRICS[k], val = playerLike.metrics[k] ?? defaultMetrics(playerLike.type)[k];
-    // Slider bounds: a bit wider than benchmark so coaches can enter out-of-range values
-    const sliderMin = m.invert ? m.low - 0.4 : Math.floor(m.low - (m.high - m.low) * 0.15);
-    const sliderMax = m.invert ? m.high + 0.4 : Math.ceil(m.high + (m.high - m.low) * 0.08);
+    const m = METRICS[k];
+    const val = playerLike.metrics[k] ?? defaults[k];
+    const bounds = sliderBounds(k);
+    const scored = m.blast ? gradeBlastMetric(k, val, ageGroup) : null;
+    const grade = normalizeMetric(k, val, ageGroup);
+    const band = scored && scored.band
+      ? `<span class="band-chip band-${scored.band.key}" id="band-${k}">${esc(scored.band.label)}</span>`
+      : "";
     return `<div class="metric-row">
-      <label for="m-${k}">${m.label} <small>${esc(m.help)} • Benchmark ${m.low}–${m.high}${esc(m.unit)}</small></label>
+      <label for="m-${k}">${m.label} <small>${esc(m.help)} • ${esc(benchmarkCaption(k, ageGroup))}</small></label>
       <div class="metric-inputs">
-        <input type="range" id="range-${k}" data-metric="${k}" min="${sliderMin}" max="${sliderMax}" step="${m.step}" value="${val}">
+        <input type="range" id="range-${k}" data-metric="${k}" min="${bounds.min}" max="${bounds.max}" step="${m.step}" value="${val}">
         <input type="number" id="m-${k}" data-metric="${k}" step="${m.step}" value="${val}">
         <span class="muted small">${esc(m.unit.trim())}</span>
-        <span class="grade-chip" id="grade-${k}">${normalizeMetric(k, val)}</span>
+        <span class="grade-chip" id="grade-${k}">${grade ?? "—"}</span>
+        ${band}
       </div>
     </div>`;
   }).join("");
@@ -506,7 +965,15 @@ function renderMetricFields(playerLike) {
       const k = input.dataset.metric;
       const range = $(`range-${k}`), num = $(`m-${k}`);
       if (input.type === "range") num.value = input.value; else range.value = input.value;
-      $(`grade-${k}`).textContent = normalizeMetric(k, num.value) ?? "—";
+      const group = $("f-ageGroup").value;
+      const grade = normalizeMetric(k, num.value, group);
+      $(`grade-${k}`).textContent = grade ?? "—";
+      const bandEl = $(`band-${k}`);
+      if (bandEl && METRICS[k].blast) {
+        const band = bandForGrade(grade);
+        bandEl.textContent = band ? band.label : "—";
+        bandEl.className = band ? `band-chip band-${band.key}` : "band-chip";
+      }
       updateLivePreview();
     });
   });
@@ -517,7 +984,9 @@ function formPlayerLike() {
   const metrics = {};
   metricKeysFor(type).forEach((k) => { const el = $(`m-${k}`); if (el) metrics[k] = parseFloat(el.value); });
   return {
-    id: $("f-id").value || "temp", name: $("f-name").value || "New Player", age: parseInt($("f-age").value, 10) || 16,
+    id: $("f-id").value || "temp", name: $("f-name").value || "New Player",
+    age: parseInt($("f-age").value, 10) || 16,
+    ageGroup: $("f-ageGroup").value || ageGroupFromAge($("f-age").value),
     classYear: $("f-class").value, team: $("f-team").value || "Antonelli Baseball", position: $("f-position").value || "—",
     bats: $("f-bats").value, throws: $("f-throws").value, type, archetype: $("f-archetype").value,
     strengths: linesToArray($("f-strengths").value), improvements: linesToArray($("f-improvements").value),
@@ -530,7 +999,8 @@ function updateLivePreview() {
   const like = formPlayerLike();
   const { subs, overall } = gradesFor(like);
   const tier = tierFor(overall);
-  $("livePreview").innerHTML = `<div>Live Overall<br><b>${overall}</b> <span class="tier-badge">${tier.label}</span></div><div class="pills" style="margin:0">${subs.map((s) => `<span class="pill">${s.key} ${s.grade ?? "—"}</span>`).join("")}</div>`;
+  const groupNote = like.type === "pitcher" ? "" : ` · ${esc(activeAgeGroup(like))}`;
+  $("livePreview").innerHTML = `<div>Live Overall${groupNote}<br><b>${overall}</b> <span class="tier-badge">${tier.label}</span></div><div class="pills" style="margin:0">${subs.map((s) => `<span class="pill">${s.key} ${s.grade ?? "—"}</span>`).join("")}</div>`;
 }
 
 function openModal(player) {
@@ -539,6 +1009,7 @@ function openModal(player) {
   $("f-id").value = isEdit ? player.id : "";
   $("f-name").value = isEdit ? player.name : "";
   $("f-age").value = isEdit ? player.age : 16;
+  $("f-ageGroup").value = isEdit ? activeAgeGroup(player) : ageGroupFromAge(16);
   $("f-class").value = isEdit ? player.classYear : "";
   $("f-team").value = isEdit ? player.team : "Antonelli 16U";
   $("f-position").value = isEdit ? player.position : "";
@@ -552,70 +1023,93 @@ function openModal(player) {
   pendingPhotoData = isEdit ? (player.photo || "") : "";
   const photoInput = $("f-photo"); if (photoInput) photoInput.value = "";
   updatePhotoPreview();
-  renderMetricFields(isEdit ? player : { type: "hitter", metrics: defaultMetrics("hitter") });
+  const seed = isEdit ? player : { type: "hitter", age: 16, ageGroup: "16U", metrics: defaultMetrics("hitter", "16U") };
+  renderMetricFields(seed);
   updateLivePreview();
   $("playerModal").hidden = false;
 }
 
 function closeModal() { $("playerModal").hidden = true; }
 
-/* ---------- Events ---------- */
-["searchInput", "typeFilter", "teamFilter", "sortSelect"].forEach((id) => {
-  $(id).addEventListener("input", renderRoster);
-  $(id).addEventListener("change", renderRoster);
-});
-$("backBtn").addEventListener("click", () => { closeProfile(); renderRoster(); });
-$("addPlayerBtn").addEventListener("click", () => openModal(null));
-$("closeModalBtn").addEventListener("click", closeModal);
-$("cancelBtn").addEventListener("click", closeModal);
-$("modalBackdrop").addEventListener("click", closeModal);
-document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
+function bindApp() {
+  if (typeof document === "undefined" || !document.getElementById || !document.getElementById("rosterGrid")) return;
+  const banner = document.getElementById("migrationBanner");
+  if (banner && migrationNotice) banner.hidden = false;
 
-$("f-type").addEventListener("change", () => {
-  fillArchetypes($("f-type").value);
-  const like = editingDefaults && editingDefaults.type === $("f-type").value ? editingDefaults : { type: $("f-type").value, metrics: defaultMetrics($("f-type").value) };
-  renderMetricFields(like);
-  updateLivePreview();
-  updatePhotoPreview();
-});
-$("playerForm").addEventListener("input", updateLivePreview);
-$("f-photo").addEventListener("change", (e) => handlePhotoFile(e.target.files && e.target.files[0]));
-$("clearPhotoBtn").addEventListener("click", () => { pendingPhotoData = ""; $("f-photo").value = ""; updatePhotoPreview(); });
+  ["searchInput", "typeFilter", "teamFilter", "sortSelect"].forEach((id) => {
+    $(id).addEventListener("input", renderRoster);
+    $(id).addEventListener("change", renderRoster);
+  });
+  $("backBtn").addEventListener("click", () => { closeProfile(); renderRoster(); });
+  $("addPlayerBtn").addEventListener("click", () => openModal(null));
+  $("closeModalBtn").addEventListener("click", closeModal);
+  $("cancelBtn").addEventListener("click", closeModal);
+  $("modalBackdrop").addEventListener("click", closeModal);
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
 
-$("playerForm").addEventListener("submit", (e) => {
-  e.preventDefault();
-  const like = formPlayerLike();
-  if (!like.name.trim()) { alert("Please enter a player name."); return; }
-  const existing = players.find((p) => p.id === like.id);
-  if (existing) {
-    // Append changed metrics to history so progress / sparkline is visible
-    const history = structuredClone(existing.history || {});
-    Object.entries(like.metrics).forEach(([k, v]) => {
-      if (v == null || isNaN(v)) return;
-      if (!history[k]) history[k] = [existing.metrics[k]];
-      if (history[k][history[k].length - 1] !== v) history[k].push(v);
-      history[k] = history[k].slice(-6);
-    });
-    Object.assign(existing, like, { history });
-  } else {
-    like.id = "player-" + Date.now().toString(36);
-    like.history = {};
-    Object.entries(like.metrics).forEach(([k, v]) => { like.history[k] = [v]; });
-    players.push(like);
-  }
-  savePlayers();
-  closeModal();
+  $("f-type").addEventListener("change", () => {
+    fillArchetypes($("f-type").value);
+    const group = $("f-ageGroup").value || "16U";
+    const like = editingDefaults && editingDefaults.type === $("f-type").value
+      ? editingDefaults
+      : { type: $("f-type").value, ageGroup: group, metrics: defaultMetrics($("f-type").value, group) };
+    renderMetricFields(like);
+    updateLivePreview();
+    updatePhotoPreview();
+  });
+  $("f-age").addEventListener("input", () => {
+    const next = ageGroupFromAge(parseInt($("f-age").value, 10));
+    if ($("f-ageGroup").value !== next) {
+      $("f-ageGroup").value = next;
+      renderMetricFields(formPlayerLike());
+    }
+    updateLivePreview();
+  });
+  $("f-ageGroup").addEventListener("change", () => {
+    renderMetricFields(formPlayerLike());
+    updateLivePreview();
+  });
+  $("playerForm").addEventListener("input", updateLivePreview);
+  $("f-photo").addEventListener("change", (e) => handlePhotoFile(e.target.files && e.target.files[0]));
+  $("clearPhotoBtn").addEventListener("click", () => { pendingPhotoData = ""; $("f-photo").value = ""; updatePhotoPreview(); });
+
+  $("playerForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const like = formPlayerLike();
+    if (!like.name.trim()) { alert("Please enter a player name."); return; }
+    const existing = players.find((p) => p.id === like.id);
+    if (existing) {
+      const history = structuredClone(existing.history || {});
+      Object.entries(like.metrics).forEach(([k, v]) => {
+        if (v == null || Number.isNaN(v)) return;
+        if (!history[k]) history[k] = [existing.metrics[k]];
+        if (history[k][history[k].length - 1] !== v) history[k].push(v);
+        history[k] = history[k].slice(-6);
+      });
+      Object.assign(existing, like, { history });
+    } else {
+      like.id = "player-" + Date.now().toString(36);
+      like.history = {};
+      Object.entries(like.metrics).forEach(([k, v]) => { like.history[k] = [v]; });
+      players.push(like);
+    }
+    savePlayers();
+    closeModal();
+    renderRoster();
+    if (selectedId) openProfile(selectedId);
+    else if (!existing) openProfile(like.id);
+  });
+
+  $("resetBtn").addEventListener("click", () => {
+    if (confirm("Reset to the 5 sample players? Any players you added or edits you made will be removed.")) {
+      players = structuredClone(SAMPLE_PLAYERS);
+      migrationNotice = false;
+      if (banner) banner.hidden = true;
+      savePlayers(); closeProfile(); renderRoster();
+    }
+  });
+
   renderRoster();
-  if (selectedId) openProfile(selectedId);
-  else if (!existing) openProfile(like.id);
-});
+}
 
-$("resetBtn").addEventListener("click", () => {
-  if (confirm("Reset to the 5 sample players? Any players you added or edits you made will be removed.")) {
-    players = structuredClone(SAMPLE_PLAYERS);
-    savePlayers(); closeProfile(); renderRoster();
-  }
-});
-
-/* ---------- Init ---------- */
-renderRoster();
+bindApp();

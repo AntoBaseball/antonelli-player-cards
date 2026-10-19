@@ -43,8 +43,8 @@ Pages only serves what is on `main`. If the app landed through a pull request, m
 ## What's built
 
 - **Roster view** — all players as baseball cards, with search and filters by player type (hitter / pitcher / two-way), team, plus sorting by overall, name, or age.
-- **5 sample players** (see note below), covering Power Hitter, Contact/Leadoff, Ace, Closer, and Two-Way archetypes across Bronze–Diamond tiers.
-- **Profile detail view** — click any player for: archetype explanation ("what type of player is he?"), strengths, areas to improve, a metrics table (current, previous, change, history sparkline, per-metric grade), and the large baseball card side-by-side.
+- **5 sample players** (see note below), covering Power Hitter, Contact/Leadoff, Ace, Closer, and Two-Way archetypes. Tiers follow the grades: with the sample Blast numbers, the roster spans Bronze, Silver, and Gold.
+- **Profile detail view** — click any player for: archetype explanation ("what type of player is he?"), strengths, areas to improve, a metrics table (current, previous, change, history sparkline, band, per-metric grade), and the large baseball card side-by-side. Hitter bands are Below Average / Average / Good / Great / Elite for the player's age group.
 - **Baseball card (front, v2 — Topps / MLB The Show style)** — vertical portrait card (5:7, the classic 2.5"×3.5" ratio). The player visual fills the card over a geometric black & gold background with a stitched/dashed frame edge:
   - **Diamond-shaped overall badge** (rotated diamond, clip-path) in the **top-right** with the overall number.
   - **Player name in bold italic uppercase at bottom-right**, with a gold position bar under it (`CF - R/R` = position + bats/throws), team/age line, and a small archetype label.
@@ -53,7 +53,7 @@ Pages only serves what is on `main`. If the app landed through a pull request, m
   - **Tier design (all in the black & gold family)** so crossing 70/80/90 is obvious: Bronze <70 = muted bronze-gold, darker; Silver 70–79 = silver-grey with a gold frame; Gold 80–89 = rich, bright gold; Diamond 90+ = black card with bright gold glow/trim and the **only cyan accent in the app — the diamond badge** — so Diamond still pops like the reference card.
 - **Photo upload + logo placeholder** — in Add/Edit, upload a player photo (JPG/PNG). It is read in the browser, downscaled to max 800px, stored as a data URL with the player in `localStorage`, and shown full-bleed on the card and profile. **Clear photo / use logo** removes it. With no photo, the card and profile show the Antonelli A-star (`assets/antonelli-a-star.png`) centered in the photo area, at its natural aspect ratio, over the tier gradient. The small team-code star stays in the name bar, drawn a little smaller so it does not compete with the logo. All 5 sample players have `photo: ""`, so they show the logo.
 - **Edit / Add player** — "Edit Metrics / Profile" on a profile, or "+ Add Player" in the header. Metrics use synced sliders + number inputs; the overall, sub-grades, and tier update **live** in the form preview before you save. Saving a changed metric appends it to that metric's history, so the previous value, delta arrow, and sparkline show progress.
-- **Persistence** — all changes save to browser `localStorage` (key: `antonelli-player-cards-v1`), so a refresh keeps your edits. **Reset Sample Data** (header) restores the original 5 sample players.
+- **Persistence** — all changes save to browser `localStorage` (key: `antonelli-player-cards-v2`), so a refresh keeps your edits. Cards saved under the older key `antonelli-player-cards-v1` are migrated once: hitter exit-velocity / contact / speed / fielding / arm fields are replaced with Blast metrics, bat speed is kept when it was between 25 and 95 mph, other hitting numbers start at the middle of that age group's published window, and pitcher metrics are kept. A one-time banner explains the reset. **Reset Sample Data** (header) restores the original 5 sample players.
 - **Responsive** — works on mobile; cards and profile stack cleanly on small screens.
 
 ## Brand: black & gold
@@ -71,20 +71,141 @@ Antonelli Baseball's main colors are **black and gold** (`#d4af37` / `#c9a227`, 
 
 ## How the overall grade is calculated
 
-The formula lives in `app.js` (top comment + `METRICS` / `SUBGRADES`) and is fully transparent:
+The formula lives in `app.js`. Hitters use `BLAST_BENCHMARKS` and `gradeBlastMetric`. Pitchers still use `METRICS` low/high. Weights live in `SUBGRADES`. Grades are calculated, never stored, so editing a metric **or the age group** recalculates the card everywhere.
 
-1. **Normalize each raw metric to a 20–99 grade** against an age-appropriate benchmark range for roughly ages 14–18 travel / high-school baseball. Example: exit velocity maps 65 mph → 20 and 102 mph → 99, linearly in between. Lower-is-better metrics (60-yard dash) are inverted. These ranges are coaching benchmarks for this prototype — **not** national percentile data — and a coach can tune them per age group in the `METRICS` table in `app.js`.
-2. **Combine into tool sub-grades:**
-   - Hitters: `CON` = Contact% (70%) + Bat Speed (30%) · `PWR` = Exit Velocity (65%) + Max Distance (35%) · `SPD` = 60 time · `FLD` = coach Fielding Score · `ARM` = Arm Velocity
-   - Pitchers: `VEL` = Fastball Velocity · `BRK` = Spin Rate (45%) + Offspeed Whiff% (55%) · `CNTL` = Strike% · `STM` = Pitch Capacity
-   - Launch angle is tracked and graded in the metrics table for context (target ~10–20°) but does not feed a sub-grade, since "higher" is not simply "better."
-3. **Overall = weighted average of sub-grades**, rounded and clamped to 20–99:
-   - Hitters: CON 25% · PWR 25% · SPD 15% · FLD 15% · ARM 20%
-   - Pitchers: VEL 30% · BRK 25% · CNTL 30% · STM 15%
-   - Two-way players: overall is the average of their hitter and pitcher overalls; both sub-grade sets are shown.
-4. **Tier from overall:** Bronze <70, Silver 70–79, Gold 80–89, Diamond 90+.
+**Age groups** (from age, unless the Age Group field is set): 10U (≤10), 12U (11–12), 14U (13–14, Blast Middle School), 16U (15–16, HS JV), 18U (17–18, HS Varsity), College (19–22), Pro (23+).
 
-Because grades are calculated — never stored — editing any metric immediately recalculates the sub-grades, overall, tier, and card color everywhere.
+**Band names** come from the 20–99 grade. These names and cuts are Antonelli, not a Blast scale:
+
+| Grade | Band |
+|---|---|
+| 20–49 | Below Average |
+| 50–64 | Average |
+| 65–79 | Good |
+| 80–89 | Great |
+| 90–99 | Elite |
+
+**Tier from overall:** Bronze <70, Silver 70–79, Gold 80–89, Diamond 90+.
+
+### Hitter weights
+
+Bat speed is the largest piece of the hitter overall (40%).
+
+| Sub-grade | What it uses | Weight of overall |
+|---|---|---|
+| `BAT` | Bat speed | **40%** |
+| `PWR` | Power 60% + peak hand speed 40% | 22% |
+| `PLANE` | On-plane efficiency 50% + attack angle 30% + vertical bat angle 20% | 18% |
+| `QUICK` | Time to contact 55% + rotational acceleration 45% | 14% |
+| `CONN` | Early connection 50% + connection at impact 50% | 6% |
+
+Exit velocity, launch angle, contact %, 60 time, fielding, and throwing velocity are **not** part of the hitter grade. Pitchers are unchanged: `VEL` 30% · `BRK` (spin 45% + whiff 55%) 25% · `CNTL` 30% · `STM` 15%. Two-way overall is the average of the hitter overall and the pitcher overall.
+
+To retune hitting grades, edit `BLAST_BENCHMARKS` (the published windows) and `gradeBlastMetric` / `gradeHigher` / `gradeLower` / `gradeIdeal` / `gradeOnPlane` (how a window becomes 20–99).
+
+### Where the Blast numbers come from
+
+Searched blastmotion.com (product page, FAQ, metric glossary, bat-speed / hand-speed / rotational-acceleration articles). `support.blastmotion.com` returned no benchmark pages. The product-page chart is [How Do You Measure Up?](https://blastmotion.com/products/baseball/). Its "View More" control did not expose extra rows. The "Amateur All Levels" column is real and is **not** mapped to an age group.
+
+| Source | URL | What we took from it |
+|---|---|---|
+| Product benchmarks | https://blastmotion.com/products/baseball/ | Level chart for bat speed, attack angle, vertical bat angle, time to contact, peak hand speed, power. All-level windows for on-plane (65–85%, aim 70%+), early connection (90°, 80–105°), connection at impact (90°, 80–95°). |
+| FAQ | https://blastmotion.com/faq/ | The 10 hitter metrics, bat-speed chart by level, MLB averages (bat speed 71.6 mph, attack angle 8.7°, time to contact 0.149 s, peak hand speed 22.3 mph, power 4.5 kW, on-plane 68.6%, rotational acceleration 15.1 g). |
+| Bat speed by age | https://blastmotion.com/blog/what-is-bat-speed-in-baseball/ | 10U and 12U bat speed, and a second copy of the older-level bat-speed chart (400M+ swings, 29 May 2026). |
+| Metric glossary | https://blastmotion.com/blog/what-does-blast-motion-measure/ | Confirms youth/pro endpoints and the all-level connection, on-plane, and vertical-bat-angle targets. Points back at the product-page chart. |
+| Rotational acceleration | https://blastmotion.com/blog/what-is-rotational-acceleration-in-baseball/ | Not by age: below 10 g low, 10–14.99 g medium, 15+ g high. Article MLB average 17 g. |
+| Hand-speed article | https://blastmotion.com/blog/what-is-hand-speed-in-a-baseball-swing/ | A **different** hand-speed table. Cited, not used. See conflicts below. |
+
+### Published windows that are graded
+
+`lo`–`hi` below are copied from those pages. 10U and 12U bat speed come from the age article. Every other 10U and 12U row is the product-page **Youth** column applied to both groups, because Blast does not split that metric. That reuse is marked in code with `sharedYouth`.
+
+**Bat speed (mph), higher is better**
+
+| Group | Blast level | Window | Which page |
+|---|---|---|---|
+| 10U | 8–10 (8U–10U) | 30–45 | Age article only (finer than Youth 40–56) |
+| 12U | 11–12 | 40–52 | Age article only |
+| 14U | Middle School | 46–62 | Product page, FAQ, and age article |
+| 16U | HS JV | **55–65** | FAQ and age article |
+| 18U | HS Varsity | 60–70 | Product page, FAQ, and age article |
+| College | College | **66–75** | Product page and FAQ |
+| Pro | Pro / MLB | 66–78 | Product page, FAQ, and age article |
+
+**Attack angle (degrees), ideal window.** Peak used for scoring is the center of the window (Antonelli). Blast does not print a single target. MLB average 8.7° is context only.
+
+| Group | Window |
+|---|---|
+| 10U, 12U | 0–15 (Youth column on both) |
+| 14U, 16U | 0–15 |
+| 18U, College | 2–15 |
+| Pro | 5–15 |
+
+**Vertical bat angle:** −40° to −10° at every level (product page and glossary). Pitch-location specific. Scoring peaks at −25°, the center — that peak is Antonelli.
+
+**Time to contact (seconds), lower is better.** Fast end is `lo`.
+
+| Group | Window |
+|---|---|
+| 10U, 12U | 0.17–0.23 (Youth column on both) |
+| 14U | 0.16–0.21 |
+| 16U | 0.15–0.20 |
+| 18U | 0.15–0.18 |
+| College | 0.14–0.17 |
+| Pro | 0.13–0.17 |
+
+**Peak hand speed (mph), higher is better.** Product-page chart.
+
+| Group | Window |
+|---|---|
+| 10U, 12U | 15–21 (Youth column on both) |
+| 14U, 16U | 17–21 |
+| 18U | 19–23 |
+| College | 21–25 |
+| Pro | 23–29 |
+
+**Power (kW), higher is better.** Product-page chart. College high is the printed 5.074.
+
+| Group | Window |
+|---|---|
+| 10U, 12U | 0.90–2.50 (Youth column on both) |
+| 14U | 1.40–3.20 |
+| 16U | 2.17–3.45 |
+| 18U | 2.81–4.09 |
+| College | 3.83–5.074 |
+| Pro | 3.65–5.65 |
+
+**On-plane efficiency:** 65–85% at every age, aim 70%+ (product page, glossary, FAQ). No age split.
+
+**Early connection:** 80–105°, target 90°, every age.
+
+**Connection at impact:** 80–95°, target 90°, every age.
+
+**Rotational acceleration:** the same buckets at every age — below 10 g low, 10–14.99 g medium, 15+ g high. Not an age table.
+
+### Official numbers we did not grade against
+
+These are real Blast figures. They disagree with the table above, so they are not silently averaged in.
+
+- **HS JV bat speed.** The product page prints **55–56 mph**. The FAQ and the age article both print **55–65**. The graded window is 55–65. A 1 mph "range" on that one cell looks like a bad print.
+- **College bat speed.** The product page and FAQ print **66–75**. The age article prints **65–75**. The graded window is 66–75.
+- **Peak hand speed article** prints Youth 17–23, Middle School 18–24, HS JV 19–25, HS Varsity 20–26, College 21–27, MiLB 22–28, Pro 23–29. The graded windows are the product-page chart (Youth 15–21 through Pro 23–29). MiLB is not an age group here.
+- **Rotational acceleration averages disagree:** FAQ 15.1 g, June 2026 article 17 g. Neither average is a band edge. The article's low / medium / high buckets are.
+- **Blast iQ Rotation Score** ("above 50 for your level", 20–80 scale) is not raw rotational acceleration in g, so it is not a hitter metric here.
+- **Amateur All Levels** (product page: bat speed 55–65, attack angle 0–15, time to contact 0.15–0.20, hand speed 17–21, power 2.17–3.45) is not used as its own age group.
+
+### Antonelli gaps — not Blast-official
+
+Blast publishes the windows. It does not publish these scoring choices:
+
+- The five band names and every 20–99 cut. For a higher-better metric, the published low starts Average (50), the midpoint starts Good (65), and the published high starts Great (80). One full span past the published high reaches 99. Lower-better mirrors that, so the fast end scores like the high end. Coaches change this in `gradeHigher` and `gradeLower`.
+- Anything above a published high, or faster than a published fast end.
+- On-plane internal cuts: under 65 Below Average, 65–70 Average, 70–78 Good, 78–85 Great, 85 and up Elite. **78** and **Elite from 85 up** are Antonelli. 65, 70, and 85 are Blast.
+- Rotational acceleration: 10 g starts Average and 15 g starts Great, using the higher-better curve. The split of the medium bucket at **12.5 g**, and Elite as the number approaches **20 g**, are Antonelli.
+- Ideal-range curve: 96 on the target, about 70 on either published edge, then down toward 20 outside the window. Attack angle and vertical bat angle peak at the **center** because Blast does not name a single target. Early connection and connection at impact peak at Blast's **90°**.
+- Putting the Youth column on both 10U and 12U for attack angle, vertical bat angle, time to contact, peak hand speed, and power. The mph / degrees / seconds / kW are the Youth column. Calling them "10U" and "12U" separately is ours. Bat speed is the exception: 30–45 and 40–52 are published by age.
+- Hitter sub-grade groups and the 40 / 22 / 18 / 14 / 6 weights.
+- Pitcher velocity, spin, strike %, whiff %, and pitch-capacity ranges. Those stayed in `METRICS` and were never Blast numbers.
 
 ## Sample data note
 
@@ -96,7 +217,7 @@ Because grades are calculated — never stored — editing any metric immediatel
 |---|---|
 | `index.html` | Page structure: roster, profile, add/edit modal |
 | `styles.css` | Antonelli black & gold branding, v2 portrait-card tiers, responsive layout |
-| `app.js` | Sample data, grade formula, card/logo/photo rendering, localStorage persistence |
+| `app.js` | Sample data, Blast benchmarks, grade formula, card/logo/photo rendering, localStorage persistence |
 | `assets/` | Antonelli block, script, and star logos (see Brand assets) |
 | `README.md` | This file |
 
@@ -106,7 +227,7 @@ Because grades are calculated — never stored — editing any metric immediatel
 2. **Coach vs. player permissions** — coaches edit metrics and evaluations; players/parents get read-only views (this matters so grades stay trusted).
 3. **Real database** — replace `localStorage` with a backend (e.g. Supabase/Firebase or a small API) so data syncs across devices and coaches.
 4. **Photo management** — ~~photo upload~~ ✅ done in v2 (browser-side, in localStorage). Next: cloud photo storage, cropping/positioning, and background removal so photos cut out over the card art like the reference.
-5. **Age-group benchmark sets** — selectable 12U/14U/16U/18U/college ranges so a 13-year-old is not graded against 17-year-olds.
+5. **Age-group Blast windows** — done for hitters (10U through Pro). Next: let a coach save their own window edits, and add a source tag (tee / front toss / game) on each metric entry.
 6. **Metric entry workflow** — session-based entries (date, coach, source: radar/Blast/TrackMan/game) with notes, instead of editing a single current value.
 7. **Card back + sharing** — flip the card for full metrics/history; export/share as an image for social posts.
 8. **Deploy to GitHub Pages** — see [GitHub Pages](#github-pages) above. Settings → Pages → deploy from the `main` branch, folder `/ (root)`. No server is needed until accounts or a database are added.
