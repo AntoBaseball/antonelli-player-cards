@@ -24,7 +24,7 @@
 </header>
 
 <div class="sample-banner" role="note">
-  <strong>SAMPLE DATA:</strong> All 5 players below are invented for this prototype. Names, teams within the sample, and metrics are fictional — no real players are used. Sample players have no photos, so their cards show the Antonelli logo. Hitter grades use Blast Motion ranges by age group.
+  <strong>SAMPLE DATA:</strong> All 5 players below are invented for this prototype. Names, teams within the sample, and metrics are fictional — no real players are used. Sample players have no photos, so their cards show the Antonelli logo. Hitter grades use Blast Motion ranges by age group. Mason and Dylan each include one fictional retired card so the collection has a prior season to open. Saved browsers do not receive those cards.
 </div>
 <div id="migrationBanner" class="sample-banner migration-banner" hidden>
   <strong>Hitting metrics moved to Blast.</strong> Saved hitter cards used the older exit-velocity formula. Bat speed was kept when it was between 25 and 95 mph. The other hitting numbers were set to the middle of the published Blast window for that age group — replace them with real Blast readings. Pitcher metrics were kept.
@@ -38,7 +38,7 @@
         <img class="hero-logo" src="assets/antonelli-script.png" alt="Antonelli script logo">
         <p class="eyebrow">DEVELOPMENT • METRICS • GRADES</p>
         <h1>Every rep moves the card.</h1>
-        <p class="hero-text">Track what a hitter or pitcher does well, what to work on next, and how their metrics translate into an overall grade — just like MLB The Show. Hitters are graded on Blast Motion swing metrics for their age group. Edit a metric or age group and the card updates live.</p>
+        <p class="hero-text">Track what a hitter or pitcher does well, what to work on next, and how their metrics translate into an overall grade — just like MLB The Show. Hitters are graded on Blast Motion swing metrics for their age group. Training perks unlock on the card when a milestone is hit.</p>
       </div>
       <div class="hero-stats" id="heroStats"></div>
     </div>
@@ -74,8 +74,11 @@
     </div>
 
     <div class="section-head">
-      <h2>Roster <span id="rosterCount" class="count"></span></h2>
-      <p class="muted">Click any player or card to open the full profile.</p>
+      <div>
+        <h2>Roster <span id="rosterCount" class="count"></span></h2>
+        <p class="muted">Click any player or card to open the full profile.</p>
+      </div>
+      <button class="btn btn-red" id="showdownBtn" type="button">SHOWDOWN</button>
     </div>
     <div id="rosterGrid" class="roster-grid"></div>
     <div id="emptyState" class="empty" hidden>
@@ -115,10 +118,15 @@
             <option value="College">College</option>
             <option value="Pro">Pro</option>
           </select>
+          <span class="muted small">A group that matches his age moves up on Sept 1. A different group stays pinned.</span>
         </div>
         <div class="field"><label for="f-class">Class / Grade</label><input id="f-class" placeholder="e.g. Junior / 11th"></div>
         <div class="field"><label for="f-team">Team</label><input id="f-team" placeholder="e.g. Antonelli 16U"></div>
         <div class="field"><label for="f-position">Position</label><input id="f-position" placeholder="e.g. SS, OF, RHP, C"></div>
+        <div class="field"><label for="f-secondary">Secondary position</label><input id="f-secondary" placeholder="e.g. 1B"></div>
+        <div class="field"><label for="f-height">Height</label><input id="f-height" placeholder="e.g. 6'1&quot;"></div>
+        <div class="field"><label for="f-weight">Weight</label><input id="f-weight" placeholder="e.g. 185 lbs"></div>
+        <div class="field"><label for="f-hometown">Hometown</label><input id="f-hometown" placeholder="e.g. Tampa, FL"></div>
         <div class="field"><label for="f-bats">Bats</label><select id="f-bats"><option>L</option><option selected>R</option><option>S</option></select></div>
         <div class="field"><label for="f-throws">Throws</label><select id="f-throws"><option>L</option><option selected>R</option></select></div>
         <div class="field"><label for="f-type">Player type *</label>
@@ -142,6 +150,11 @@
         <div class="field grow2"><label for="f-improvements">Areas to improve — one per line</label><textarea id="f-improvements" rows="3" placeholder="Improve two-strike approach&#10;Add strength for bat speed"></textarea></div>
       </div>
 
+      <h3 class="form-section">Coach-awarded perks</h3>
+      <p class="muted small">These are positive MLB The Show-style perks a coach pins on. Training perks are not in this list — they unlock from milestones and stay on the card.</p>
+      <div id="quirkFields"></div>
+      <p id="quirkEarnPreview" class="muted small"></p>
+
       <h3 class="form-section">Metrics — drag or type. Overall updates live.</h3>
       <p class="muted small">Hitting grades use the age group above and the published Blast windows in <code>BLAST_BENCHMARKS</code>. Changing the age group recalculates the card without changing the raw numbers. On Save, changed metrics are appended to history.</p>
       <div id="metricFields"></div>
@@ -159,6 +172,108 @@
 <footer class="footer">
   <strong>Antonelli Baseball</strong> — Prototype v2 • Sample data only • Grades are a coaching guide, not a scouting guarantee. See README.md for the formula and next steps.
 </footer>
+
+<div id="quirkReveal" class="quirk-reveal" hidden role="dialog" aria-modal="true" aria-labelledby="quirkRevealTitle">
+  <div class="quirk-reveal-card">
+    <p class="quirk-kicker" id="quirkRevealTitle">Player Perks</p>
+    <p class="quirk-reveal-player" id="quirkRevealPlayer"></p>
+    <p class="quirk-reveal-count" id="quirkRevealCount"></p>
+    <div class="perk-stage" id="perkStage">
+      <div class="perk-pack" id="perkPack">
+        <div class="perk-pack-top"><span>SEALED</span></div>
+        <div class="perk-pack-body">
+          <img src="assets/antonelli-a-star.png" alt="">
+          <b>PLAYER PERKS</b>
+          <span>ANTONELLI</span>
+          <em id="perkPackCount">1 PERK INSIDE</em>
+        </div>
+        <div class="perk-pack-shine" aria-hidden="true"></div>
+      </div>
+      <div class="perk-burst" aria-hidden="true"></div>
+      <div class="quirk-flip" id="quirkFlip">
+        <div class="quirk-flip-inner">
+          <div class="quirk-face quirk-back">
+            <img src="assets/antonelli-a-star.png" alt="">
+          </div>
+          <div class="quirk-face quirk-front" id="quirkRevealFace"></div>
+        </div>
+      </div>
+    </div>
+    <button class="btn btn-red" type="button" id="quirkCollectBtn">Open Pack</button>
+  </div>
+</div>
+
+<div id="celebrate" class="celebrate" hidden role="dialog" aria-modal="true" aria-labelledby="celebrateTitle">
+  <div class="celebrate-spot" aria-hidden="true"></div>
+  <div class="celebrate-shake">
+    <div class="celebrate-card" id="celebrateCard"></div>
+    <div class="celebrate-fx" id="celebrateFx" aria-hidden="true"></div>
+  </div>
+  <div class="celebrate-copy">
+    <p class="celebrate-kicker" id="celebrateTitle">Overall up</p>
+    <p class="celebrate-player" id="celebratePlayer"></p>
+    <p class="celebrate-tiername" id="celebrateTierName"></p>
+    <p class="celebrate-score" id="celebrateScore"></p>
+    <p class="celebrate-reason" id="celebrateReason"></p>
+    <div class="celebrate-actions">
+      <button class="btn btn-ghost" type="button" id="celebrateSkip">Skip</button>
+      <button class="btn btn-red" type="button" id="celebrateCollect" hidden>Collect</button>
+    </div>
+  </div>
+</div>
+
+<div id="seasonConfirm" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="seasonConfirmTitle">
+  <div class="modal-backdrop" id="seasonConfirmBackdrop"></div>
+  <div class="modal-card">
+    <h2 id="seasonConfirmTitle">Start New Season</h2>
+    <div id="seasonConfirmCopy"></div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" type="button" id="seasonConfirmCancel">Cancel</button>
+      <button class="btn btn-red" type="button" id="seasonConfirmGo">Start New Season</button>
+    </div>
+  </div>
+</div>
+
+<div id="seasonReveal" class="celebrate season-reveal" hidden role="dialog" aria-modal="true" aria-labelledby="seasonRevealTitle">
+  <div class="celebrate-spot" aria-hidden="true"></div>
+  <div class="season-pair" id="seasonRevealCards"></div>
+  <div class="celebrate-copy">
+    <p class="celebrate-kicker" id="seasonRevealTitle">New Season, New Chase</p>
+    <p class="celebrate-player" id="seasonRevealPlayer"></p>
+    <p class="celebrate-tiername" id="seasonRevealTier"></p>
+    <p class="celebrate-score" id="seasonRevealScore"></p>
+    <p class="celebrate-reason" id="seasonRevealReason"></p>
+    <button class="btn btn-red" type="button" id="seasonRevealCollect">Start the chase</button>
+  </div>
+</div>
+
+<div id="showdown" class="showdown" hidden role="dialog" aria-modal="true" aria-labelledby="showdownTitle">
+  <div class="sd-pick" id="showdownPick">
+    <h2 id="showdownTitle" class="sd-display">SHOWDOWN</h2>
+    <p class="sd-note">Current season cards only. Retired cards stay in the collection.</p>
+    <label for="sd-a">Player A</label>
+    <select id="sd-a"></select>
+    <label for="sd-b">Player B</label>
+    <select id="sd-b"></select>
+    <p id="sd-warn" class="sd-warn" hidden>Pick two different players.</p>
+    <div class="sd-actions">
+      <button class="btn btn-ghost" type="button" id="sd-cancel">Cancel</button>
+      <button class="btn btn-red" type="button" id="sd-start">Start SHOWDOWN</button>
+    </div>
+  </div>
+  <div class="sd-face" id="showdownFace" hidden>
+    <h2 class="sd-title sd-display">SHOWDOWN</h2>
+    <div class="sd-stage">
+      <div class="sd-lane sd-left"><div class="sd-card" id="sd-card-a"></div></div>
+      <div class="sd-lane sd-right"><div class="sd-card" id="sd-card-b"></div></div>
+      <div class="sd-vs" aria-hidden="true"><span class="sd-vs-star"></span><b>VS</b></div>
+      <div class="sd-flash" aria-hidden="true"></div>
+      <div class="sd-sparks" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    </div>
+    <button class="btn btn-ghost sd-skip" type="button" id="sd-skip">Skip</button>
+  </div>
+  <div class="sd-results" id="showdownResults" hidden></div>
+</div>
 
 <script src="app.js"></script>
 </body>

@@ -44,7 +44,10 @@ Pages only serves what is on `main`. If the app landed through a pull request, m
 
 - **Roster view** — all players as baseball cards, with search and filters by player type (hitter / pitcher / two-way), team, plus sorting by overall, name, or age.
 - **5 sample players** (see note below), covering Power Hitter, Contact/Leadoff, Ace, Closer, and Two-Way archetypes. Tiers follow the grades: with the sample Blast numbers, the roster spans Bronze, Silver, and Gold.
-- **Profile detail view** — click any player for: archetype explanation ("what type of player is he?"), strengths, areas to improve, a metrics table (current, previous, change, history sparkline, band, per-metric grade), and the large baseball card side-by-side. Hitter bands are Below Average / Average / Good / Great / Elite for the player's age group.
+- **Profile detail view** — click a card for a dark player screen: large card, huge name, position diamond, quick facts, and tabs for Attributes, Metrics & History, Player Perks, Strengths & Growth, and Collection. See [Player profile](#player-profile) and [Seasons](#seasons).
+- **Player Perks** — up to three perks on the card front. Training perks unlock from milestones and stay once earned. A new perk opens a sealed pack once. Show perks are coach-awarded. See [Player Perks](#player-perks).
+- **Celebrations** — an overall climb plays a short card bounce and count-up. Crossing into Silver, Gold, or Diamond takes over the screen. See [Celebrations](#celebrations).
+- **Showdown** — compare two current-season cards, category by category, with a short face-off and chase targets. See [Showdown](#showdown).
 - **Baseball card (front, v2 — Topps / MLB The Show style)** — vertical portrait card (5:7, the classic 2.5"×3.5" ratio). The player visual fills the card over a geometric black & gold background with a stitched/dashed frame edge:
   - **Diamond-shaped overall badge** (rotated diamond, clip-path) in the **top-right** with the overall number.
   - **Player name in bold italic uppercase at bottom-right**, with a gold position bar under it (`CF - R/R` = position + bats/throws), team/age line, and a small archetype label.
@@ -207,6 +210,137 @@ Blast publishes the windows. It does not publish these scoring choices:
 - Hitter sub-grade groups and the 40 / 22 / 18 / 14 / 6 weights.
 - Pitcher velocity, spin, strike %, whiff %, and pitch-capacity ranges. Those stayed in `METRICS` and were never Blast numbers.
 
+## Player Perks
+
+Player Perks are earned badges on the card, inspired by MLB The Show quirks (called Player Perks here). The Show names and effects come from the MLB The Show 26 active list on [ShowZone](https://showzone.gg/players/quirks) (21 quirks). That page describes every one of them as a situational boost. None are penalties, so **0 were excluded**. "Bad Ball Hitter" stays, because it means he can still do damage on a pitch just off the plate.
+
+Two kinds of perks, labeled differently:
+
+- **Earned** — original Antonelli training perks. Checked live from metrics, age-group bands, overall tier, and metric history. The first time a milestone is true, the perk is stored on the player (`earnedQuirks`: id, milestone text, date, `seen`). **Once earned, it stays** even if the number later drops. A new earn opens the pack once. **Add to my card** marks `seen`, so a reload does not show that perk again. Click an earned perk on the profile, or **Open again**, to replay the pack.
+- **Coach Awarded** — the Show list. A coach checks them in Add/Edit. This app does not have at-bat situations (day game, runner on third, fastball vs breaker), so these are not auto-scored.
+
+The card front shows up to 3 perks (earned ones first) plus a +N count. The profile lists every perk, the category, and the milestone.
+
+Training is the largest category (23). The +5 mph bat-speed perk (Heat Check) is separate from the +3 mph perk (Bat Speed Builder): a jump straight to +5 earns Heat Check. If a player already earned +3 and later reaches +5, both stay.
+
+### Training milestones
+
+Edit the thresholds in `TRAINING_QUIRKS` in `app.js`.
+
+| Perk | Milestone |
+|---|---|
+| Heat Check | Bat speed gain ≥ 5 mph from the first logged check-in |
+| Bat Speed Builder | Bat speed gain ≥ 3 mph and under 5 mph |
+| Power Surge | Power gain ≥ 0.40 kW |
+| Plane Climber | On-plane efficiency gain ≥ 5 points |
+| Quick Trigger | Time to contact faster by ≥ 0.015 s |
+| Fast Twitch | Rotational acceleration gain ≥ 2 g |
+| Quick Hands | Peak hand speed gain ≥ 2 mph |
+| Metronome | 4+ check-ins and bat speed (hitters / two-way) or fastball (pitchers) stays inside a 2.5 mph window |
+| Added Gas | Fastball gain ≥ 3 mph |
+| Spin Lab | Spin gain ≥ 150 rpm |
+| Strike Painter | Strike % gain ≥ 5 points |
+| Whiff Maker | Whiff % gain ≥ 6 points |
+| Deep Start | Pitch capacity gain ≥ 12 pitches |
+| Both Sides | Two-way player with a hitting gain and a pitching gain in the same block |
+| Diamond Standard | Overall ≥ 90 |
+| Gold Standard | Overall 80–89 |
+| Silver Standard | Overall 70–79 |
+| Elite Barrel | Bat speed grades Elite for the age group |
+| Great Barrel | Bat speed grades Great for the age group |
+| Stay Connected | Early connection or connection at impact moves ≥ 4° closer to 90° |
+| Path Finder | Attack angle moves ≥ 2° closer to the age-group target |
+| Three-Tool Climb | Bat speed ≥ +2 mph, power ≥ +0.30 kW, and on-plane ≥ +4 points |
+| Cage Rat | 4+ check-ins on at least 4 different metrics |
+
+### Show perks (coach awarded)
+
+Hitting: Dead Red, Breaking Ball Hitter, Bad Ball Hitter, First-Pitch Hitter, Unfazed, Situational Hitter, Table Setter, Pinch Hitter.
+
+Pitching: Outlier I, Outlier II, Break Outlier, Pressure Cooker, Stopper, Pick Off Artist.
+
+Fielding: Catcher Pop Time.
+
+Intangibles: Fighter, Rally Monkey, Homebody, Road Warrior, Day Player, Night Player.
+
+### Motion
+
+Cards carry a slow gold sheen while they are on screen. On a desktop that can hover, and when the user has not asked for reduced motion, hovering a card tilts it slightly and speeds the sheen. Gold and Diamond overall badges glow while the card is on screen; Diamond is the stronger glow. Sheen and badge glow run only while the card is near the viewport.
+
+A new Player Perk opens as a sealed black-and-gold foil pack (A-star, “PLAYER PERKS”, a shimmer). Nothing tears until the player clicks **Open Pack**. The top rip, a shine burst, and the perk card slide out, then the card flips to the name, description, milestone, and player. Several new perks are in one pack: after the open, **Next Perk** walks through them, and the last button is **Add to my card**. **Open again** on the profile replays that pack and does not clear the seen flag. `prefers-reduced-motion` turns the sheen, tilt, glow, pack shimmer, rip, and flip off. Open Pack then fades straight to the perk face. There is no tear.
+
+## Celebrations
+
+The card remembers the last overall and tier the player has already been shown (`gradeSeen` on the player, saved with everything else in `localStorage`).
+
+- The first time a player is seen — samples, a new card, or an older save with no `gradeSeen` — the app stores the current overall and tier and stays quiet.
+- **Overall up** plays when the overall number rises and the tier does not. The card bounces, the sheen speeds up, the badge counts from the old number to the new one, a +N line pops, and a few gold bits fly. About 2 seconds, then **Collect**.
+- **Tier up** plays only when the tier rises: Silver at 70, Gold at 80, Diamond at 90. The screen goes black, a spotlight hits the card, the card shakes and then shakes harder, a flash and particle burst hit, and the card comes back in the new tier color with the tier name and the new overall. About 4 seconds. **Skip** jumps to that payoff. **Collect** is what marks it seen.
+- A drop in overall or tier updates `gradeSeen` immediately and does not celebrate.
+- Collect writes the new overall and tier into `gradeSeen`. Reload before Collect plays the same celebration again. After Collect, that value does not play again.
+- **Preview overall-up** and **Preview tier-up** on the profile replay the motion for a coach. They do not change `gradeSeen`.
+
+One save can earn a tier, an overall jump, and new perks. The order is tier-up, then overall-up, then the Player Perks pack. A tier-up already shows the new overall, so that save does not also open an overall-up. Nothing is dropped: each step stays queued until its Collect (or, for a perk, Open Pack and Add to my card). `prefers-reduced-motion` skips the shake, bounce, count-up, flash, and particles and shows the new number and tier immediately.
+
+## Player profile
+
+The screen that opens from a card is laid out like a baseball-game player page, in Antonelli black and gold. It does not use MLB or The Show logos.
+
+The header puts the animated card on the left, the last name large beside it, a rotated position badge, team, archetype, and a facts grid: overall, tier, bats, throws, secondary position, height, weight, age and age group, team, class/year, and hometown. Overall includes a small chip when the grade moved since the previous saved check-in. That chip is the overall now minus the overall computed from the prior history point on each metric. It is labeled “since last assessment.”
+
+Optional fields added to the player and the add/edit form: `secondaryPosition`, `height`, `weight`, `hometown`. Blank fields show —. Older saves in `localStorage` keep working; missing fields stay blank. The card and roster still print `OF / 1B` when a secondary position is set.
+
+Tabs, left to right:
+
+| Tab | What it holds |
+|---|---|
+| Attributes | Tall bars. Hitters get hitting tools (BAT, PWR, PLANE, QUICK, CONN) and Blast grades (bat speed, hand speed, power, plane, attack, vertical bat angle, time to contact, rotational acceleration, both connections). Pitchers get VEL, BRK, CNTL, STM plus fastball, spin, strike %, whiff %, and capacity. Two-way players get both groups, labeled. |
+| Metrics & History | The existing table: current, previous, change, sparkline, band, grade. |
+| Player Perks | Earned and coach-awarded perks, Open again, and click-to-replay. |
+| Strengths & Growth | Archetype note, how the grade is built, strengths, and areas to improve. |
+| Collection | Current card plus every retired season, oldest first. Click a retired card for its frozen snapshot. |
+
+Bar fill is the 20–99 grade as a percent of 99. Color follows the band: red Below Average (under 50), bronze Average (50–64), gold Good (65–79), green Great (80–89), cyan Elite (90–99). Hover a bar for the band name. Bars grow from the bottom when the profile opens. `prefers-reduced-motion` shows them at full height with no grow. On a narrow screen the bar row scrolls sideways.
+
+The right rail is a Blast snapshot for hitters (raw mph, degrees, seconds, and the age-group band) and a pitch-metric list with a short meter for pitchers. Two-way players get both. Edit, preview overall-up, preview tier-up, Start New Season, and delete stay in the header. Back to roster stays above the screen.
+
+## Seasons
+
+A season runs from September 1 through August 31. September 1, 2025 through August 31, 2026 is labeled `2025-26`. The app does not store a date of birth. It keeps a numeric age, an age group, and `currentSeason`.
+
+On load, each player is compared with today's season. The first time an older save has no season stamp, it is marked with the season that is already underway and nothing is archived. After that, if today's season is later, the app rolls the player forward automatically. A coach can also press **Start New Season (Sept 1 Rollover)** on the profile. That button always moves one season, even before September 1, so the archive can be demoed. The confirm dialog previews the card being retired and the projected overall and tier of the new one.
+
+Rollover does four things:
+
+1. The current card is copied into `cardCollection`. The copy stores the final overall, tier, sub-grades, raw metrics, the grade and band for each metric, the metric history, training perks (id and name), coach-awarded perks, strengths, improvements, archetype, photo, and the season and age group (`2025-26 - 16U`). That copy is never graded again, even if the Blast windows change later.
+2. Age increases by the number of seasons that elapsed. One press of the button is one year. If the app was closed for two Septembers, age jumps by two and only the card they actually had is archived — missing seasons are not invented.
+3. Age group follows the Blast map (10U through Pro) unless a coach pinned a different group. A group is pinned when the saved age group does not match the age. Changing age in the form keeps a pinned group put; a group that already matches age moves with the birthday. College and Pro still archive every year. An unpinned 22-year-old College player becomes Pro at 23. Pro stays Pro.
+4. The new card keeps the same name, photo, positions, and the metric numbers. Those numbers are the new season's baseline: live history restarts at that single value so improvement perks measure this season, and the retired card keeps the old history. The numbers are then graded on the new age group's windows. Pitcher ranges are not age-banded, so a pitcher overall usually holds while a hitter's overall can drop when the windows get harder. A drop does not play a downgrade celebration.
+
+Training perks are season-scoped. They are stored on the retired card and cleared on the new card. A milestone that is still true on the carried baseline (for example Gold Standard, if the new grade is still gold) can be earned again. A perk that needs a gain waits for new check-ins after the baseline. Coach-awarded Show perks stay on the player. The retired card also remembers which ones were on the card that season.
+
+After rollover, a **New Season, New Chase** reveal shows the retired card and the new card. If the new tier is higher, the spotlight from the tier-up celebration is used. If the overall is lower, the copy stays on the new chase and no sad animation plays. **Start the chase** writes `gradeSeen` to the new overall and tier. Reload before that button shows the reveal again and does not mark a downgrade. The roster keeps showing only the current card.
+
+The Collection tab lists seasons with Antonelli, the best overall, and how many seasons were Gold or better. Mason's sample roster includes a fictional `2025-26` 16U card (final overall frozen at Gold). Dylan's includes a fictional `2024-25` 12U card. Those two cards ship with a fresh sample roster or Reset Sample Data. They are not added to a browser that already had players saved.
+
+## Showdown
+
+Showdown puts two **current-season** cards against each other. Retired collection cards are not in it. Open it from **Showdown** on the roster, or **Challenge in Showdown** on a profile (that player is already Player A). The same player cannot be picked twice.
+
+The intro slams a huge **SHOWDOWN** title, then the cards rush in from off-screen and collide in the center. A flash, sparks, and a short shake mark the hit. The cards settle side by side with the Antonelli star **VS** badge between them and square up once more before the results. It lasts about two and a half seconds. **Skip** jumps to the results. `prefers-reduced-motion` skips the battle and opens the results immediately. Buttons and headings use the word SHOWDOWN in capitals.
+
+Each shared category shows both grades, the raw reading when there is one, and the gap. The center says `A +5` or `B +3`. The leader’s chip is `+N` and the trailer’s chip is `-N`. A tie says `EVEN`. Overall and tier are always shared. Tool grades (BAT, PWR, PLANE, QUICK, CONN, VEL, BRK, CNTL, STM) and metric grades are shared only when both cards have that category. A hitter against a pitcher still compares overall and tier. Hitting rows show the hitter’s number and a dash for the pitcher, and those dashes are not losses. A two-way player brings both sets; the opponent is scored only on the rows they also have.
+
+Grades are versus each player’s own age group. Raw mph, degrees, and seconds are the absolute readings, shown beside the grade so a harder window is visible.
+
+The banner follows the overall: the higher overall leads, and the same overall is **Dead Even Showdown**. Under that, the tally counts shared categories only (`Mason takes 6 of 9 categories`). Ties count in the 9 and for neither player.
+
+**Perks earned this season** is an exhibition row. The counts and the names are shown, and they are not part of the tally, so a longer perk list cannot decide the showdown.
+
+**Chase targets** are the three closest categories the trailer can flip, smallest grade gap first. Copy stays on the chase (`+4 Bat Speed to catch Eli`). When the raw number is a simple higher-or-lower reading, the line adds the raw gap (`+3 mph`). Ideal-window metrics (attack angle, connection, on-plane) stay on the grade, because “closer” is not a straight add.
+
+**Rematch** runs the face-off again. **Change players** returns to the picker. **View profile** opens that player’s current card. Showdowns are not saved.
+
 ## Sample data note
 
 ⚠️ **All 5 players are invented for this prototype** (Mason Carter, Eli Ramirez, Noah Bennett, Connor Walsh, Dylan Brooks). Names, metrics, strengths, and history are fictional and do not represent real people. The app labels this in a banner on the page itself.
@@ -217,7 +351,7 @@ Blast publishes the windows. It does not publish these scoring choices:
 |---|---|
 | `index.html` | Page structure: roster, profile, add/edit modal |
 | `styles.css` | Antonelli black & gold branding, v2 portrait-card tiers, responsive layout |
-| `app.js` | Sample data, Blast benchmarks, grade formula, card/logo/photo rendering, localStorage persistence |
+| `app.js` | Sample data, Blast benchmarks, Player Perks, celebrations, seasons, Showdown, grade formula, card rendering, localStorage persistence |
 | `assets/` | Antonelli block, script, and star logos (see Brand assets) |
 | `README.md` | This file |
 
