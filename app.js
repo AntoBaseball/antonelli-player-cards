@@ -527,6 +527,200 @@ function gradeSnapshot(player) {
   return { overall, tier };
 }
 
+/* Seasons run Sept 1 through Aug 31. 2025-09-01 .. 2026-08-31 is "2025-26".
+   There is no date of birth. Age advances from the stored number, and the
+   season stamp on the player decides when a year has passed. */
+let seasonClock = null;
+function nowDate() {
+  return seasonClock ? new Date(seasonClock) : new Date();
+}
+function seasonLabel(date) {
+  const d = date instanceof Date ? date : new Date(date || nowDate());
+  const when = Number.isNaN(d.getTime()) ? nowDate() : d;
+  const startYear = when.getMonth() >= 8 ? when.getFullYear() : when.getFullYear() - 1;
+  return `${startYear}-${String(startYear + 1).slice(-2)}`;
+}
+function seasonStartYear(label) {
+  const n = parseInt(String(label || "").slice(0, 4), 10);
+  return Number.isFinite(n) ? n : null;
+}
+function seasonsBetween(fromLabel, toLabel) {
+  const a = seasonStartYear(fromLabel);
+  const b = seasonStartYear(toLabel);
+  if (a == null || b == null) return 0;
+  return b - a;
+}
+function addSeasons(label, count) {
+  const start = seasonStartYear(label);
+  const y = (start == null ? seasonStartYear(seasonLabel(nowDate())) : start) + count;
+  return `${y}-${String(y + 1).slice(-2)}`;
+}
+
+function ensureSeasonFields(player) {
+  let changed = false;
+  if (!player.currentSeason) {
+    player.currentSeason = seasonLabel(nowDate());
+    changed = true;
+  }
+  if (!Array.isArray(player.cardCollection)) {
+    player.cardCollection = [];
+    changed = true;
+  }
+  if (typeof player.ageGroupPinned !== "boolean") {
+    const mapped = ageGroupFromAge(player.age);
+    player.ageGroupPinned = AGE_GROUP_ORDER.includes(player.ageGroup) && player.ageGroup !== mapped;
+    changed = true;
+  }
+  return changed;
+}
+
+function nextAgeState(player, years) {
+  const age = (Number(player.age) || 0) + years;
+  const ageGroup = player.ageGroupPinned ? activeAgeGroup(player) : ageGroupFromAge(age);
+  return { age, ageGroup };
+}
+
+function projectRollover(player, years) {
+  const steps = years > 0 ? years : 1;
+  const from = gradesFor(player);
+  const next = nextAgeState(player, steps);
+  const projectedPlayer = { ...player, age: next.age, ageGroup: next.ageGroup, ageGroupPinned: false };
+  const to = gradesFor(projectedPlayer);
+  return {
+    years: steps,
+    fromSeason: player.currentSeason,
+    toSeason: addSeasons(player.currentSeason, steps),
+    fromAge: Number(player.age) || 0,
+    toAge: next.age,
+    fromGroup: activeAgeGroup(player),
+    toGroup: next.ageGroup,
+    fromOverall: from.overall,
+    fromTier: tierFor(from.overall).key,
+    toOverall: to.overall,
+    toTier: tierFor(to.overall).key,
+    pinned: !!player.ageGroupPinned,
+  };
+}
+
+function archiveCurrentCard(player, archivedAt) {
+  const graded = gradesFor(player);
+  const ageGroup = activeAgeGroup(player);
+  const metricGrades = {};
+  metricKeysFor(player.type).forEach((key) => {
+    const value = player.metrics ? player.metrics[key] : null;
+    const grade = normalizeMetric(key, value, ageGroup);
+    let band = null;
+    if (METRICS[key] && METRICS[key].blast) {
+      const scored = gradeBlastMetric(key, value, ageGroup);
+      band = scored.band ? { key: scored.band.key, label: scored.band.label } : null;
+    } else {
+      const fromGrade = bandForGrade(grade);
+      band = fromGrade ? { key: fromGrade.key, label: fromGrade.label } : null;
+    }
+    metricGrades[key] = { value, grade, band };
+  });
+  const perksEarned = (player.earnedQuirks || []).map((rec) => {
+    const q = TRAINING_BY_ID[rec.id];
+    return {
+      id: rec.id,
+      name: q ? q.name : rec.id,
+      icon: q ? q.icon : "",
+      milestone: rec.milestone || (q ? q.description : ""),
+      earnedAt: rec.earnedAt || "",
+    };
+  });
+  const assignedPerks = (player.coachQuirks || []).map((id) => {
+    const q = SHOW_BY_ID[id];
+    return { id, name: q ? q.name : id, icon: q ? q.icon : "", description: q ? q.description : "" };
+  });
+  return {
+    seasonLabel: player.currentSeason,
+    age: player.age,
+    ageGroup,
+    archivedAt: archivedAt || new Date().toISOString(),
+    overall: graded.overall,
+    tier: tierFor(graded.overall).key,
+    subGrades: graded.subs.map((s) => ({ key: s.key, label: s.label, grade: s.grade })),
+    metrics: structuredClone(player.metrics || {}),
+    metricGrades,
+    history: structuredClone(player.history || {}),
+    perksEarned,
+    assignedPerks,
+    strengths: (player.strengths || []).slice(),
+    improvements: (player.improvements || []).slice(),
+    archetype: player.archetype || "",
+    photo: player.photo || "",
+    name: player.name,
+    position: player.position || "",
+    secondaryPosition: player.secondaryPosition || "",
+    height: player.height || "",
+    weight: player.weight || "",
+    hometown: player.hometown || "",
+    bats: player.bats || "",
+    throws: player.throws || "",
+    type: player.type,
+    team: player.team || "",
+    classYear: player.classYear || "",
+  };
+}
+
+function applyRollover(player, years) {
+  ensureSeasonFields(player);
+  const preview = projectRollover(player, years);
+  if (!Array.isArray(player.cardCollection)) player.cardCollection = [];
+  player.cardCollection.push(archiveCurrentCard(player));
+  player.age = preview.toAge;
+  if (!player.ageGroupPinned) player.ageGroup = preview.toGroup;
+  player.currentSeason = preview.toSeason;
+  const baseline = {};
+  metricKeysFor(player.type).forEach((key) => {
+    const value = player.metrics && player.metrics[key];
+    if (value == null || Number.isNaN(Number(value))) return;
+    baseline[key] = [Number(value)];
+  });
+  player.history = baseline;
+  player.earnedQuirks = [];
+  player.seasonReveal = {
+    seasonLabel: preview.toSeason,
+    retiredSeason: preview.fromSeason,
+    retiredGroup: preview.fromGroup,
+    retiredOverall: preview.fromOverall,
+    retiredTier: preview.fromTier,
+    ageGroup: preview.toGroup,
+    age: preview.toAge,
+    overall: preview.toOverall,
+    tier: preview.toTier,
+  };
+  return preview;
+}
+
+function rolloverIfDue(player) {
+  ensureSeasonFields(player);
+  const elapsed = seasonsBetween(player.currentSeason, seasonLabel(nowDate()));
+  if (elapsed > 0) return applyRollover(player, elapsed);
+  return null;
+}
+
+function ackSeasonReveal(player) {
+  if (!player || !player.seasonReveal) return;
+  player.gradeSeen = { overall: player.seasonReveal.overall, tier: player.seasonReveal.tier };
+  delete player.seasonReveal;
+}
+
+function careerSummary(player) {
+  const cards = Array.isArray(player.cardCollection) ? player.cardCollection : [];
+  const live = gradesFor(player);
+  const liveTier = tierFor(live.overall).key;
+  const overalls = cards.map((c) => c.overall).concat(live.overall);
+  const goldPlus = cards.filter((c) => TIER_RANK[c.tier] >= TIER_RANK.gold).length + (TIER_RANK[liveTier] >= TIER_RANK.gold ? 1 : 0);
+  return {
+    seasons: cards.length + 1,
+    retired: cards.length,
+    best: overalls.length ? Math.max(...overalls) : live.overall,
+    goldPlus,
+  };
+}
+
 /* Pure decision for overall / tier celebrations. `seen` is the last acknowledged
    overall and tier. A missing seen is a silent init. A higher tier is a tier-up
    (the overall jump rides along). A higher overall inside the same tier is an
@@ -547,6 +741,7 @@ function planGradeCelebration(seen, next) {
 }
 
 function takeGradeCelebration(player) {
+  if (player && player.seasonReveal) return { kind: "season-hold" };
   const plan = planGradeCelebration(player.gradeSeen, gradeSnapshot(player));
   if (plan.mark) player.gradeSeen = plan.mark;
   return plan;
@@ -749,6 +944,587 @@ function displayQuirks(player) {
   return [...earned, ...coach];
 }
 
+const SAMPLE_CAREER = {
+  "sample-mason-carter": [
+    {
+      "seasonLabel": "2025-26",
+      "age": 16,
+      "ageGroup": "16U",
+      "archivedAt": "2026-09-01T12:00:00.000Z",
+      "overall": 82,
+      "tier": "gold",
+      "subGrades": [
+        {
+          "key": "BAT",
+          "label": "Bat Speed",
+          "grade": 84
+        },
+        {
+          "key": "PWR",
+          "label": "Power",
+          "grade": 82
+        },
+        {
+          "key": "PLANE",
+          "label": "Plane",
+          "grade": 80
+        },
+        {
+          "key": "QUICK",
+          "label": "Quickness",
+          "grade": 78
+        },
+        {
+          "key": "CONN",
+          "label": "Connection",
+          "grade": 91
+        }
+      ],
+      "metrics": {
+        "batSpeed": 67,
+        "peakHandSpeed": 21,
+        "attackAngle": 12,
+        "verticalBatAngle": -27,
+        "timeToContact": 0.156,
+        "powerKw": 3.7,
+        "rotationalAcceleration": 15,
+        "onPlaneEfficiency": 75,
+        "earlyConnection": 91,
+        "connectionAtImpact": 87
+      },
+      "metricGrades": {
+        "batSpeed": {
+          "value": 67,
+          "grade": 84,
+          "band": {
+            "key": "great",
+            "label": "Great"
+          }
+        },
+        "peakHandSpeed": {
+          "value": 21,
+          "grade": 80,
+          "band": {
+            "key": "great",
+            "label": "Great"
+          }
+        },
+        "attackAngle": {
+          "value": 12,
+          "grade": 80,
+          "band": {
+            "key": "great",
+            "label": "Great"
+          }
+        },
+        "verticalBatAngle": {
+          "value": -27,
+          "grade": 93,
+          "band": {
+            "key": "elite",
+            "label": "Elite"
+          }
+        },
+        "timeToContact": {
+          "value": 0.156,
+          "grade": 76,
+          "band": {
+            "key": "good",
+            "label": "Good"
+          }
+        },
+        "powerKw": {
+          "value": 3.7,
+          "grade": 84,
+          "band": {
+            "key": "great",
+            "label": "Great"
+          }
+        },
+        "rotationalAcceleration": {
+          "value": 15,
+          "grade": 80,
+          "band": {
+            "key": "great",
+            "label": "Great"
+          }
+        },
+        "onPlaneEfficiency": {
+          "value": 75,
+          "grade": 74,
+          "band": {
+            "key": "good",
+            "label": "Good"
+          }
+        },
+        "earlyConnection": {
+          "value": 91,
+          "grade": 94,
+          "band": {
+            "key": "elite",
+            "label": "Elite"
+          }
+        },
+        "connectionAtImpact": {
+          "value": 87,
+          "grade": 88,
+          "band": {
+            "key": "great",
+            "label": "Great"
+          }
+        }
+      },
+      "history": {
+        "batSpeed": [
+          63,
+          65,
+          67
+        ],
+        "peakHandSpeed": [
+          20,
+          20.5,
+          21
+        ],
+        "attackAngle": [
+          11,
+          11.5,
+          12
+        ],
+        "verticalBatAngle": [
+          -26,
+          -27,
+          -27
+        ],
+        "timeToContact": [
+          0.16,
+          0.158,
+          0.156
+        ],
+        "powerKw": [
+          3.2,
+          3.5,
+          3.7
+        ],
+        "rotationalAcceleration": [
+          13,
+          14,
+          15
+        ],
+        "onPlaneEfficiency": [
+          73,
+          74,
+          75
+        ],
+        "earlyConnection": [
+          90,
+          91,
+          91
+        ],
+        "connectionAtImpact": [
+          86,
+          87,
+          87
+        ]
+      },
+      "perksEarned": [
+        {
+          "id": "bat-speed-builder",
+          "name": "Bat Speed Builder",
+          "icon": "\u26a1",
+          "milestone": "Earned: Bat Speed +4 mph this training block",
+          "earnedAt": "2026-05-01"
+        },
+        {
+          "id": "power-surge",
+          "name": "Power Surge",
+          "icon": "\ud83d\udca5",
+          "milestone": "Earned: Power +0.5 kW this training block",
+          "earnedAt": "2026-05-01"
+        },
+        {
+          "id": "fast-twitch",
+          "name": "Fast Twitch",
+          "icon": "\ud83c\udf00",
+          "milestone": "Earned: Rotational Acceleration +2 g",
+          "earnedAt": "2026-05-01"
+        },
+        {
+          "id": "gold-standard",
+          "name": "Gold Standard",
+          "icon": "\ud83e\udd47",
+          "milestone": "Earned: overall 82 hit Gold",
+          "earnedAt": "2026-05-01"
+        },
+        {
+          "id": "great-barrel",
+          "name": "Great Barrel",
+          "icon": "\ud83c\udf1f",
+          "milestone": "Earned: Bat Speed 67 mph is Great at 16U",
+          "earnedAt": "2026-05-01"
+        }
+      ],
+      "assignedPerks": [
+        {
+          "id": "dead-red",
+          "name": "Dead Red",
+          "icon": "\ud83d\udd34",
+          "description": "Hunts velocity and squares up fastballs when he is on time."
+        },
+        {
+          "id": "unfazed",
+          "name": "Unfazed",
+          "icon": "\ud83d\ude24",
+          "description": "Shortens up with two strikes and still competes \u2014 the at-bat is not over."
+        }
+      ],
+      "strengths": [
+        "Drives the ball in the air to the pull side with real carry",
+        "Strong, physical swing \u2014 top bat speed on the team",
+        "Patient in hitter's counts; hunts pitches he can lift"
+      ],
+      "improvements": [
+        "Stay on plane against breaking balls down and away",
+        "Shorten the two-strike swing without giving up bat speed",
+        "First-step quickness on outfield reads"
+      ],
+      "archetype": "Power Hitter",
+      "photo": "",
+      "name": "Mason Carter",
+      "position": "OF",
+      "secondaryPosition": "1B",
+      "height": "6'1\"",
+      "weight": "190 lbs",
+      "hometown": "Tampa, FL",
+      "bats": "L",
+      "throws": "L",
+      "type": "hitter",
+      "team": "Antonelli 17U",
+      "classYear": "Sophomore / 10th",
+      "sample": true
+    }
+  ],
+  "sample-dylan-brooks": [
+    {
+      "seasonLabel": "2024-25",
+      "age": 12,
+      "ageGroup": "12U",
+      "archivedAt": "2025-09-01T12:00:00.000Z",
+      "overall": 56,
+      "tier": "bronze",
+      "subGrades": [
+        {
+          "key": "BAT",
+          "label": "Bat Speed",
+          "grade": 74
+        },
+        {
+          "key": "PWR",
+          "label": "Power",
+          "grade": 62
+        },
+        {
+          "key": "PLANE",
+          "label": "Plane",
+          "grade": 68
+        },
+        {
+          "key": "QUICK",
+          "label": "Quickness",
+          "grade": 54
+        },
+        {
+          "key": "CONN",
+          "label": "Connection",
+          "grade": 69
+        },
+        {
+          "key": "VEL",
+          "label": "Velocity",
+          "grade": 40
+        },
+        {
+          "key": "BRK",
+          "label": "Breaking / Offspeed",
+          "grade": 44
+        },
+        {
+          "key": "CNTL",
+          "label": "Control / Command",
+          "grade": 51
+        },
+        {
+          "key": "STM",
+          "label": "Stamina",
+          "grade": 41
+        }
+      ],
+      "metrics": {
+        "batSpeed": 50,
+        "peakHandSpeed": 16.5,
+        "attackAngle": 5,
+        "verticalBatAngle": -24,
+        "timeToContact": 0.195,
+        "powerKw": 1.7,
+        "rotationalAcceleration": 8.2,
+        "onPlaneEfficiency": 63,
+        "earlyConnection": 77,
+        "connectionAtImpact": 82,
+        "fastballVelo": 75,
+        "spinRate": 1920,
+        "strikePct": 57,
+        "whiffPct": 21,
+        "pitchCapacity": 59
+      },
+      "metricGrades": {
+        "batSpeed": {
+          "value": 50,
+          "grade": 74,
+          "band": {
+            "key": "good",
+            "label": "Good"
+          }
+        },
+        "peakHandSpeed": {
+          "value": 16.5,
+          "grade": 57,
+          "band": {
+            "key": "average",
+            "label": "Average"
+          }
+        },
+        "attackAngle": {
+          "value": 5,
+          "grade": 87,
+          "band": {
+            "key": "great",
+            "label": "Great"
+          }
+        },
+        "verticalBatAngle": {
+          "value": -24,
+          "grade": 94,
+          "band": {
+            "key": "elite",
+            "label": "Elite"
+          }
+        },
+        "timeToContact": {
+          "value": 0.195,
+          "grade": 67,
+          "band": {
+            "key": "good",
+            "label": "Good"
+          }
+        },
+        "powerKw": {
+          "value": 1.7,
+          "grade": 65,
+          "band": {
+            "key": "good",
+            "label": "Good"
+          }
+        },
+        "rotationalAcceleration": {
+          "value": 8.2,
+          "grade": 39,
+          "band": {
+            "key": "below",
+            "label": "Below Average"
+          }
+        },
+        "onPlaneEfficiency": {
+          "value": 63,
+          "grade": 46,
+          "band": {
+            "key": "below",
+            "label": "Below Average"
+          }
+        },
+        "earlyConnection": {
+          "value": 77,
+          "grade": 63,
+          "band": {
+            "key": "average",
+            "label": "Average"
+          }
+        },
+        "connectionAtImpact": {
+          "value": 82,
+          "grade": 75,
+          "band": {
+            "key": "good",
+            "label": "Good"
+          }
+        },
+        "fastballVelo": {
+          "value": 75,
+          "grade": 40,
+          "band": {
+            "key": "below",
+            "label": "Below Average"
+          }
+        },
+        "spinRate": {
+          "value": 1920,
+          "grade": 45,
+          "band": {
+            "key": "below",
+            "label": "Below Average"
+          }
+        },
+        "strikePct": {
+          "value": 57,
+          "grade": 51,
+          "band": {
+            "key": "average",
+            "label": "Average"
+          }
+        },
+        "whiffPct": {
+          "value": 21,
+          "grade": 44,
+          "band": {
+            "key": "below",
+            "label": "Below Average"
+          }
+        },
+        "pitchCapacity": {
+          "value": 59,
+          "grade": 41,
+          "band": {
+            "key": "below",
+            "label": "Below Average"
+          }
+        }
+      },
+      "history": {
+        "batSpeed": [
+          48,
+          49,
+          50
+        ],
+        "peakHandSpeed": [
+          16,
+          16.5,
+          16.5
+        ],
+        "attackAngle": [
+          4,
+          5,
+          5
+        ],
+        "verticalBatAngle": [
+          -22,
+          -23,
+          -24
+        ],
+        "timeToContact": [
+          0.205,
+          0.2,
+          0.195
+        ],
+        "powerKw": [
+          1.55,
+          1.65,
+          1.7
+        ],
+        "rotationalAcceleration": [
+          7.5,
+          8,
+          8.2
+        ],
+        "onPlaneEfficiency": [
+          60,
+          61,
+          63
+        ],
+        "earlyConnection": [
+          74,
+          75,
+          77
+        ],
+        "connectionAtImpact": [
+          80,
+          81,
+          82
+        ],
+        "fastballVelo": [
+          73,
+          74,
+          75
+        ],
+        "spinRate": [
+          1850,
+          1880,
+          1920
+        ],
+        "strikePct": [
+          54,
+          55,
+          57
+        ],
+        "whiffPct": [
+          18,
+          19,
+          21
+        ],
+        "pitchCapacity": [
+          52,
+          56,
+          59
+        ]
+      },
+      "perksEarned": [
+        {
+          "id": "both-sides",
+          "name": "Both Sides",
+          "icon": "\u2694\ufe0f",
+          "milestone": "Earned: a real gain on both the hitting side and the pitching side",
+          "earnedAt": "2025-05-01"
+        }
+      ],
+      "assignedPerks": [
+        {
+          "id": "pop-time",
+          "name": "Catcher Pop Time",
+          "icon": "\ud83e\udde4",
+          "description": "Gets the ball out of the glove quickly and throws a strike to second."
+        },
+        {
+          "id": "unfazed",
+          "name": "Unfazed",
+          "icon": "\ud83d\ude24",
+          "description": "Shortens up with two strikes and still competes \u2014 the at-bat is not over."
+        }
+      ],
+      "strengths": [
+        "Strong arm behind the plate and on the mound",
+        "Competitive at-bats; battles with two strikes",
+        "Athletic frame with room to add strength"
+      ],
+      "improvements": [
+        "Receiving and blocking consistency behind the plate",
+        "Bat speed \u2014 stay connected through the turn",
+        "Pitching mechanics: stay closed longer to improve command"
+      ],
+      "archetype": "Two-Way Player",
+      "photo": "",
+      "name": "Dylan Brooks",
+      "position": "C",
+      "secondaryPosition": "RHP",
+      "height": "5'10\"",
+      "weight": "160 lbs",
+      "hometown": "Sarasota, FL",
+      "bats": "R",
+      "throws": "R",
+      "type": "two-way",
+      "team": "Antonelli 14U",
+      "classYear": "7th grade",
+      "sample": true
+    }
+  ]
+};
+
 function seedSampleEarns() {
   SAMPLE_PLAYERS.forEach((p) => {
     p.coachQuirks = p.coachQuirks || [];
@@ -756,6 +1532,10 @@ function seedSampleEarns() {
     syncEarnedQuirks(p, "2026-05-01");
     p.earnedQuirks.forEach((e) => { e.seen = true; });
     p.gradeSeen = gradeSnapshot(p);
+    p.currentSeason = "2026-27";
+    p.ageGroupPinned = false;
+    p.cardCollection = SAMPLE_CAREER[p.id] ? structuredClone(SAMPLE_CAREER[p.id]) : [];
+    delete p.seasonReveal;
   });
 }
 seedSampleEarns();
@@ -978,13 +1758,15 @@ function cardHTML(player, large, face) {
   const graded = gradesFor(player);
   const overall = face && face.overall != null ? face.overall : graded.overall;
   const tier = face && face.tier ? { key: face.tier, label: TIER_LABEL[face.tier] || tierFor(overall).label } : tierFor(overall);
-  const { subs } = graded;
+  const subs = face && Array.isArray(face.subs) ? face.subs : graded.subs;
   const shownSubs = player.type === "two-way" && !large ? subs.slice(0, 5) : subs;
   const visual = player.photo
     ? `<img class="card-photo" src="${esc(player.photo)}" alt="Photo of ${esc(player.name)}">`
     : logoPlaceholder();
-  const group = activeAgeGroup(player);
-  const quirkList = displayQuirks(player);
+  const group = face && face.ageGroup ? face.ageGroup : activeAgeGroup(player);
+  const ageShown = face && face.age != null ? face.age : player.age;
+  const classShown = face && face.classYear != null ? face.classYear : player.classYear;
+  const quirkList = face && Array.isArray(face.quirks) ? face.quirks : displayQuirks(player);
   const quirkShown = quirkList.slice(0, 3);
   const quirkExtra = quirkList.length - quirkShown.length;
   const quirkHTML = quirkShown.length ? `<div class="card-quirks">${quirkShown.map((q) => `<span class="q-badge ${q.kind === "coach" ? "q-coach" : "q-earned"}" title="${esc(q.name)}">${q.icon} ${esc(q.name)}</span>`).join("")}${quirkExtra > 0 ? `<span class="q-badge q-more">+${quirkExtra}</span>` : ""}</div>` : "";
@@ -1002,7 +1784,7 @@ function cardHTML(player, large, face) {
           <span class="archetype">${esc(player.archetype)}</span>
           <${large ? "h2" : "h3"}>${esc(player.name)}</${large ? "h2" : "h3"}>
           <span class="pos-bar">${esc(positionLine(player))} - ${esc(player.bats)}/${esc(player.throws)}</span>
-          <span class="card-teamline">${esc(player.team)} • Age ${esc(player.age)} • ${esc(group)} • ${esc(player.classYear)}</span>
+          <span class="card-teamline">${esc(player.team)} • Age ${esc(ageShown)} • ${esc(group)} • ${esc(classShown)}</span>
         </div>
       </div>
       <div class="subgrades">${shownSubs.map((x) => `<div class="subgrade"><b>${x.grade ?? "—"}</b><span>${x.key}</span></div>`).join("")}</div>
@@ -1676,7 +2458,100 @@ function growAttrBars() {
   requestAnimationFrame(() => requestAnimationFrame(() => strips.forEach((strip) => strip.classList.add("is-in"))));
 }
 
-function openProfile(id) {
+function playerFromArchive(card) {
+  return {
+    name: card.name, age: card.age, ageGroup: card.ageGroup, team: card.team, archetype: card.archetype,
+    photo: card.photo || "", position: card.position, secondaryPosition: card.secondaryPosition || "",
+    bats: card.bats, throws: card.throws, type: card.type, classYear: card.classYear || "",
+    metrics: card.metrics || {}, earnedQuirks: [], coachQuirks: [],
+  };
+}
+
+function faceFromArchive(card) {
+  const quirks = (card.perksEarned || []).map((q) => ({ ...q, kind: "earned" }))
+    .concat((card.assignedPerks || []).map((q) => ({ ...q, kind: "coach" })));
+  return {
+    overall: card.overall, tier: card.tier, subs: card.subGrades || [],
+    ageGroup: card.ageGroup, age: card.age, classYear: card.classYear || "", quirks,
+  };
+}
+
+function archiveBars(card) {
+  const stored = card.metricGrades || {};
+  const hitKeys = ["BAT", "PWR", "PLANE", "QUICK", "CONN"];
+  const pitchKeys = ["VEL", "BRK", "CNTL", "STM"];
+  const subs = card.subGrades || [];
+  const groups = [];
+  const fromSubs = (keys) => subs.filter((s) => keys.includes(s.key)).map((s) => attrBar(s.key, s.grade, s.label)).join("");
+  const fromMetrics = (pairs) => pairs.map(([label, key]) => {
+    const row = stored[key];
+    const title = (METRICS[key] && METRICS[key].label) || label;
+    return attrBar(label, row ? row.grade : null, title + (row && row.band ? " · " + row.band.label : ""));
+  }).join("");
+  if (card.type !== "pitcher") {
+    groups.push({ title: card.type === "two-way" ? "Hitting tools" : "Tools", bars: fromSubs(hitKeys) });
+    groups.push({ title: "Blast grades", bars: fromMetrics(HITTER_BAR_KEYS) });
+  }
+  if (card.type !== "hitter") {
+    groups.push({ title: card.type === "two-way" ? "Pitching tools" : "Tools", bars: fromSubs(pitchKeys) });
+    groups.push({ title: "Pitch grades", bars: fromMetrics(PITCH_BAR_KEYS) });
+  }
+  return groups.map((group) => `<section class="attr-group"><h3>${esc(group.title)}</h3><div class="attr-strip">${group.bars}</div></section>`).join("")
+    + `<p class="muted small">These numbers were saved at retirement. Editing the live card, or the benchmark tables, does not change them.</p>`;
+}
+
+function archiveMetricsTable(card) {
+  const rows = metricKeysFor(card.type).map((key) => {
+    const meta = METRICS[key];
+    const row = (card.metricGrades || {})[key] || {};
+    const band = row.band ? `<span class="band-chip band-${esc(row.band.key)}">${esc(row.band.label)}</span>` : "—";
+    return `<tr><td><strong>${esc(meta.label)}</strong></td><td>${formatMetric(key, row.value)}${esc(meta.unit)}</td><td>${band}</td><td><span class="grade-chip">${row.grade ?? "—"}</span></td></tr>`;
+  }).join("");
+  return `<div class="table-scroll"><table><thead><tr><th>Metric</th><th>Value at retirement</th><th>Band</th><th>Grade</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <p class="muted small">Grades and bands are the copy stored on ${esc(card.seasonLabel)}. They are not calculated again.</p>`;
+}
+
+function archivePerks(card) {
+  const row = (q, kind) => `<div class="quirk-row quirk-static"><span class="q-badge ${kind === "Coach Awarded" ? "q-coach" : "q-earned"}">${q.icon || ""}</span><span><strong>${esc(q.name)}</strong> <span class="quirk-tag">${kind}</span><br><span class="small">${esc(q.milestone || q.description || "")}</span></span></div>`;
+  const earned = (card.perksEarned || []).map((q) => row(q, "Earned")).join("") || `<p class="muted small">No training perks were earned that season.</p>`;
+  const coach = (card.assignedPerks || []).map((q) => row(q, "Coach Awarded")).join("") || `<p class="muted small">No coach-awarded perks on this snapshot.</p>`;
+  return `<p class="muted small">Snapshot of that season. Training perks start over on the new card. Coach-awarded perks stay on the current card too.</p><h4 class="quirk-sub">Earned that season</h4>${earned}<h4 class="quirk-sub">Coach Awarded</h4>${coach}`;
+}
+
+function archiveSide(card) {
+  const rows = metricKeysFor(card.type).map((key) => {
+    const meta = METRICS[key];
+    const row = (card.metricGrades || {})[key] || {};
+    const band = row.band ? `<span class="band-chip band-${esc(row.band.key)}">${esc(row.band.label)}</span>` : "";
+    return `<div class="snap-row"><span>${esc(meta.label)}</span><b>${formatMetric(key, row.value)}${esc(meta.unit)}</b>${band}</div>`;
+  }).join("");
+  const title = card.type === "pitcher" ? "Pitch snapshot" : "Frozen metrics";
+  return `<aside class="side-panel"><h3>${title}</h3><p class="small muted">${esc(card.seasonLabel)} · ${esc(card.ageGroup)}</p>${rows}</aside>`;
+}
+
+function collectionPanel(player) {
+  const summary = careerSummary(player);
+  const cards = player.cardCollection || [];
+  const retired = cards.map((card, i) => `<button type="button" class="collection-item" data-archive="${i}" aria-label="Open retired card ${esc(card.seasonLabel)} ${esc(card.ageGroup)} overall ${card.overall}">
+      <div class="collection-ribbon"><span>${esc(card.seasonLabel)} · ${esc(card.ageGroup)}</span><span class="ribbon-retired">RETIRED${card.sample ? " · SAMPLE" : ""}</span></div>
+      <div class="collection-thumb">${cardHTML(playerFromArchive(card), false, faceFromArchive(card))}</div>
+    </button>`).join("");
+  const current = `<div class="collection-item is-current">
+      <div class="collection-ribbon"><span>${esc(player.currentSeason || "")} · ${esc(activeAgeGroup(player))}</span><span class="ribbon-current">CURRENT</span></div>
+      <div class="collection-thumb">${cardHTML(player, false)}</div>
+    </div>`;
+  const empty = cards.length ? "" : `<p class="muted">No retired cards yet. On September 1 the current card is archived. Start New Season runs that rollover now so you can see it before then.</p>`;
+  return `<div class="career-summary">
+      <div class="career-stat"><b>${summary.seasons}</b><span>Seasons with Antonelli</span></div>
+      <div class="career-stat"><b>${summary.best}</b><span>Best overall</span></div>
+      <div class="career-stat"><b>${summary.goldPlus}</b><span>Gold+ seasons</span></div>
+    </div>
+    ${empty}
+    <div class="collection-grid">${retired}${current}</div>
+    <p class="muted small">Oldest season first. The roster shows only the current card. A retired card keeps its overall, tier, metrics, bands, perks, and notes.</p>`;
+}
+
+function openProfile(id, opts) {
   const p = players.find((x) => x.id === id);
   if (!p) return;
   selectedId = id;
@@ -1703,7 +2578,7 @@ function openProfile(id) {
           <div class="pos-diamond" title="${esc(p.position || "")}"><span>${esc(pos)}</span></div>
           <div>
             <div class="show-team">${esc(p.team || "—")}</div>
-            <div class="show-arch">${esc(p.archetype || "—")} · ${esc(typeLabel(p.type))} · ${esc(group)}</div>
+            <div class="show-arch">${esc(p.archetype || "—")} · ${esc(typeLabel(p.type))} · ${esc(group)} · ${esc(p.currentSeason || "")}</div>
           </div>
         </div>
         <div class="show-facts">
@@ -1715,6 +2590,7 @@ function openProfile(id) {
           ${fact("Height", showOrDash(p.height))}
           ${fact("Weight", showOrDash(p.weight))}
           ${fact("Age / group", `${esc(p.age)} · ${esc(group)}`)}
+          ${fact("Season", esc(p.currentSeason || "—"))}
           ${fact("Team", esc(p.team || "—"))}
           ${fact("Class / year", showOrDash(p.classYear))}
           ${fact("Hometown", showOrDash(p.hometown))}
@@ -1723,6 +2599,7 @@ function openProfile(id) {
           <button class="btn btn-red" type="button" id="editProfileBtn">Edit Metrics / Profile</button>
           <button class="btn btn-ghost" type="button" id="previewOverallBtn">Preview overall-up</button>
           <button class="btn btn-ghost" type="button" id="previewTierBtn">Preview tier-up</button>
+          <button class="btn btn-ghost" type="button" id="rolloverBtn">Start New Season (Sept 1 Rollover)</button>
           <button class="btn btn-ghost" type="button" id="deleteProfileBtn">Delete Player</button>
         </div>
       </div>
@@ -1733,6 +2610,7 @@ function openProfile(id) {
       <button class="show-tab" type="button" role="tab" aria-selected="false" data-tab="metrics">Metrics &amp; History</button>
       <button class="show-tab" type="button" role="tab" aria-selected="false" data-tab="perks">Player Perks</button>
       <button class="show-tab" type="button" role="tab" aria-selected="false" data-tab="growth">Strengths &amp; Growth</button>
+      <button class="show-tab" type="button" role="tab" aria-selected="false" data-tab="collection">Collection</button>
     </div>
     <div class="show-panel" data-panel="attributes">${attributePanel(p)}</div>
     <div class="show-panel" data-panel="metrics" hidden>
@@ -1752,6 +2630,9 @@ function openProfile(id) {
         <div class="panel"><h3>What he does well</h3><ul class="list good">${(p.strengths || []).map((s) => `<li>${esc(s)}</li>`).join("") || "<li>—</li>"}</ul></div>
         <div class="panel"><h3>What to improve</h3><ul class="list work">${(p.improvements || []).map((s) => `<li>${esc(s)}</li>`).join("") || "<li>—</li>"}</ul></div>
       </div>
+    </div>
+    <div class="show-panel" data-panel="collection" hidden>
+      <div class="panel"><h3>Card collection</h3>${collectionPanel(p)}</div>
     </div>`;
   document.querySelectorAll(".show-tab").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -1774,6 +2655,10 @@ function openProfile(id) {
   if (previewBtn) previewBtn.addEventListener("click", () => previewReveal(p.id));
   $("previewOverallBtn").addEventListener("click", () => previewOverallUp(p.id));
   $("previewTierBtn").addEventListener("click", () => previewTierUp(p.id));
+  $("rolloverBtn").addEventListener("click", () => askRollover(p.id));
+  document.querySelectorAll("[data-archive]").forEach((btn) => {
+    btn.addEventListener("click", () => openRetired(p.id, Number(btn.dataset.archive)));
+  });
   $("deleteProfileBtn").addEventListener("click", () => {
     if (confirm(`Delete ${p.name}? This cannot be undone (Reset Sample Data only restores the 5 sample players).`)) {
       players = players.filter((x) => x.id !== p.id);
@@ -1781,7 +2666,203 @@ function openProfile(id) {
     }
   });
   growAttrBars();
+  if (opts && opts.tab) {
+    const tabBtn = document.querySelector(`.show-tab[data-tab="${opts.tab}"]`);
+    if (tabBtn) tabBtn.click();
+  }
   window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function openRetired(id, index) {
+  const p = players.find((x) => x.id === id);
+  const card = p && p.cardCollection && p.cardCollection[index];
+  if (!p || !card) return;
+  selectedId = id;
+  const names = nameParts(card.name || p.name);
+  const tierLabel = TIER_LABEL[card.tier] || "";
+  const fact = (label, value) => `<div class="show-fact"><b>${value}</b><span>${label}</span></div>`;
+  const pos = String(card.position || "—").split(/[/,]/)[0].trim().slice(0, 4).toUpperCase() || "—";
+  const like = playerFromArchive(card);
+  const face = faceFromArchive(card);
+  const sampleNote = card.sample ? " Sample career card from the fictional roster." : "";
+  $("rosterView").hidden = true;
+  $("profileView").hidden = false;
+  $("profileContent").innerHTML = `
+    <div class="retired-banner">
+      <div><strong>Retired — ${esc(card.seasonLabel)} ${esc(card.ageGroup)} — Final overall ${card.overall} ${esc(tierLabel)}</strong><span>${esc(sampleNote)} Read-only. Later benchmark edits do not change this card.</span></div>
+      <button class="btn btn-ghost" type="button" id="backCurrentBtn">Back to current card</button>
+    </div>
+    <div class="show-top">
+      <div class="show-card">${cardHTML(like, true, face)}</div>
+      <div class="show-identity">
+        <h2 class="show-name">${names.first ? `<span class="first">${esc(names.first)}</span>` : ""}<span class="last">${esc(names.last)}</span></h2>
+        <div class="show-posrow">
+          <div class="pos-diamond" title="${esc(card.position || "")}"><span>${esc(pos)}</span></div>
+          <div>
+            <div class="show-team">${esc(card.team || "—")}</div>
+            <div class="show-arch">${esc(card.archetype || "—")} · ${esc(typeLabel(card.type))} · ${esc(card.ageGroup)} · ${esc(card.seasonLabel)}</div>
+          </div>
+        </div>
+        <div class="show-facts">
+          ${fact("Final overall", String(card.overall))}
+          ${fact("Tier", esc(tierLabel))}
+          ${fact("Bats", esc(card.bats || "—"))}
+          ${fact("Throws", esc(card.throws || "—"))}
+          ${fact("Secondary position", showOrDash(card.secondaryPosition))}
+          ${fact("Height", showOrDash(card.height))}
+          ${fact("Weight", showOrDash(card.weight))}
+          ${fact("Age / group", `${esc(card.age)} · ${esc(card.ageGroup)}`)}
+          ${fact("Season", esc(card.seasonLabel || "—"))}
+          ${fact("Team", esc(card.team || "—"))}
+          ${fact("Class / year", showOrDash(card.classYear))}
+          ${fact("Hometown", showOrDash(card.hometown))}
+        </div>
+      </div>
+      <div class="show-side">${archiveSide(card)}</div>
+    </div>
+    <div class="show-tabs" role="tablist">
+      <button class="show-tab is-on" type="button" role="tab" aria-selected="true" data-tab="attributes">Attributes</button>
+      <button class="show-tab" type="button" role="tab" aria-selected="false" data-tab="metrics">Metrics &amp; History</button>
+      <button class="show-tab" type="button" role="tab" aria-selected="false" data-tab="perks">Player Perks</button>
+      <button class="show-tab" type="button" role="tab" aria-selected="false" data-tab="growth">Strengths &amp; Growth</button>
+    </div>
+    <div class="show-panel" data-panel="attributes">${archiveBars(card)}</div>
+    <div class="show-panel" data-panel="metrics" hidden><div class="panel"><h3>Metrics at retirement</h3>${archiveMetricsTable(card)}</div></div>
+    <div class="show-panel" data-panel="perks" hidden><div class="panel"><h3>Player Perks that season</h3>${archivePerks(card)}</div></div>
+    <div class="show-panel" data-panel="growth" hidden>
+      <div class="panel">
+        <h3>${esc(card.archetype || "Player")}</h3>
+        <p style="line-height:1.65">${esc(ARCHETYPE_INFO[card.archetype] || "Snapshot of how this player was described when the card was retired.")}</p>
+      </div>
+      <div class="two-col">
+        <div class="panel"><h3>What he did well</h3><ul class="list good">${(card.strengths || []).map((s) => `<li>${esc(s)}</li>`).join("") || "<li>—</li>"}</ul></div>
+        <div class="panel"><h3>What to improve</h3><ul class="list work">${(card.improvements || []).map((s) => `<li>${esc(s)}</li>`).join("") || "<li>—</li>"}</ul></div>
+      </div>
+    </div>`;
+  document.querySelectorAll(".show-tab").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".show-tab").forEach((tab) => {
+        const on = tab === btn;
+        tab.classList.toggle("is-on", on);
+        tab.setAttribute("aria-selected", on ? "true" : "false");
+      });
+      document.querySelectorAll(".show-panel").forEach((panel) => {
+        panel.hidden = panel.dataset.panel !== btn.dataset.tab;
+      });
+      if (btn.dataset.tab === "attributes") growAttrBars();
+    });
+  });
+  $("backCurrentBtn").addEventListener("click", () => openProfile(id, { tab: "collection" }));
+  growAttrBars();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+let pendingRolloverId = null;
+let seasonQueue = [];
+let seasonPos = 0;
+let seasonAfter = null;
+
+function askRollover(playerId) {
+  const player = players.find((p) => p.id === playerId);
+  if (!player || !$("seasonConfirm")) return;
+  if (player.seasonReveal) {
+    beginSeasonReveals([player.id]);
+    return;
+  }
+  pendingRolloverId = playerId;
+  const preview = projectRollover(player, 1);
+  const pinNote = preview.pinned ? ` Age group stays ${preview.toGroup} because it is pinned.` : "";
+  const dropNote = preview.toOverall < preview.fromOverall ? " A lower overall is the new age-group window, not a step back. No downgrade animation plays." : "";
+  const upNote = TIER_RANK[preview.toTier] > TIER_RANK[preview.fromTier] ? ` The new card reaches ${TIER_LABEL[preview.toTier]}. The reveal spotlights that tier.` : "";
+  $("seasonConfirmCopy").innerHTML = `<p>Retire <strong>${esc(preview.fromSeason)} · ${esc(preview.fromGroup)} · ${preview.fromOverall} ${esc(TIER_LABEL[preview.fromTier])}</strong>.</p>
+    <p>New card <strong>${esc(preview.toSeason)} · ${esc(preview.toGroup)} · projected ${preview.toOverall} ${esc(TIER_LABEL[preview.toTier])}</strong>. Age ${preview.fromAge} → ${preview.toAge}.${esc(pinNote)}</p>
+    <p>Metrics carry over and get graded for the new season. Training perks from this season are saved on the retired card, then cleared so they can be earned again. Coach-awarded perks stay on the player. The retired card is never re-graded.</p>
+    <p>${esc(dropNote)}${esc(upNote)}</p>`;
+  $("seasonConfirm").hidden = false;
+}
+
+function closeSeasonConfirm() {
+  pendingRolloverId = null;
+  const box = $("seasonConfirm");
+  if (box) box.hidden = true;
+}
+
+function confirmRollover() {
+  const player = players.find((p) => p.id === pendingRolloverId);
+  closeSeasonConfirm();
+  if (!player) return;
+  applyRollover(player, 1);
+  const added = syncEarnedQuirks(player);
+  savePlayers();
+  openProfile(player.id, { tab: "collection" });
+  beginSeasonReveals([player.id], () => {
+    if (added.length) startReveal(added.map((rec) => ({ playerId: player.id, quirkId: rec.id })));
+  });
+}
+
+function beginSeasonReveals(ids, after) {
+  seasonQueue = (ids || []).slice();
+  seasonPos = 0;
+  seasonAfter = after || null;
+  if (!seasonQueue.length) {
+    const fn = seasonAfter;
+    seasonAfter = null;
+    if (fn) fn();
+    return;
+  }
+  showSeasonReveal();
+}
+
+function showSeasonReveal() {
+  const id = seasonQueue[seasonPos];
+  const player = players.find((p) => p.id === id);
+  const box = $("seasonReveal");
+  if (!player || !player.seasonReveal || !box) {
+    finishSeasonQueue();
+    return;
+  }
+  const info = player.seasonReveal;
+  const retired = (player.cardCollection || []).slice().reverse().find((c) => c.seasonLabel === info.retiredSeason) || (player.cardCollection || []).slice(-1)[0];
+  const tierUp = TIER_RANK[info.tier] > TIER_RANK[info.retiredTier];
+  const dropped = info.overall < info.retiredOverall;
+  box.classList.toggle("is-tier", tierUp);
+  box.classList.toggle("is-reduced", motionReduced());
+  $("seasonRevealPlayer").textContent = player.name;
+  $("seasonRevealTier").textContent = tierUp ? (TIER_LABEL[info.tier] || "") : "New Season, New Chase";
+  $("seasonRevealScore").textContent = `${info.retiredOverall} ${TIER_LABEL[info.retiredTier]} → ${info.overall} ${TIER_LABEL[info.tier]}`;
+  $("seasonRevealReason").textContent = dropped
+    ? `${info.seasonLabel} · ${info.ageGroup}. The new windows are harder. Same player, new chase.`
+    : `${info.seasonLabel} · ${info.ageGroup}. Metrics carried over. Chase Diamond in this age group.`;
+  $("seasonRevealCards").innerHTML = `
+    <div class="season-col"><p class="celebrate-kicker">Retired ${esc(info.retiredSeason)} · ${esc(info.retiredGroup)}</p>${retired ? cardHTML(playerFromArchive(retired), true, faceFromArchive(retired)) : ""}</div>
+    <div class="season-col"><p class="celebrate-kicker">New card ${esc(info.seasonLabel)} · ${esc(info.ageGroup)}</p>${cardHTML(player, true, { overall: info.overall, tier: info.tier, age: info.age, ageGroup: info.ageGroup })}</div>`;
+  box.hidden = false;
+}
+
+function finishSeasonQueue() {
+  const fn = seasonAfter;
+  seasonAfter = null;
+  seasonQueue = [];
+  seasonPos = 0;
+  const box = $("seasonReveal");
+  if (box) box.hidden = true;
+  if (fn) fn();
+}
+
+function collectSeasonReveal() {
+  const id = seasonQueue[seasonPos];
+  const player = id && players.find((p) => p.id === id);
+  if (player) {
+    ackSeasonReveal(player);
+    savePlayers();
+  }
+  seasonPos += 1;
+  if (seasonPos < seasonQueue.length) {
+    showSeasonReveal();
+    return;
+  }
+  if (selectedId && player) openProfile(selectedId, { tab: "collection" });
+  finishSeasonQueue();
 }
 
 function closeProfile() {
@@ -1938,6 +3019,7 @@ function formPlayerLike() {
     strengths: linesToArray($("f-strengths").value), improvements: linesToArray($("f-improvements").value),
     photo: pendingPhotoData || "",
     metrics, history: {},
+    ageGroupPinned: ($("f-ageGroup").value || "") !== ageGroupFromAge(parseInt($("f-age").value, 10) || 16),
   };
 }
 
@@ -1956,6 +3038,7 @@ function openModal(player) {
   $("f-id").value = isEdit ? player.id : "";
   $("f-name").value = isEdit ? player.name : "";
   $("f-age").value = isEdit ? player.age : 16;
+  $("f-age").dataset.prevAge = String(isEdit ? player.age : 16);
   $("f-ageGroup").value = isEdit ? activeAgeGroup(player) : ageGroupFromAge(16);
   $("f-class").value = isEdit ? player.classYear : "";
   $("f-team").value = isEdit ? player.team : "Antonelli 16U";
@@ -1997,7 +3080,11 @@ function bindApp() {
   $("closeModalBtn").addEventListener("click", closeModal);
   $("cancelBtn").addEventListener("click", closeModal);
   $("modalBackdrop").addEventListener("click", closeModal);
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    closeModal();
+    closeSeasonConfirm();
+  });
 
   $("f-type").addEventListener("change", () => {
     fillArchetypes($("f-type").value);
@@ -2010,11 +3097,14 @@ function bindApp() {
     updatePhotoPreview();
   });
   $("f-age").addEventListener("input", () => {
-    const next = ageGroupFromAge(parseInt($("f-age").value, 10));
-    if ($("f-ageGroup").value !== next) {
+    const age = parseInt($("f-age").value, 10);
+    const next = ageGroupFromAge(age);
+    const prevMapped = ageGroupFromAge(Number($("f-age").dataset.prevAge));
+    if ($("f-ageGroup").value === prevMapped && $("f-ageGroup").value !== next) {
       $("f-ageGroup").value = next;
       renderMetricFields(formPlayerLike());
     }
+    $("f-age").dataset.prevAge = String(age);
     updateLivePreview();
   });
   $("f-ageGroup").addEventListener("change", () => {
@@ -2047,6 +3137,8 @@ function bindApp() {
       like.id = "player-" + Date.now().toString(36);
       like.history = {};
       like.earnedQuirks = [];
+      like.currentSeason = seasonLabel(nowDate());
+      like.cardCollection = [];
       Object.entries(like.metrics).forEach(([k, v]) => { like.history[k] = [v]; });
       players.push(like);
       saved = like;
@@ -2081,15 +3173,29 @@ function bindApp() {
   const celebSkip = $("celebrateSkip");
   if (celebCollect) celebCollect.addEventListener("click", collectCelebration);
   if (celebSkip) celebSkip.addEventListener("click", skipCelebration);
+  const seasonGo = $("seasonConfirmGo");
+  const seasonCancel = $("seasonConfirmCancel");
+  const seasonBackdrop = $("seasonConfirmBackdrop");
+  const seasonCollect = $("seasonRevealCollect");
+  if (seasonGo) seasonGo.addEventListener("click", confirmRollover);
+  if (seasonCancel) seasonCancel.addEventListener("click", closeSeasonConfirm);
+  if (seasonBackdrop) seasonBackdrop.addEventListener("click", closeSeasonConfirm);
+  if (seasonCollect) seasonCollect.addEventListener("click", collectSeasonReveal);
   let earnedDirty = false;
   const pendingReveal = [];
   const pendingCeleb = [];
+  const pendingSeason = [];
   players.forEach((p) => {
     if (!Array.isArray(p.coachQuirks)) p.coachQuirks = [];
-    const plan = takeGradeCelebration(p);
-    if (plan.mark) earnedDirty = true;
-    if (plan.kind === "tier-up" || plan.kind === "overall-up") {
-      pendingCeleb.push({ ...plan, playerId: p.id, reason: topGainText(p) });
+    if (ensureSeasonFields(p)) earnedDirty = true;
+    if (rolloverIfDue(p)) earnedDirty = true;
+    if (p.seasonReveal) pendingSeason.push(p.id);
+    else {
+      const plan = takeGradeCelebration(p);
+      if (plan.mark) earnedDirty = true;
+      if (plan.kind === "tier-up" || plan.kind === "overall-up") {
+        pendingCeleb.push({ ...plan, playerId: p.id, reason: topGainText(p) });
+      }
     }
     if (syncEarnedQuirks(p).length) earnedDirty = true;
     unseenEarns(p).forEach((rec) => pendingReveal.push({ playerId: p.id, quirkId: rec.id }));
@@ -2097,8 +3203,10 @@ function bindApp() {
   pendingCeleb.sort((a, b) => (a.kind === "tier-up" ? 0 : 1) - (b.kind === "tier-up" ? 0 : 1));
   if (earnedDirty) savePlayers();
   renderRoster();
-  beginCelebrations(pendingCeleb, () => {
-    if (pendingReveal.length) startReveal(pendingReveal);
+  beginSeasonReveals(pendingSeason, () => {
+    beginCelebrations(pendingCeleb, () => {
+      if (pendingReveal.length) startReveal(pendingReveal);
+    });
   });
 }
 

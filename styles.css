@@ -336,6 +336,27 @@ th{font-size:11px;letter-spacing:.7px;text-transform:uppercase;color:var(--muted
   .attr-fill,.attr-strip.is-in .attr-fill{height:var(--h);transition:none}
 }
 .profile-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.career-summary{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.career-stat{background:#141414;border:1px solid #3a3218;border-radius:12px;padding:10px 14px;min-width:140px}
+.career-stat b{display:block;font-size:26px;color:var(--gold-bright);font-family:Impact,"Arial Black",system-ui,sans-serif;font-style:italic}
+.career-stat span{font-size:11px;letter-spacing:.4px;text-transform:uppercase;color:#b7aa8a;font-weight:800}
+.collection-grid{display:flex;gap:16px;overflow-x:auto;padding:4px 2px 14px;max-width:100%}
+.collection-item{flex:0 0 210px;background:transparent;border:0;padding:0;color:inherit;text-align:left;cursor:pointer}
+.collection-item.is-current{cursor:default}
+.collection-thumb{border-radius:16px}
+.collection-ribbon{display:flex;justify-content:space-between;gap:6px;align-items:center;font-size:11px;font-weight:800;letter-spacing:.3px;margin-bottom:6px;color:#d9d0b8}
+.ribbon-current{background:var(--gold);color:#111;border-radius:999px;padding:2px 7px}
+.ribbon-retired{border:1px solid var(--gold);color:var(--gold-bright);border-radius:999px;padding:2px 7px}
+.retired-banner{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;background:#1a1408;border:1px solid var(--gold);border-radius:14px;padding:12px 14px;margin-bottom:14px}
+.retired-banner strong{display:block;color:var(--gold-bright);font-size:16px}
+.retired-banner span{color:#d9d0b8;font-size:13px}
+.quirk-static{cursor:default}
+.quirk-static:hover{border-color:var(--line)}
+.season-reveal{z-index:95}
+.season-pair{position:relative;z-index:2;display:flex;gap:18px;justify-content:center;align-items:flex-start;flex-wrap:wrap;width:min(920px,100%)}
+.season-col{width:min(280px,86vw)}
+.season-col .celebrate-kicker{text-align:center}
+.season-reveal .celebrate-tiername{min-height:0}
 /* Modal */
 .modal{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:14px}
 .modal[hidden]{display:none}

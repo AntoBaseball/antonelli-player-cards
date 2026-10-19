@@ -44,7 +44,7 @@ Pages only serves what is on `main`. If the app landed through a pull request, m
 
 - **Roster view** — all players as baseball cards, with search and filters by player type (hitter / pitcher / two-way), team, plus sorting by overall, name, or age.
 - **5 sample players** (see note below), covering Power Hitter, Contact/Leadoff, Ace, Closer, and Two-Way archetypes. Tiers follow the grades: with the sample Blast numbers, the roster spans Bronze, Silver, and Gold.
-- **Profile detail view** — click a card for a dark player screen: large card, huge name, position diamond, quick facts, and tabs for Attributes, Metrics & History, Player Perks, and Strengths & Growth. See [Player profile](#player-profile).
+- **Profile detail view** — click a card for a dark player screen: large card, huge name, position diamond, quick facts, and tabs for Attributes, Metrics & History, Player Perks, Strengths & Growth, and Collection. See [Player profile](#player-profile) and [Seasons](#seasons).
 - **Player Perks** — up to three perks on the card front. Training perks unlock from milestones and stay once earned. A new perk opens a sealed pack once. Show perks are coach-awarded. See [Player Perks](#player-perks).
 - **Celebrations** — an overall climb plays a short card bounce and count-up. Crossing into Silver, Gold, or Diamond takes over the screen. See [Celebrations](#celebrations).
 - **Baseball card (front, v2 — Topps / MLB The Show style)** — vertical portrait card (5:7, the classic 2.5"×3.5" ratio). The player visual fills the card over a geometric black & gold background with a stitched/dashed frame edge:
@@ -297,10 +297,30 @@ Tabs, left to right:
 | Metrics & History | The existing table: current, previous, change, sparkline, band, grade. |
 | Player Perks | Earned and coach-awarded perks, Open again, and click-to-replay. |
 | Strengths & Growth | Archetype note, how the grade is built, strengths, and areas to improve. |
+| Collection | Current card plus every retired season, oldest first. Click a retired card for its frozen snapshot. |
 
 Bar fill is the 20–99 grade as a percent of 99. Color follows the band: red Below Average (under 50), bronze Average (50–64), gold Good (65–79), green Great (80–89), cyan Elite (90–99). Hover a bar for the band name. Bars grow from the bottom when the profile opens. `prefers-reduced-motion` shows them at full height with no grow. On a narrow screen the bar row scrolls sideways.
 
-The right rail is a Blast snapshot for hitters (raw mph, degrees, seconds, and the age-group band) and a pitch-metric list with a short meter for pitchers. Two-way players get both. Edit, preview overall-up, preview tier-up, and delete stay in the header. Back to roster stays above the screen.
+The right rail is a Blast snapshot for hitters (raw mph, degrees, seconds, and the age-group band) and a pitch-metric list with a short meter for pitchers. Two-way players get both. Edit, preview overall-up, preview tier-up, Start New Season, and delete stay in the header. Back to roster stays above the screen.
+
+## Seasons
+
+A season runs from September 1 through August 31. September 1, 2025 through August 31, 2026 is labeled `2025-26`. The app does not store a date of birth. It keeps a numeric age, an age group, and `currentSeason`.
+
+On load, each player is compared with today's season. The first time an older save has no season stamp, it is marked with the season that is already underway and nothing is archived. After that, if today's season is later, the app rolls the player forward automatically. A coach can also press **Start New Season (Sept 1 Rollover)** on the profile. That button always moves one season, even before September 1, so the archive can be demoed. The confirm dialog previews the card being retired and the projected overall and tier of the new one.
+
+Rollover does four things:
+
+1. The current card is copied into `cardCollection`. The copy stores the final overall, tier, sub-grades, raw metrics, the grade and band for each metric, the metric history, training perks (id and name), coach-awarded perks, strengths, improvements, archetype, photo, and the season and age group (`2025-26 - 16U`). That copy is never graded again, even if the Blast windows change later.
+2. Age increases by the number of seasons that elapsed. One press of the button is one year. If the app was closed for two Septembers, age jumps by two and only the card they actually had is archived — missing seasons are not invented.
+3. Age group follows the Blast map (10U through Pro) unless a coach pinned a different group. A group is pinned when the saved age group does not match the age. Changing age in the form keeps a pinned group put; a group that already matches age moves with the birthday. College and Pro still archive every year. An unpinned 22-year-old College player becomes Pro at 23. Pro stays Pro.
+4. The new card keeps the same name, photo, positions, and the metric numbers. Those numbers are the new season's baseline: live history restarts at that single value so improvement perks measure this season, and the retired card keeps the old history. The numbers are then graded on the new age group's windows. Pitcher ranges are not age-banded, so a pitcher overall usually holds while a hitter's overall can drop when the windows get harder. A drop does not play a downgrade celebration.
+
+Training perks are season-scoped. They are stored on the retired card and cleared on the new card. A milestone that is still true on the carried baseline (for example Gold Standard, if the new grade is still gold) can be earned again. A perk that needs a gain waits for new check-ins after the baseline. Coach-awarded Show perks stay on the player. The retired card also remembers which ones were on the card that season.
+
+After rollover, a **New Season, New Chase** reveal shows the retired card and the new card. If the new tier is higher, the spotlight from the tier-up celebration is used. If the overall is lower, the copy stays on the new chase and no sad animation plays. **Start the chase** writes `gradeSeen` to the new overall and tier. Reload before that button shows the reveal again and does not mark a downgrade. The roster keeps showing only the current card.
+
+The Collection tab lists seasons with Antonelli, the best overall, and how many seasons were Gold or better. Mason's sample roster includes a fictional `2025-26` 16U card (final overall frozen at Gold). Dylan's includes a fictional `2024-25` 12U card. Those two cards ship with a fresh sample roster or Reset Sample Data. They are not added to a browser that already had players saved.
 
 ## Sample data note
 
@@ -312,7 +332,7 @@ The right rail is a Blast snapshot for hitters (raw mph, degrees, seconds, and t
 |---|---|
 | `index.html` | Page structure: roster, profile, add/edit modal |
 | `styles.css` | Antonelli black & gold branding, v2 portrait-card tiers, responsive layout |
-| `app.js` | Sample data, Blast benchmarks, Player Perks, celebrations, grade formula, card rendering, localStorage persistence |
+| `app.js` | Sample data, Blast benchmarks, Player Perks, celebrations, seasons, grade formula, card rendering, localStorage persistence |
 | `assets/` | Antonelli block, script, and star logos (see Brand assets) |
 | `README.md` | This file |
 

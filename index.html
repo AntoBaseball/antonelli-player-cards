@@ -24,7 +24,7 @@
 </header>
 
 <div class="sample-banner" role="note">
-  <strong>SAMPLE DATA:</strong> All 5 players below are invented for this prototype. Names, teams within the sample, and metrics are fictional — no real players are used. Sample players have no photos, so their cards show the Antonelli logo. Hitter grades use Blast Motion ranges by age group.
+  <strong>SAMPLE DATA:</strong> All 5 players below are invented for this prototype. Names, teams within the sample, and metrics are fictional — no real players are used. Sample players have no photos, so their cards show the Antonelli logo. Hitter grades use Blast Motion ranges by age group. Mason and Dylan each include one fictional retired card so the collection has a prior season to open. Saved browsers do not receive those cards.
 </div>
 <div id="migrationBanner" class="sample-banner migration-banner" hidden>
   <strong>Hitting metrics moved to Blast.</strong> Saved hitter cards used the older exit-velocity formula. Bat speed was kept when it was between 25 and 95 mph. The other hitting numbers were set to the middle of the published Blast window for that age group — replace them with real Blast readings. Pitcher metrics were kept.
@@ -115,6 +115,7 @@
             <option value="College">College</option>
             <option value="Pro">Pro</option>
           </select>
+          <span class="muted small">A group that matches his age moves up on Sept 1. A different group stays pinned.</span>
         </div>
         <div class="field"><label for="f-class">Class / Grade</label><input id="f-class" placeholder="e.g. Junior / 11th"></div>
         <div class="field"><label for="f-team">Team</label><input id="f-team" placeholder="e.g. Antonelli 16U"></div>
@@ -215,6 +216,31 @@
       <button class="btn btn-ghost" type="button" id="celebrateSkip">Skip</button>
       <button class="btn btn-red" type="button" id="celebrateCollect" hidden>Collect</button>
     </div>
+  </div>
+</div>
+
+<div id="seasonConfirm" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="seasonConfirmTitle">
+  <div class="modal-backdrop" id="seasonConfirmBackdrop"></div>
+  <div class="modal-card">
+    <h2 id="seasonConfirmTitle">Start New Season</h2>
+    <div id="seasonConfirmCopy"></div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" type="button" id="seasonConfirmCancel">Cancel</button>
+      <button class="btn btn-red" type="button" id="seasonConfirmGo">Start New Season</button>
+    </div>
+  </div>
+</div>
+
+<div id="seasonReveal" class="celebrate season-reveal" hidden role="dialog" aria-modal="true" aria-labelledby="seasonRevealTitle">
+  <div class="celebrate-spot" aria-hidden="true"></div>
+  <div class="season-pair" id="seasonRevealCards"></div>
+  <div class="celebrate-copy">
+    <p class="celebrate-kicker" id="seasonRevealTitle">New Season, New Chase</p>
+    <p class="celebrate-player" id="seasonRevealPlayer"></p>
+    <p class="celebrate-tiername" id="seasonRevealTier"></p>
+    <p class="celebrate-score" id="seasonRevealScore"></p>
+    <p class="celebrate-reason" id="seasonRevealReason"></p>
+    <button class="btn btn-red" type="button" id="seasonRevealCollect">Start the chase</button>
   </div>
 </div>
 
