@@ -44,17 +44,18 @@ Pages only serves what is on `main`. If the app landed through a pull request, m
 
 - **Roster view** — all players as baseball cards, with search and filters by player type (hitter / pitcher / two-way), team, plus sorting by overall, name, or age.
 - **5 sample players** (see note below), covering Power Hitter, Contact/Leadoff, Ace, Closer, and Two-Way archetypes. Tiers follow the grades: with the sample Blast numbers, the roster spans Bronze, Silver, and Gold.
-- **Profile detail view** — click a card for a dark player screen: large card, huge name, position diamond, quick facts, and tabs for Attributes, Metrics & History, Player Perks, Strengths & Growth, and Collection. See [Player profile](#player-profile) and [Seasons](#seasons).
+- **Profile detail view** — **View Profile** on a roster card opens a dark player screen: large card, huge name, position diamond, quick facts, and tabs for Attributes, Metrics & History, Player Perks, Strengths & Growth, and Collection. Clicking the card itself flips it. See [Player profile](#player-profile) and [Seasons](#seasons).
 - **Player Perks** — up to three perks on the card front. Training perks unlock from milestones and stay once earned. A new perk opens a sealed pack once. Show perks are coach-awarded. See [Player Perks](#player-perks).
 - **Celebrations** — an overall climb plays a short card bounce and count-up. Crossing into Silver, Gold, or Diamond takes over the screen. See [Celebrations](#celebrations).
 - **Showdown** — compare two current-season cards, category by category, with a short face-off and chase targets. See [Showdown](#showdown).
 - **Baseball card (front, v2 — Topps / MLB The Show style)** — vertical portrait card (5:7, the classic 2.5"×3.5" ratio). The player visual fills the card over a geometric black & gold background with a stitched/dashed frame edge:
   - **Diamond-shaped overall badge** (rotated diamond, clip-path) in the **top-right** with the overall number.
-  - **Player name in bold italic uppercase at bottom-right**, with a gold position bar under it (`CF - R/R` = position + bats/throws), team/age line, and a small archetype label.
-  - **Antonelli star + team code watermark at bottom-left** (star redrawn as clean inline SVG — see Brand assets; team code derived from the team name, e.g. `Antonelli 17U` → `A17U`).
-  - **Sub-grade strip** across the bottom of the card so tool grades stay readable without cluttering the visual.
+  - **Player name in bold italic uppercase**, with the archetype above it and a gold position bar under it (`OF / 1B - L/L` = position + bats/throws). Team, age, age group, and class are on the **card back**, not the front.
+  - **No small star or team-code mark** on the card front. The big A-star still fills the photo area when a player has no photo.
+  - **Sub-grade strip** across the bottom. Hitters and two-way players show five grades, in order: **POW, CON, SPD, THW, STR**. Pitchers show **VEL, BRK, CNTL, STM**. A missing athletic grade prints as a dash.
   - **Tier design (all in the black & gold family)** so crossing 70/80/90 is obvious: Bronze <70 = muted bronze-gold, darker; Silver 70–79 = silver-grey with a gold frame; Gold 80–89 = rich, bright gold; Diamond 90+ = black card with bright gold glow/trim and the **only cyan accent in the app — the diamond badge** — so Diamond still pops like the reference card.
-- **Photo upload + logo placeholder** — in Add/Edit, upload a player photo (JPG/PNG). It is read in the browser, downscaled to max 800px, stored as a data URL with the player in `localStorage`, and shown full-bleed on the card and profile. **Clear photo / use logo** removes it. With no photo, the card and profile show the Antonelli A-star (`assets/antonelli-a-star.png`) centered in the photo area, at its natural aspect ratio, over the tier gradient. The small team-code star stays in the name bar, drawn a little smaller so it does not compete with the logo. All 5 sample players have `photo: ""`, so they show the logo.
+- **Photo upload + logo placeholder** — in Add/Edit, upload a player photo (JPG/PNG). It is read in the browser, downscaled to max 800px, stored as a data URL with the player in `localStorage`, and shown full-bleed on the card and profile. **Clear photo / use logo** removes it. With no photo, the card and profile show the Antonelli A-star (`assets/antonelli-a-star.png`) centered in the photo area, at its natural aspect ratio, over the tier gradient. All 5 sample players have `photo: ""`, so they show the logo.
+- **Card back** — click or tap the roster card, the big profile card, or a retired card to flip it. Enter or Space does the same when the card has focus. The back lists team, age and age group, class, height, weight, hometown, bats/throws, positions, season, the sub-grade breakdown, and the key raw numbers (bat speed, 10-yard dash, throw velocity, med ball with its note, grip, and pitcher tools when those apply). **View Profile** on the roster card back, and the same button under the roster blurb, opens the profile. Collection thumbnails stay buttons that open the retired card; they do not flip. Showdown and celebrations stay on the front. `prefers-reduced-motion` swaps the face instantly, with no 3D turn. See [Card back](#card-back).
 - **Edit / Add player** — "Edit Metrics / Profile" on a profile, or "+ Add Player" in the header. Metrics use synced sliders + number inputs; the overall, sub-grades, and tier update **live** in the form preview before you save. Saving a changed metric appends it to that metric's history, so the previous value, delta arrow, and sparkline show progress.
 - **Persistence** — all changes save to browser `localStorage` (key: `antonelli-player-cards-v2`), so a refresh keeps your edits. Cards saved under the older key `antonelli-player-cards-v1` are migrated once: hitter exit-velocity / contact / speed / fielding / arm fields are replaced with Blast metrics, bat speed is kept when it was between 25 and 95 mph, other hitting numbers start at the middle of that age group's published window, and pitcher metrics are kept. A one-time banner explains the reset. **Reset Sample Data** (header) restores the original 5 sample players.
 - **Responsive** — works on mobile; cards and profile stack cleanly on small screens.
@@ -69,7 +70,7 @@ Antonelli Baseball's main colors are **black and gold** (`#d4af37` / `#c9a227`, 
 |---|---|---|
 | `assets/antonelli-block.png` | ANTONELLI in black italic block letters with gold outline (dark grunge banner) | Header logo (shown at natural aspect ratio, never distorted) |
 | `assets/antonelli-script.png` | Antonelli in black script with gold outline + swoosh (cream/pale-gold banner) | Hero brand banner |
-| `assets/antonelli-star.png` | White star with black/gold outline | Cropped from the source banner to the star only — the original banner's `#TEAMTRITON`/sponsor text is **not** used anywhere. On cards and in the header the star is actually drawn as a clean inline SVG (white fill, black outline, gold inner outline) matching this asset, so it stays crisp and transparent at any size. |
+| `assets/antonelli-star.png` | White star with black/gold outline | Cropped from the source banner to the star only — the original banner's `#TEAMTRITON`/sponsor text is **not** used anywhere. The header draws a matching inline SVG. The card front does not use this small star. The no-photo placeholder is the A-star below. |
 | `assets/antonelli-a-star.png` | Black star, gold outline, white “A” | Placeholder on a card or profile when the player has no uploaded photo. Shown centered, unstretched, over the tier background. |
 
 ## How the overall grade is calculated
@@ -92,19 +93,100 @@ The formula lives in `app.js`. Hitters use `BLAST_BENCHMARKS` and `gradeBlastMet
 
 ### Hitter weights
 
-Bat speed is the largest piece of the hitter overall (40%).
+Bat speed is the largest piece of the hitter overall, and it stays **40%** whenever a bat-speed grade exists. SPD, THW, and STR are modest, and each one is left out when that test has no number. They are not zeros. The other Blast buckets then share what is left, in the same 22:18:14:6 ratio they had before.
 
-| Sub-grade | What it uses | Weight of overall |
+| Piece | What it uses | Weight when every optional is blank | Weight when SPD, THW, and STR all have a grade |
+|---|---|---|---|
+| Bat speed | Bat speed grade | **40%** | **40%** |
+| `PWR` | Power 60% + peak hand speed 40% | 22% | 16.1% |
+| `PLANE` | On-plane 50% + attack angle 30% + vertical bat angle 20% | 18% | 13.2% |
+| `QUICK` | Time to contact 55% + rotational acceleration 45% | 14% | 10.3% |
+| `CONN` | Early connection 50% + connection at impact 50% | 6% | 4.4% |
+| `SPD` | 10-yard dash | left out | 6% |
+| `THW` | Throwing velocity | left out | 5% |
+| `STR` | Average of strength tests that have a number | left out | 5% |
+
+With no 10-yard, throw, or strength numbers, and every Blast bucket present, the overall matches the older 40 / 22 / 18 / 14 / 6 formula. A saved `sixtyYard` is ignored. It is not turned into a 10-yard time, so SPD stays blank.
+
+The **front of the card** does not print BAT / PWR / PLANE / QUICK / CONN. It prints five face grades:
+
+| Face | Built from | Notes |
 |---|---|---|
-| `BAT` | Bat speed | **40%** |
-| `PWR` | Power 60% + peak hand speed 40% | 22% |
-| `PLANE` | On-plane efficiency 50% + attack angle 30% + vertical bat angle 20% | 18% |
-| `QUICK` | Time to contact 55% + rotational acceleration 45% | 14% |
-| `CONN` | Early connection 50% + connection at impact 50% | 6% |
+| `POW` | Bat speed 50% + Blast power 30% + rotational acceleration 20% | Display only. The overall still uses the bat-speed grade at 40%, not this composite. |
+| `CON` | Time to contact 28% + attack angle 18% + vertical bat angle 12% + on-plane 22% + early connection 10% + connection at impact 10% | Missing pieces are dropped and the rest are reweighted. |
+| `SPD` | 10-yard dash, lower is better | Age bands below. Antonelli, not Blast. |
+| `THW` | Throwing velocity, higher is better | Hitter bands, not the pitcher fastball scale. |
+| `STR` | Average of graded `STRENGTH_TESTS` | Med ball and grip today. Blank tests are skipped. |
 
-Exit velocity, launch angle, contact %, 60 time, fielding, and throwing velocity are **not** part of the hitter grade. Pitchers are unchanged: `VEL` 30% · `BRK` (spin 45% + whiff 55%) 25% · `CNTL` 30% · `STM` 15%. Two-way overall is the average of the hitter overall and the pitcher overall.
+Pitchers are unchanged: `VEL` 30% · `BRK` (spin 45% + whiff 55%) 25% · `CNTL` 30% · `STM` 15%. Two-way overall is the average of the hitter overall and the pitcher overall. A two-way front shows the five hitter grades. Pitching tools are on the back, the profile, and in Showdown.
 
-To retune hitting grades, edit `BLAST_BENCHMARKS` (the published windows) and `gradeBlastMetric` / `gradeHigher` / `gradeLower` / `gradeIdeal` / `gradeOnPlane` (how a window becomes 20–99).
+To retune Blast grades, edit `BLAST_BENCHMARKS` and `gradeBlastMetric` / `gradeHigher` / `gradeLower` / `gradeIdeal` / `gradeOnPlane`. To retune 10-yard, throw, med ball, or grip, edit the `bands` on those metrics. The cuts that turn a window into 20–99 are the same Antonelli curve as a Blast higher/lower metric.
+
+### 10-yard, throw, med ball, and grip
+
+These windows are **Antonelli coach-tuneable**. They are not Blast numbers. `lo` starts Average (50). The midpoint starts Good (65). `hi` starts Great (80).
+
+**10-yard dash (seconds), lower is better.** Fast end is `lo`.
+
+| Group | Window |
+|---|---|
+| 10U | 2.05–2.45 |
+| 12U | 1.95–2.35 |
+| 14U | 1.85–2.25 |
+| 16U | 1.75–2.15 |
+| 18U | 1.65–2.05 |
+| College | 1.55–1.95 |
+| Pro | 1.45–1.85 |
+
+**Throwing velocity (mph), higher is better.** Position-player throws, not the pitcher fastball range.
+
+| Group | Window |
+|---|---|
+| 10U | 40–55 |
+| 12U | 48–64 |
+| 14U | 55–72 |
+| 16U | 62–80 |
+| 18U | 70–88 |
+| College | 78–96 |
+| Pro | 85–100 |
+
+**Med ball throw (feet), higher is better.** The bands assume the default note, a **6 lb rotational / scoop throw**. The note is a coach-editable field (`strengthNote`) stored with the player and printed on the card back next to the distance. If the ball weight or throw type changes, retune the bands.
+
+| Group | Window |
+|---|---|
+| 10U | 12–22 |
+| 12U | 15–26 |
+| 14U | 18–32 |
+| 16U | 22–36 |
+| 18U | 26–42 |
+| College | 30–48 |
+| Pro | 34–54 |
+
+**Grip strength (lbs), higher is better.** Hand dynamometer. The throwing hand is the dominant hand. If both hands are entered, STR uses the higher reading (a tie keeps the throwing hand, which is the same number). If only one hand is entered, that reading is used, so a partial test still counts. If neither is entered, grip is missing.
+
+| Group | Window |
+|---|---|
+| 10U | 28–48 |
+| 12U | 40–65 |
+| 14U | 55–90 |
+| 16U | 75–115 |
+| 18U | 95–145 |
+| College | 115–165 |
+| Pro | 130–180 |
+
+`STR` is the unweighted average of the strength tests that have a grade. With only a med ball, STR is that grade. With only grip, STR is the grip grade. With both, STR is the average. With neither, STR is a dash and it is left out of the overall.
+
+### Adding a strength test
+
+`STRENGTH_TESTS` in `app.js` is the list. Adding a test means adding **one object**:
+
+- `id` — the number is stored at `player.metrics[id]`
+- `label`, `unit`, `mode` (`"higher"` or `"lower"`), `step`, `entryMin`, `entryMax`, `help`
+- `bands` — one `{ lo, hi }` for each age group (`10U` through `Pro`)
+
+The add/edit form, the metrics table, history, the card back, and the STR average pick that entry up. No other list has to be edited for a normal test. Grip is the special case already in the list: it sets `hands: ["gripDominant", "gripOther"]` because one grade reads two fields. A new single-number test should not set `hands`.
+
+A brand-new player form starts each athletic field at the middle of the age-group band so the sliders are not empty. Clearing a field and saving leaves that grade off the card. Migrating an old save does not invent a 10-yard time, a throw, or a strength number, and it does not copy `sixtyYard` into `tenYard`.
 
 ### Where the Blast numbers come from
 
@@ -207,8 +289,19 @@ Blast publishes the windows. It does not publish these scoring choices:
 - Rotational acceleration: 10 g starts Average and 15 g starts Great, using the higher-better curve. The split of the medium bucket at **12.5 g**, and Elite as the number approaches **20 g**, are Antonelli.
 - Ideal-range curve: 96 on the target, about 70 on either published edge, then down toward 20 outside the window. Attack angle and vertical bat angle peak at the **center** because Blast does not name a single target. Early connection and connection at impact peak at Blast's **90°**.
 - Putting the Youth column on both 10U and 12U for attack angle, vertical bat angle, time to contact, peak hand speed, and power. The mph / degrees / seconds / kW are the Youth column. Calling them "10U" and "12U" separately is ours. Bat speed is the exception: 30–45 and 40–52 are published by age.
-- Hitter sub-grade groups and the 40 / 22 / 18 / 14 / 6 weights.
+- Hitter sub-grade groups and the 40 / 22 / 18 / 14 / 6 Blast weights, plus the modest 6% / 5% / 5% for SPD / THW / STR when those tests exist.
+- The face composites POW and CON, and the coach-tuneable 10-yard, throwing-velocity, med-ball, and grip bands.
 - Pitcher velocity, spin, strike %, whiff %, and pitch-capacity ranges. Those stayed in `METRICS` and were never Blast numbers.
+
+## Card back
+
+Clicking a roster card flips it. It does not open the profile. **View Profile** sits on the card back and again under the roster blurb, so the profile is still one click away. The big card on the profile flips the same way, and so does the big card on a retired season. Enter or Space flips the card that has keyboard focus. Clicking again returns to the front.
+
+The back is a black and gold face: team, age and age group, class, height, weight, hometown, bats/throws, positions, season, every sub-grade, and the raw bat speed, 10-yard, throw velocity, med-ball distance with the coach note, grip (better hand called out), and pitcher readings when the player has them.
+
+Collection thumbnails are still buttons. A click opens that retired card. The thumbnail itself does not flip. Showdown and the celebration overlays stay on the front so the clash and the count-up are not interrupted.
+
+`prefers-reduced-motion` does not spin the card. The front and back swap immediately.
 
 ## Player Perks
 
@@ -288,7 +381,7 @@ One save can earn a tier, an overall jump, and new perks. The order is tier-up, 
 
 The screen that opens from a card is laid out like a baseball-game player page, in Antonelli black and gold. It does not use MLB or The Show logos.
 
-The header puts the animated card on the left, the last name large beside it, a rotated position badge, team, archetype, and a facts grid: overall, tier, bats, throws, secondary position, height, weight, age and age group, team, class/year, and hometown. Overall includes a small chip when the grade moved since the previous saved check-in. That chip is the overall now minus the overall computed from the prior history point on each metric. It is labeled “since last assessment.”
+The header puts the animated card on the left, the last name large beside it, a rotated position badge, team, archetype, and a facts grid: overall, tier, bats, throws, secondary position, height, weight, age and age group, team, class/year, and hometown. The big card flips to the same back as the roster card. Overall includes a small chip when the grade moved since the previous saved check-in. That chip is the overall now minus the overall computed from the prior history point on each metric. It is labeled “since last assessment.”
 
 Optional fields added to the player and the add/edit form: `secondaryPosition`, `height`, `weight`, `hometown`. Blank fields show —. Older saves in `localStorage` keep working; missing fields stay blank. The card and roster still print `OF / 1B` when a secondary position is set.
 
@@ -296,7 +389,7 @@ Tabs, left to right:
 
 | Tab | What it holds |
 |---|---|
-| Attributes | Tall bars. Hitters get hitting tools (BAT, PWR, PLANE, QUICK, CONN) and Blast grades (bat speed, hand speed, power, plane, attack, vertical bat angle, time to contact, rotational acceleration, both connections). Pitchers get VEL, BRK, CNTL, STM plus fastball, spin, strike %, whiff %, and capacity. Two-way players get both groups, labeled. |
+| Attributes | Tall bars. Hitters get POW, CON, SPD, THW, STR, then 10-yard, throw, med ball, and grip, then the Blast metric grades. Pitchers get VEL, BRK, CNTL, STM plus fastball, spin, strike %, whiff %, and capacity. Two-way players get both groups, labeled. A retired card keeps the tool keys it was saved with. |
 | Metrics & History | The existing table: current, previous, change, sparkline, band, grade. |
 | Player Perks | Earned and coach-awarded perks, Open again, and click-to-replay. |
 | Strengths & Growth | Archetype note, how the grade is built, strengths, and areas to improve. |
@@ -331,7 +424,7 @@ Showdown puts two **current-season** cards against each other. Retired collectio
 
 The intro slams a huge **SHOWDOWN** title, then the cards rush in from off-screen and collide in the center. A flash, sparks, and a short shake mark the hit. The cards settle side by side with the Antonelli star **VS** badge between them and square up once more before the results. It lasts about two and a half seconds. **Skip** jumps to the results. `prefers-reduced-motion` skips the battle and opens the results immediately. Buttons and headings use the word SHOWDOWN in capitals.
 
-Each shared category shows both grades, the raw reading when there is one, and the gap. The center says `A +5` or `B +3`. The leader’s chip is `+N` and the trailer’s chip is `-N`. A tie says `EVEN`. Overall and tier are always shared. Tool grades (BAT, PWR, PLANE, QUICK, CONN, VEL, BRK, CNTL, STM) and metric grades are shared only when both cards have that category. A hitter against a pitcher still compares overall and tier. Hitting rows show the hitter’s number and a dash for the pitcher, and those dashes are not losses. A two-way player brings both sets; the opponent is scored only on the rows they also have.
+Each shared category shows both grades, the raw reading when there is one, and the gap. The center says `A +5` or `B +3`. The leader’s chip is `+N` and the trailer’s chip is `-N`. A tie says `EVEN`. Overall and tier are always shared. Tool grades (POW, CON, SPD, THW, STR, VEL, BRK, CNTL, STM) and metric grades are shared only when both cards have that category. A dash, including a blank SPD, THW, or STR, is not a loss. A hitter against a pitcher still compares overall and tier. A two-way player brings both sets; the opponent is scored only on the rows they also have. Chase lines for Speed and Throw add the raw gap (seconds quicker, or mph). Strength chase stays on the grade, because STR can mix med ball and grip.
 
 Grades are versus each player’s own age group. Raw mph, degrees, and seconds are the absolute readings, shown beside the grade so a harder window is visible.
 
@@ -365,7 +458,7 @@ The banner follows the overall: the higher overall leads, and the same overall i
 4. **Photo management** — ~~photo upload~~ ✅ done in v2 (browser-side, in localStorage). Next: cloud photo storage, cropping/positioning, and background removal so photos cut out over the card art like the reference.
 5. **Age-group Blast windows** — done for hitters (10U through Pro). Next: let a coach save their own window edits, and add a source tag (tee / front toss / game) on each metric entry.
 6. **Metric entry workflow** — session-based entries (date, coach, source: radar/Blast/TrackMan/game) with notes, instead of editing a single current value.
-7. **Card back + sharing** — flip the card for full metrics/history; export/share as an image for social posts.
+7. **Card back + sharing** — the flip is in. Next: export or share the card as an image for social posts.
 8. **Deploy to GitHub Pages** — see [GitHub Pages](#github-pages) above. Settings → Pages → deploy from the `main` branch, folder `/ (root)`. No server is needed until accounts or a database are added.
 
 ## Notes / limitations (v2)

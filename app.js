@@ -12,14 +12,22 @@
    Pitchers still use the linear METRICS low/high ranges (not Blast).
 
    1) Each raw metric becomes a 20–99 grade.
-   2) Hitter sub-grades (weights in SUBGRADES.hitter — bat speed is 40%):
-        BAT  = bat speed                         40%
-        PWR  = power 60% + peak hand speed 40%   22%
-        PLANE = on-plane 50% + attack angle 30% + vertical bat angle 20%   18%
-        QUICK = time to contact 55% + rotational acceleration 45%   14%
-        CONN = early connection 50% + connection at impact 50%   6%
-      Pitcher: VEL 30, BRK 25, CNTL 30, STM 15.
+   2) The hitter OVERALL still starts from the Blast buckets in SUBGRADES.hitter.
+      Bat speed is always 40% of that overall when a bat-speed grade exists.
+      The other Blast buckets (PWR 22, PLANE 18, QUICK 14, CONN 6) share whatever
+      is left after the optional athletic grades that actually have a number:
+        SPD  6%  10-yard dash (tenYard). A saved sixtyYard is ignored.
+        THW  5%  throwing velocity (throwVelo), age-banded, not the pitcher scale.
+        STR  5%  average of the STRENGTH_TESTS that have a number (med ball, grip).
+      Missing SPD, THW, or STR is left out. It is not a zero.
+      The card FRONT does not print those buckets. It prints five face grades:
+        POW = bat speed 50% + power 30% + rotational acceleration 20%
+        CON = time to contact 28% + attack angle 18% + vertical bat angle 12%
+              + on-plane 22% + early connection 10% + connection at impact 10%
+        SPD, THW, STR as above. No data prints as a dash and stays off the overall.
+      Pitcher: VEL 30, BRK 25, CNTL 30, STM 15. Unchanged.
       Two-way overall is the average of the hitter overall and the pitcher overall.
+      The two-way front shows the five hitter grades. Pitching tools stay on the back.
    3) Overall is rounded and clamped to 20–99.
    4) Tier: Bronze <70, Silver 70–79, Gold 80–89, Diamond 90+.
 
@@ -251,7 +259,101 @@ const METRICS = {
   strikePct: { label: "Strike % (Command)", unit: "%", low: 45, high: 76, step: 1, help: "Pitches in / around the strike zone" },
   whiffPct: { label: "Offspeed Whiff %", unit: "%", low: 10, high: 46, step: 1, help: "Swings-and-misses on breaking / offspeed" },
   pitchCapacity: { label: "Pitch Capacity (Stamina)", unit: " pitches", low: 40, high: 110, step: 1, help: "Pitches before velocity / command drops" },
+  /* Athletic hitter metrics. Bands are Antonelli coach-tuneable, not Blast.
+     A saved sixtyYard is never read and is never copied onto tenYard. */
+  tenYard: {
+    label: "10-Yard Dash", unit: " s", step: 0.01, coach: true, mode: "lower",
+    entryMin: 1.2, entryMax: 3.2,
+    help: "10-yard dash in seconds. Lower is better. This is not a 60-yard time.",
+    bands: {
+      "10U": { lo: 2.05, hi: 2.45 },
+      "12U": { lo: 1.95, hi: 2.35 },
+      "14U": { lo: 1.85, hi: 2.25 },
+      "16U": { lo: 1.75, hi: 2.15 },
+      "18U": { lo: 1.65, hi: 2.05 },
+      "College": { lo: 1.55, hi: 1.95 },
+      "Pro": { lo: 1.45, hi: 1.85 },
+    },
+  },
+  throwVelo: {
+    label: "Throwing Velocity", unit: " mph", step: 0.5, coach: true, mode: "higher",
+    entryMin: 30, entryMax: 105,
+    help: "Hitter throwing velocity, not the pitcher fastball scale. Higher is better.",
+    bands: {
+      "10U": { lo: 40, hi: 55 },
+      "12U": { lo: 48, hi: 64 },
+      "14U": { lo: 55, hi: 72 },
+      "16U": { lo: 62, hi: 80 },
+      "18U": { lo: 70, hi: 88 },
+      "College": { lo: 78, hi: 96 },
+      "Pro": { lo: 85, hi: 100 },
+    },
+  },
+  medBall: {
+    label: "Med Ball Throw", unit: " ft", step: 0.5, coach: true, mode: "higher",
+    entryMin: 5, entryMax: 80, bandsFrom: "medBall",
+    help: "Medicine-ball throw distance. Higher is better. The note records the ball weight and throw type.",
+  },
+  gripDominant: {
+    label: "Grip Strength (throwing hand)", unit: " lbs", step: 1, coach: true, mode: "higher",
+    entryMin: 15, entryMax: 220, bandsFrom: "grip",
+    help: "Dynamometer, throwing hand. Dominant hand. Higher is better. STR uses the better hand when both are entered.",
+  },
+  gripOther: {
+    label: "Grip Strength (other hand)", unit: " lbs", step: 1, coach: true, mode: "higher",
+    entryMin: 15, entryMax: 220, bandsFrom: "grip",
+    help: "Dynamometer, non-throwing hand. Used when it is the only grip entered, or when it beats the throwing hand.",
+  },
 };
+
+/* Strength tests that feed STR. STR is the unweighted average of the tests
+   below that have a number. To add a test, append one object. A normal test
+   stores its number at player.metrics[id]. Set `hands` only when one grade
+   should read several fields (grip does). Age bands are Antonelli coach-tuneable.
+   The med-ball bands assume the default note: a 6 lb rotational / scoop throw.
+   Retune `bands` if the ball weight or throw type changes. */
+const DEFAULT_STRENGTH_NOTE = "6 lb rotational / scoop throw";
+const STRENGTH_TESTS = [
+  {
+    id: "medBall",
+    label: "Med Ball Throw",
+    unit: " ft",
+    mode: "higher",
+    step: 0.5,
+    entryMin: 5,
+    entryMax: 80,
+    help: "Medicine-ball throw distance. Higher is better. The note records the ball weight and throw type.",
+    bands: {
+      "10U": { lo: 12, hi: 22 },
+      "12U": { lo: 15, hi: 26 },
+      "14U": { lo: 18, hi: 32 },
+      "16U": { lo: 22, hi: 36 },
+      "18U": { lo: 26, hi: 42 },
+      "College": { lo: 30, hi: 48 },
+      "Pro": { lo: 34, hi: 54 },
+    },
+  },
+  {
+    id: "grip",
+    label: "Grip Strength",
+    unit: " lbs",
+    mode: "higher",
+    step: 1,
+    entryMin: 15,
+    entryMax: 220,
+    hands: ["gripDominant", "gripOther"],
+    help: "Hand dynamometer. The better hand is graded. If only one hand is entered, that reading is used. The throwing hand is the dominant hand.",
+    bands: {
+      "10U": { lo: 28, hi: 48 },
+      "12U": { lo: 40, hi: 65 },
+      "14U": { lo: 55, hi: 90 },
+      "16U": { lo: 75, hi: 115 },
+      "18U": { lo: 95, hi: 145 },
+      "College": { lo: 115, hi: 165 },
+      "Pro": { lo: 130, hi: 180 },
+    },
+  },
+];
 
 const SUBGRADES = {
   hitter: [
@@ -302,13 +404,19 @@ const SAMPLE_PLAYERS = [
     strengths: ["Drives the ball in the air to the pull side with real carry", "Strong, physical swing — top bat speed on the team", "Patient in hitter's counts; hunts pitches he can lift"],
     improvements: ["Stay on plane against breaking balls down and away", "Shorten the two-strike swing without giving up bat speed", "First-step quickness on outfield reads"],
     coachQuirks: ["dead-red", "unfazed"],
-    metrics: { batSpeed: 69, peakHandSpeed: 22, attackAngle: 12, verticalBatAngle: -28, timeToContact: 0.155, powerKw: 3.9, rotationalAcceleration: 16, onPlaneEfficiency: 76, earlyConnection: 92, connectionAtImpact: 88 },
+    strengthNote: DEFAULT_STRENGTH_NOTE,
+    metrics: {
+      batSpeed: 69, peakHandSpeed: 22, attackAngle: 12, verticalBatAngle: -28, timeToContact: 0.155, powerKw: 3.9, rotationalAcceleration: 16, onPlaneEfficiency: 76, earlyConnection: 92, connectionAtImpact: 88,
+      tenYard: 1.84, throwVelo: 84, medBall: 38, gripDominant: 132, gripOther: 121,
+    },
     history: {
       batSpeed: metricHistory(69, [63, 65, 67]), peakHandSpeed: metricHistory(22, [20, 20.5, 21]),
       attackAngle: metricHistory(12, [11, 11.5, 12]), verticalBatAngle: metricHistory(-28, [-26, -27, -27]),
       timeToContact: metricHistory(0.155, [0.160, 0.158, 0.156]), powerKw: metricHistory(3.9, [3.2, 3.5, 3.7]),
       rotationalAcceleration: metricHistory(16, [13, 14, 15]), onPlaneEfficiency: metricHistory(76, [73, 74, 75]),
       earlyConnection: metricHistory(92, [90, 91, 91]), connectionAtImpact: metricHistory(88, [86, 87, 87]),
+      tenYard: metricHistory(1.84, [1.95, 1.91, 1.87]), throwVelo: metricHistory(84, [78, 80, 82]),
+      medBall: metricHistory(38, [32, 34, 36]), gripDominant: metricHistory(132, [118, 122, 128]), gripOther: metricHistory(121, [110, 114, 118]),
     },
   },
   {
@@ -317,13 +425,19 @@ const SAMPLE_PLAYERS = [
     strengths: ["Short, quick swing that finds the barrel", "Advanced strike-zone awareness for his age", "Instinctive base runner; quick first step out of the box"],
     improvements: ["Add strength so bat speed can climb toward varsity range", "Keep the bat on plane against high fastballs", "Stay connected when he tries to drive a pitch"],
     coachQuirks: ["table-setter", "first-pitch"],
-    metrics: { batSpeed: 58, peakHandSpeed: 19, attackAngle: 8, verticalBatAngle: -22, timeToContact: 0.17, powerKw: 2.4, rotationalAcceleration: 11, onPlaneEfficiency: 72, earlyConnection: 90, connectionAtImpact: 89 },
+    strengthNote: DEFAULT_STRENGTH_NOTE,
+    metrics: {
+      batSpeed: 58, peakHandSpeed: 19, attackAngle: 8, verticalBatAngle: -22, timeToContact: 0.17, powerKw: 2.4, rotationalAcceleration: 11, onPlaneEfficiency: 72, earlyConnection: 90, connectionAtImpact: 89,
+      tenYard: 1.68, throwVelo: 74, medBall: 27, gripDominant: 96, gripOther: 88,
+    },
     history: {
       batSpeed: metricHistory(58, [56, 57, 57.5]), peakHandSpeed: metricHistory(19, [18, 18.5, 18.5]),
       attackAngle: metricHistory(8, [5, 6, 7]), verticalBatAngle: metricHistory(-22, [-20, -21, -22]),
       timeToContact: metricHistory(0.17, [0.19, 0.182, 0.176]), powerKw: metricHistory(2.4, [2.25, 2.3, 2.35]),
       rotationalAcceleration: metricHistory(11, [10, 10.5, 10.5]), onPlaneEfficiency: metricHistory(72, [66, 68, 70]),
       earlyConnection: metricHistory(90, [86, 88, 89]), connectionAtImpact: metricHistory(89, [85, 86, 88]),
+      tenYard: metricHistory(1.68, [1.82, 1.76, 1.72]), throwVelo: metricHistory(74, [68, 70, 72]),
+      medBall: metricHistory(27, [22, 24, 25]), gripDominant: metricHistory(96, [84, 88, 92]), gripOther: metricHistory(88, [78, 82, 85]),
     },
   },
   {
@@ -358,8 +472,10 @@ const SAMPLE_PLAYERS = [
     strengths: ["Strong arm behind the plate and on the mound", "Competitive at-bats; battles with two strikes", "Athletic frame with room to add strength"],
     improvements: ["Receiving and blocking consistency behind the plate", "Bat speed — stay connected through the turn", "Pitching mechanics: stay closed longer to improve command"],
     coachQuirks: ["pop-time", "unfazed"],
+    strengthNote: DEFAULT_STRENGTH_NOTE,
     metrics: {
       batSpeed: 51, peakHandSpeed: 17, attackAngle: 6, verticalBatAngle: -25, timeToContact: 0.19, powerKw: 1.8, rotationalAcceleration: 8.5, onPlaneEfficiency: 64, earlyConnection: 78, connectionAtImpact: 84,
+      tenYard: 2.08, throwVelo: 70, medBall: 24, gripDominant: 72, gripOther: 66,
       fastballVelo: 76, spinRate: 1950, strikePct: 58, whiffPct: 22, pitchCapacity: 62,
     },
     history: {
@@ -368,6 +484,8 @@ const SAMPLE_PLAYERS = [
       timeToContact: metricHistory(0.19, [0.205, 0.200, 0.195]), powerKw: metricHistory(1.8, [1.55, 1.65, 1.7]),
       rotationalAcceleration: metricHistory(8.5, [7.5, 8, 8.2]), onPlaneEfficiency: metricHistory(64, [60, 61, 63]),
       earlyConnection: metricHistory(78, [74, 75, 77]), connectionAtImpact: metricHistory(84, [80, 81, 82]),
+      tenYard: metricHistory(2.08, [2.20, 2.16, 2.12]), throwVelo: metricHistory(70, [64, 66, 68]),
+      medBall: metricHistory(24, [20, 21, 23]), gripDominant: metricHistory(72, [62, 66, 69]), gripOther: metricHistory(66, [58, 61, 64]),
       fastballVelo: metricHistory(76, [73, 74, 75]), spinRate: metricHistory(1950, [1850, 1880, 1920]),
       strikePct: metricHistory(58, [54, 55, 57]), whiffPct: metricHistory(22, [18, 19, 21]),
       pitchCapacity: metricHistory(62, [52, 56, 59]),
@@ -468,13 +586,79 @@ function gradeBlastMetric(key, value, ageGroup) {
   return { grade, band: bandForGrade(grade), window };
 }
 
+function metricNumber(value) {
+  if (value == null || value === "") return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
+function coachSpecFor(key) {
+  const direct = STRENGTH_TESTS.find((test) => test.id === key);
+  if (direct) return direct;
+  const m = METRICS[key];
+  if (m && m.bandsFrom) {
+    const from = STRENGTH_TESTS.find((test) => test.id === m.bandsFrom);
+    if (from) return { ...from, mode: m.mode || from.mode };
+  }
+  if (m && m.coach && m.bands) return m;
+  return null;
+}
+
+/* Age-banded coach windows. lo/hi are Antonelli, not Blast. */
+function gradeWindow(value, spec, ageGroup) {
+  const n = metricNumber(value);
+  if (n == null || !spec || !spec.bands) return null;
+  const group = AGE_GROUP_ORDER.includes(ageGroup) ? ageGroup : "16U";
+  const window = spec.bands[group] || spec.bands["16U"];
+  if (!window || !(window.hi > window.lo) && window.hi !== window.lo) return null;
+  const raw = spec.mode === "lower" ? gradeLower(n, window.lo, window.hi) : gradeHigher(n, window.lo, window.hi);
+  return clamp(Math.round(raw), 20, 99);
+}
+
 function normalizeMetric(key, value, ageGroup) {
   const m = METRICS[key];
-  if (!m || value == null || Number.isNaN(Number(value))) return null;
+  if (!m || metricNumber(value) == null) return null;
   if (m.blast) return gradeBlastMetric(key, value, ageGroup).grade;
+  const coach = coachSpecFor(key);
+  if (m.coach && coach) return gradeWindow(value, coach, ageGroup);
+  if (m.low == null || m.high == null) return null;
   let pct = (Number(value) - m.low) / (m.high - m.low);
   if (m.invert) pct = 1 - pct;
   return Math.round(clamp(20 + pct * 79, 20, 99));
+}
+
+/* Grip: throwing hand is dominant (`throws`). Both numbers → the higher one.
+   Only one number → that reading, so a single entered hand still counts.
+   Neither number → grip is missing and STR ignores it. */
+function gripReading(player) {
+  const metrics = (player && player.metrics) || {};
+  const dominant = metricNumber(metrics.gripDominant);
+  const other = metricNumber(metrics.gripOther);
+  if (dominant != null && other != null) return Math.max(dominant, other);
+  if (dominant != null) return dominant;
+  if (other != null) return other;
+  return null;
+}
+
+function strengthValue(player, test) {
+  if (!test) return null;
+  if (test.hands) return test.id === "grip" ? gripReading(player) : null;
+  return metricNumber(player && player.metrics && player.metrics[test.id]);
+}
+
+function strengthResults(player) {
+  const ageGroup = activeAgeGroup(player);
+  return STRENGTH_TESTS.map((test) => {
+    const value = strengthValue(player, test);
+    const grade = value == null ? null : gradeWindow(value, test, ageGroup);
+    return { id: test.id, label: test.label, unit: test.unit, value, grade };
+  });
+}
+
+function strengthGrade(player) {
+  const grades = strengthResults(player).map((row) => row.grade).filter((grade) => grade != null);
+  if (!grades.length) return null;
+  return clamp(Math.round(grades.reduce((sum, grade) => sum + grade, 0) / grades.length), 20, 99);
 }
 
 function subGradesFor(player, kind) {
@@ -496,19 +680,111 @@ function overallFromSubgrades(subs) {
   return tw ? clamp(Math.round(sum / tw), 20, 99) : 20;
 }
 
+/* Face grades on the hitter card. These are display composites. The overall
+   still reserves 40% for the bat-speed grade itself (see hitterWeightMap). */
+const FACE_PARTS = {
+  POW: [
+    { key: "batSpeed", weight: 0.50 },
+    { key: "powerKw", weight: 0.30 },
+    { key: "rotationalAcceleration", weight: 0.20 },
+  ],
+  CON: [
+    { key: "timeToContact", weight: 0.28 },
+    { key: "attackAngle", weight: 0.18 },
+    { key: "verticalBatAngle", weight: 0.12 },
+    { key: "onPlaneEfficiency", weight: 0.22 },
+    { key: "earlyConnection", weight: 0.10 },
+    { key: "connectionAtImpact", weight: 0.10 },
+  ],
+};
+const FACE_ORDER = [
+  { key: "POW", label: "Power" },
+  { key: "CON", label: "Contact" },
+  { key: "SPD", label: "Speed" },
+  { key: "THW", label: "Throw" },
+  { key: "STR", label: "Strength" },
+];
+const BAT_OVERALL_WEIGHT = 0.40;
+const OPTIONAL_OVERALL = { SPD: 0.06, THW: 0.05, STR: 0.05 };
+const BLAST_POOL_WEIGHTS = { PWR: 0.22, PLANE: 0.18, QUICK: 0.14, CONN: 0.06 };
+
+function compositeGrade(player, parts) {
+  const ageGroup = activeAgeGroup(player);
+  let total = 0;
+  let sum = 0;
+  parts.forEach((part) => {
+    const grade = normalizeMetric(part.key, player.metrics && player.metrics[part.key], ageGroup);
+    if (grade == null) return;
+    sum += grade * part.weight;
+    total += part.weight;
+  });
+  return total ? Math.round(sum / total) : null;
+}
+
+function faceGradesFor(player) {
+  const ageGroup = activeAgeGroup(player);
+  const spd = normalizeMetric("tenYard", player.metrics && player.metrics.tenYard, ageGroup);
+  const thw = normalizeMetric("throwVelo", player.metrics && player.metrics.throwVelo, ageGroup);
+  const str = strengthGrade(player);
+  const grades = { POW: compositeGrade(player, FACE_PARTS.POW), CON: compositeGrade(player, FACE_PARTS.CON), SPD: spd, THW: thw, STR: str };
+  return FACE_ORDER.map((row) => ({ key: row.key, label: row.label, grade: grades[row.key] }));
+}
+
+/* Bat speed stays 40% of the hitter overall whenever that grade exists.
+   SPD / THW / STR add their modest weights only when they have a grade.
+   PWR, PLANE, QUICK, and CONN share the leftover in their 22:18:14:6 ratio.
+   With none of the optionals and every Blast bucket present, this matches
+   overallFromSubgrades on the five Blast buckets. */
+function hitterWeightMap(blastSubs, faceSubs) {
+  const blast = Object.fromEntries(blastSubs.map((row) => [row.key, row.grade]));
+  const face = Object.fromEntries(faceSubs.map((row) => [row.key, row.grade]));
+  const map = { BAT: 0, PWR: 0, PLANE: 0, QUICK: 0, CONN: 0, SPD: 0, THW: 0, STR: 0 };
+  const optKeys = ["SPD", "THW", "STR"].filter((key) => face[key] != null);
+  const optW = optKeys.reduce((sum, key) => sum + OPTIONAL_OVERALL[key], 0);
+  if (blast.BAT == null) {
+    const present = Object.entries(BLAST_POOL_WEIGHTS).filter(([key]) => blast[key] != null);
+    const tw = present.reduce((sum, [, weight]) => sum + weight, 0) + optW;
+    if (!tw) return map;
+    present.forEach(([key, weight]) => { map[key] = weight / tw; });
+    optKeys.forEach((key) => { map[key] = OPTIONAL_OVERALL[key] / tw; });
+    return map;
+  }
+  map.BAT = BAT_OVERALL_WEIGHT;
+  const present = Object.entries(BLAST_POOL_WEIGHTS).filter(([key]) => blast[key] != null);
+  const presentW = present.reduce((sum, [, weight]) => sum + weight, 0);
+  const pool = 1 - BAT_OVERALL_WEIGHT - optW;
+  if (presentW > 0) present.forEach(([key, weight]) => { map[key] = pool * (weight / presentW); });
+  optKeys.forEach((key) => { map[key] = OPTIONAL_OVERALL[key]; });
+  return map;
+}
+
+function hitterOverall(blastSubs, faceSubs) {
+  const weights = hitterWeightMap(blastSubs, faceSubs);
+  const grades = Object.fromEntries(blastSubs.map((row) => [row.key, row.grade]));
+  faceSubs.forEach((row) => { grades[row.key] = row.grade; });
+  let sum = 0;
+  let tw = 0;
+  Object.entries(weights).forEach(([key, weight]) => {
+    if (weight > 0 && grades[key] != null) { sum += grades[key] * weight; tw += weight; }
+  });
+  return tw ? clamp(Math.round(sum / tw), 20, 99) : 20;
+}
+
 function gradesFor(player) {
+  if (!player) return { subs: [], overall: 20 };
   if (player.type === "pitcher") {
     const subs = subGradesFor(player, "pitcher");
-    return { subs, overall: overallFromSubgrades(subs) };
+    return { subs, overall: overallFromSubgrades(subs), pitcherSubs: subs };
   }
+  const blast = subGradesFor(player, "hitter");
+  const face = faceGradesFor(player);
+  const hitting = hitterOverall(blast, face);
   if (player.type === "two-way") {
-    const h = subGradesFor(player, "hitter");
-    const p = subGradesFor(player, "pitcher");
-    const overall = clamp(Math.round((overallFromSubgrades(h) + overallFromSubgrades(p)) / 2), 20, 99);
-    return { subs: [...h, ...p], overall, hitterSubs: h, pitcherSubs: p };
+    const pitching = subGradesFor(player, "pitcher");
+    const overall = clamp(Math.round((hitting + overallFromSubgrades(pitching)) / 2), 20, 99);
+    return { subs: [...face, ...pitching], overall, hitterSubs: face, pitcherSubs: pitching, blastSubs: blast };
   }
-  const subs = subGradesFor(player, "hitter");
-  return { subs, overall: overallFromSubgrades(subs) };
+  return { subs: face, overall: hitting, hitterSubs: face, blastSubs: blast };
 }
 
 function tierFor(overall) {
@@ -656,6 +932,7 @@ function archiveCurrentCard(player, archivedAt) {
     height: player.height || "",
     weight: player.weight || "",
     hometown: player.hometown || "",
+    strengthNote: player.strengthNote || "",
     bats: player.bats || "",
     throws: player.throws || "",
     type: player.type,
@@ -1540,10 +1817,19 @@ function seedSampleEarns() {
 }
 seedSampleEarns();
 
+function athleticKeys() {
+  const keys = ["tenYard", "throwVelo"];
+  STRENGTH_TESTS.forEach((test) => {
+    if (test.hands) keys.push(...test.hands);
+    else keys.push(test.id);
+  });
+  return keys;
+}
+
 function metricKeysFor(type) {
-  if (type === "pitcher") return PITCHER_KEYS;
-  if (type === "two-way") return [...BLAST_KEYS, ...PITCHER_KEYS];
-  return BLAST_KEYS;
+  if (type === "pitcher") return PITCHER_KEYS.slice();
+  if (type === "two-way") return [...BLAST_KEYS, ...athleticKeys(), ...PITCHER_KEYS];
+  return [...BLAST_KEYS, ...athleticKeys()];
 }
 
 function defaultBlastMetrics(ageGroup) {
@@ -1565,16 +1851,39 @@ function defaultPitcherMetrics() {
   return { fastballVelo: 78, spinRate: 2000, strikePct: 58, whiffPct: 22, pitchCapacity: 60 };
 }
 
+function defaultAthleticMetrics(ageGroup) {
+  const group = AGE_GROUP_ORDER.includes(ageGroup) ? ageGroup : "16U";
+  const out = {};
+  athleticKeys().forEach((key) => {
+    const spec = coachSpecFor(key);
+    const window = spec && spec.bands && (spec.bands[group] || spec.bands["16U"]);
+    if (!window) return;
+    const mid = (window.lo + window.hi) / 2;
+    out[key] = spec.mode === "lower" ? Math.round(mid * 100) / 100 : Math.round(mid);
+  });
+  return out;
+}
+
 function defaultMetrics(type, ageGroup) {
   const blast = defaultBlastMetrics(ageGroup || "16U");
   const pitch = defaultPitcherMetrics();
+  const athletic = defaultAthleticMetrics(ageGroup || "16U");
   const out = {};
-  metricKeysFor(type).forEach((k) => { out[k] = BLAST_KEYS.includes(k) ? blast[k] : pitch[k]; });
+  metricKeysFor(type).forEach((k) => {
+    if (BLAST_KEYS.includes(k)) out[k] = blast[k];
+    else if (PITCHER_KEYS.includes(k)) out[k] = pitch[k];
+    else out[k] = athletic[k];
+  });
   return out;
 }
 
 function benchmarkCaption(key, ageGroup) {
   const m = METRICS[key];
+  const coach = coachSpecFor(key);
+  if (m.coach && coach && coach.bands) {
+    const b = coach.bands[ageGroup] || coach.bands["16U"];
+    return `Antonelli coach-tuneable ${ageGroup}: ${formatMetric(key, b.lo)}–${formatMetric(key, b.hi)}${m.unit}. Not a Blast window.`;
+  }
   if (!m.blast) return `Benchmark ${m.low}–${m.high}${m.unit}`;
   const spec = BLAST_BENCHMARKS[key];
   const b = spec.bands[ageGroup] || spec.bands["16U"];
@@ -1591,6 +1900,7 @@ function formatMetric(key, value) {
   if (value == null || value === "" || Number.isNaN(Number(value))) return "—";
   const n = Number(value);
   if (key === "timeToContact") return n.toFixed(3);
+  if (key === "tenYard") return n.toFixed(2);
   if (key === "powerKw") {
     const rounded = Math.round(n * 1000) / 1000;
     return String(rounded);
@@ -1667,6 +1977,21 @@ function migratePlayer(p) {
       history[k] = Array.isArray(oldHist[k]) && oldHist[k].length ? oldHist[k] : [metrics[k]];
     });
   }
+  /* Optional athletic metrics stay absent when the old card did not have them.
+     sixtyYard is never copied onto tenYard. SPD stays blank instead. */
+  athleticKeys().forEach((k) => {
+    if (k === "tenYard") {
+      const dash = metricNumber(old.tenYard);
+      if (dash == null) return;
+      metrics.tenYard = dash;
+      history.tenYard = Array.isArray(oldHist.tenYard) && oldHist.tenYard.length ? oldHist.tenYard.map(Number) : [dash];
+      return;
+    }
+    const numeric = metricNumber(old[k]);
+    if (numeric == null) return;
+    metrics[k] = numeric;
+    history[k] = Array.isArray(oldHist[k]) && oldHist[k].length ? oldHist[k].map(Number) : [numeric];
+  });
   copy.metrics = metrics;
   copy.history = history;
   return copy;
@@ -1708,10 +2033,11 @@ function savePlayers() {
 function metricImproved(key, before, after, ageGroup) {
   const m = METRICS[key];
   if (!m) return after > before;
-  if (m.blast) {
-    const spec = BLAST_BENCHMARKS[key];
-    if (spec.mode === "lower") return after < before;
-    if (spec.mode === "ideal") {
+  if (m.blast || m.coach) {
+    const spec = m.blast ? BLAST_BENCHMARKS[key] : coachSpecFor(key);
+    const mode = spec && spec.mode;
+    if (mode === "lower") return after < before;
+    if (mode === "ideal" && spec.bands) {
       const target = (spec.bands[ageGroup] || spec.bands["16U"]).target;
       return Math.abs(after - target) < Math.abs(before - target);
     }
@@ -1747,10 +2073,12 @@ function deltaHTML(key, history, ageGroup) {
 }
 
 function bandHTML(key, value, ageGroup) {
-  if (!METRICS[key] || !METRICS[key].blast) return "—";
-  const scored = gradeBlastMetric(key, value, ageGroup);
-  if (!scored.band) return "—";
-  return `<span class="band-chip band-${scored.band.key}">${esc(scored.band.label)}</span>`;
+  const meta = METRICS[key];
+  if (!meta || (!meta.blast && !meta.coach)) return "—";
+  const grade = meta.blast ? gradeBlastMetric(key, value, ageGroup).grade : normalizeMetric(key, value, ageGroup);
+  const band = bandForGrade(grade);
+  if (!band) return "—";
+  return `<span class="band-chip band-${band.key}">${esc(band.label)}</span>`;
 }
 
 /* ---------- Card foil ---------- */
@@ -1785,18 +2113,105 @@ function sparkleHTML(tier, seed, quiet) {
 }
 
 /* ---------- Card rendering ---------- */
-function cardHTML(player, large, face) {
+const HITTER_FACE_KEYS = ["POW", "CON", "SPD", "THW", "STR"];
+const PITCH_FACE_KEYS = ["VEL", "BRK", "CNTL", "STM"];
+
+function stripSubs(player, subs, large) {
+  const rows = Array.isArray(subs) ? subs : [];
+  const hasFace = rows.some((row) => HITTER_FACE_KEYS.includes(row.key));
+  if (player.type !== "pitcher" && hasFace) {
+    return HITTER_FACE_KEYS.map((key) => rows.find((row) => row.key === key) || { key, label: key, grade: null });
+  }
+  if (player.type === "pitcher") {
+    const pitched = PITCH_FACE_KEYS.map((key) => rows.find((row) => row.key === key)).filter(Boolean);
+    return pitched.length ? pitched : rows;
+  }
+  if (!large && player.type === "two-way") return rows.slice(0, 5);
+  return rows;
+}
+
+function backFact(label, value) {
+  return `<div class="back-fact"><span>${esc(label)}</span><b>${value}</b></div>`;
+}
+
+function rawBackLine(label, text) {
+  return `<div class="back-raw"><span>${esc(label)}</span><b>${text}</b></div>`;
+}
+
+function gripBackText(player) {
+  const metrics = player.metrics || {};
+  const dominant = metricNumber(metrics.gripDominant);
+  const other = metricNumber(metrics.gripOther);
+  const hand = player.throws || "—";
+  if (dominant == null && other == null) return "—";
+  if (dominant != null && other != null) {
+    const better = dominant >= other ? `throwing hand (${hand})` : "other hand";
+    return `${formatMetric("gripDominant", Math.max(dominant, other))} lbs · better hand, ${better}`;
+  }
+  if (dominant != null) return `${formatMetric("gripDominant", dominant)} lbs · throwing hand (${esc(hand)})`;
+  return `${formatMetric("gripOther", other)} lbs · other hand only`;
+}
+
+function cardBackHTML(player, face, subs, opts) {
+  const group = face && face.ageGroup ? face.ageGroup : activeAgeGroup(player);
+  const ageShown = face && face.age != null ? face.age : player.age;
+  const classShown = face && face.classYear != null ? face.classYear : player.classYear;
+  const season = (face && face.season) || player.currentSeason || "—";
+  const note = String(player.strengthNote || "").trim();
+  const metrics = player.metrics || {};
+  const med = metricNumber(metrics.medBall);
+  const medText = med == null ? "—" : `${formatMetric("medBall", med)} ft${note ? " · " + esc(note) : ""}`;
+  const gradeLine = subs.map((row) => `<div class="back-grade"><b>${row.grade ?? "—"}</b><span>${esc(row.key)}</span><small>${esc(row.label || row.key)}</small></div>`).join("");
+  const hitting = player.type !== "pitcher" ? [
+    rawBackLine("Bat speed", metricNumber(metrics.batSpeed) == null ? "—" : `${formatMetric("batSpeed", metrics.batSpeed)} mph`),
+    rawBackLine("10-yard dash", metricNumber(metrics.tenYard) == null ? "—" : `${formatMetric("tenYard", metrics.tenYard)} s`),
+    rawBackLine("Throw velo", metricNumber(metrics.throwVelo) == null ? "—" : `${formatMetric("throwVelo", metrics.throwVelo)} mph`),
+    rawBackLine("Med ball", medText),
+    rawBackLine("Grip", gripBackText(player)),
+  ].join("") : "";
+  const pitching = player.type !== "hitter" ? [
+    rawBackLine("Fastball", metricNumber(metrics.fastballVelo) == null ? "—" : `${formatMetric("fastballVelo", metrics.fastballVelo)} mph`),
+    rawBackLine("Spin", metricNumber(metrics.spinRate) == null ? "—" : `${formatMetric("spinRate", metrics.spinRate)} rpm`),
+    rawBackLine("Strike %", metricNumber(metrics.strikePct) == null ? "—" : `${formatMetric("strikePct", metrics.strikePct)}%`),
+    rawBackLine("Whiff %", metricNumber(metrics.whiffPct) == null ? "—" : `${formatMetric("whiffPct", metrics.whiffPct)}%`),
+    rawBackLine("Capacity", metricNumber(metrics.pitchCapacity) == null ? "—" : `${formatMetric("pitchCapacity", metrics.pitchCapacity)} pitches`),
+  ].join("") : "";
+  const profileBtn = opts && opts.profileButton && player.id
+    ? `<button class="btn btn-red back-profile" type="button" data-open="${esc(player.id)}">View Profile</button>`
+    : "";
+  return `<div class="card-back" aria-label="Card back for ${esc(player.name)}">
+    <div class="back-scroll">
+    <div class="back-brand"><b>ANTONELLI</b><span>CARD BACK</span></div>
+    <h3>${esc(player.name)}</h3>
+    <p class="back-arch">${esc(player.archetype || "")}</p>
+    <div class="back-facts">
+      ${backFact("Team", esc(player.team || "—"))}
+      ${backFact("Age / group", `${esc(ageShown)} · ${esc(group)}`)}
+      ${backFact("Class", showOrDash(classShown))}
+      ${backFact("Height", showOrDash(player.height))}
+      ${backFact("Weight", showOrDash(player.weight))}
+      ${backFact("Hometown", showOrDash(player.hometown))}
+      ${backFact("Bats / throws", `${esc(player.bats || "—")}/${esc(player.throws || "—")}`)}
+      ${backFact("Positions", esc(positionLine(player)))}
+      ${backFact("Season", esc(season))}
+    </div>
+    <div class="back-grades">${gradeLine}</div>
+    <div class="back-raws">${hitting}${pitching}</div>
+    </div>
+    ${profileBtn}
+  </div>`;
+}
+
+function cardHTML(player, large, face, opts) {
   const graded = gradesFor(player);
   const overall = face && face.overall != null ? face.overall : graded.overall;
   const tier = face && face.tier ? { key: face.tier, label: TIER_LABEL[face.tier] || tierFor(overall).label } : tierFor(overall);
   const subs = face && Array.isArray(face.subs) ? face.subs : graded.subs;
-  const shownSubs = player.type === "two-way" && !large ? subs.slice(0, 5) : subs;
+  const shownSubs = stripSubs(player, subs, large);
+  const backSubs = face && Array.isArray(face.subs) ? face.subs : graded.subs;
   const visual = player.photo
     ? `<img class="card-photo" src="${esc(player.photo)}" alt="Photo of ${esc(player.name)}">`
     : logoPlaceholder();
-  const group = face && face.ageGroup ? face.ageGroup : activeAgeGroup(player);
-  const ageShown = face && face.age != null ? face.age : player.age;
-  const classShown = face && face.classYear != null ? face.classYear : player.classYear;
   const quirkList = face && Array.isArray(face.quirks) ? face.quirks : displayQuirks(player);
   const quirkShown = quirkList.slice(0, 3);
   const quirkExtra = quirkList.length - quirkShown.length;
@@ -1804,8 +2219,8 @@ function cardHTML(player, large, face) {
   const quiet = !!(face && face.quiet);
   const phase = foilPhase(player.id || player.name);
   const badgeSpark = tier.key === "diamond" ? `<i class="badge-spark" aria-hidden="true"></i>` : "";
-  return `
-  <div class="bb-card tier-${tier.key} ${large ? "large" : ""} ${quiet ? "foil-dim" : ""} ${player.photo ? "" : "logo-placeholder"}" style="--foil-delay:${phase.toFixed(2)}s">
+  const front = `
+  <div class="bb-card is-front tier-${tier.key} ${large ? "large" : ""} ${quiet ? "foil-dim" : ""} ${player.photo ? "" : "logo-placeholder"}" style="--foil-delay:${phase.toFixed(2)}s">
     <div class="card-visual">${visual}</div>
     <div class="card-foil" aria-hidden="true"></div>
     <div class="card-glare" aria-hidden="true"></div>
@@ -1814,18 +2229,43 @@ function cardHTML(player, large, face) {
     ${quirkHTML}
     <div class="overall-diamond"><div><b>${overall}</b><span>OVR</span></div>${badgeSpark}</div>
     <div class="card-bottom">
-      <div class="card-meta-row">
-        <div class="team-mark">${starSVG()}<span class="team-code">${esc(teamCode(player.team))}</span></div>
-        <div class="card-name">
-          <span class="archetype">${esc(player.archetype)}</span>
-          <${large ? "h2" : "h3"}>${esc(player.name)}</${large ? "h2" : "h3"}>
-          <span class="pos-bar">${esc(positionLine(player))} - ${esc(player.bats)}/${esc(player.throws)}</span>
-          <span class="card-teamline">${esc(player.team)} • Age ${esc(ageShown)} • ${esc(group)} • ${esc(classShown)}</span>
-        </div>
+      <div class="card-name">
+        <span class="archetype">${esc(player.archetype)}</span>
+        <${large ? "h2" : "h3"}>${esc(player.name)}</${large ? "h2" : "h3"}>
+        <span class="pos-bar">${esc(positionLine(player))} - ${esc(player.bats)}/${esc(player.throws)}</span>
       </div>
-      <div class="subgrades">${shownSubs.map((x) => `<div class="subgrade"><b>${x.grade ?? "—"}</b><span>${x.key}</span></div>`).join("")}</div>
+      <div class="subgrades${shownSubs.length > 5 ? " is-legacy" : ""}">${shownSubs.map((x) => `<div class="subgrade"><b>${x.grade ?? "—"}</b><span>${x.key}</span></div>`).join("")}</div>
     </div>
   </div>`;
+  if (!opts || !opts.flip) return front;
+  return `<div class="card-shell tier-${tier.key}" data-flip tabindex="0" aria-label="Flip ${esc(player.name)}'s card" aria-pressed="false" style="--foil-delay:${phase.toFixed(2)}s">
+    <div class="card-flipper">
+      ${front}
+      ${cardBackHTML(player, face, backSubs, opts)}
+    </div>
+  </div>`;
+}
+
+function wireCardFlips(root) {
+  const scope = root && root.querySelectorAll ? root : document;
+  scope.querySelectorAll("[data-flip]").forEach((shell) => {
+    if (shell.dataset.flipWired) return;
+    shell.dataset.flipWired = "1";
+    const toggle = () => {
+      const on = shell.classList.toggle("is-flipped");
+      shell.setAttribute("aria-pressed", on ? "true" : "false");
+    };
+    shell.addEventListener("click", (e) => {
+      if (e.target.closest("button, a, input, textarea, select, [data-open]")) return;
+      toggle();
+    });
+    shell.addEventListener("keydown", (e) => {
+      if (e.target !== shell) return;
+      if (e.key !== "Enter" && e.key !== " ") return;
+      e.preventDefault();
+      toggle();
+    });
+  });
 }
 
 /* ---------- Roster ---------- */
@@ -1873,38 +2313,50 @@ function renderRoster() {
   $("rosterGrid").innerHTML = list.map((p) => {
     const { overall } = gradesFor(p);
     return `
-    <article class="roster-card" tabindex="0" role="button" data-open="${esc(p.id)}" aria-label="Open profile for ${esc(p.name)}">
-      ${cardHTML(p, false)}
+    <article class="roster-card">
+      ${cardHTML(p, false, null, { flip: true, profileButton: true })}
       <div class="roster-info">
         <h3>${esc(p.name)}</h3>
         <div class="meta">${esc(positionLine(p))} • ${esc(p.team)} • Age ${esc(p.age)} • ${esc(activeAgeGroup(p))} • ${esc(p.classYear)}<br>Bats ${esc(p.bats)} / Throws ${esc(p.throws)} • Overall ${overall}</div>
         <div class="pills"><span class="pill red">${esc(p.archetype)}</span><span class="pill">${typeLabel(p.type)}</span><span class="pill">${tierFor(overall).label}</span></div>
         <p class="snippet"><strong>Does well:</strong> ${esc((p.strengths || [])[0] || "—")}</p>
         <p class="snippet"><strong>Work on:</strong> ${esc((p.improvements || [])[0] || "—")}</p>
+        <button class="btn btn-red roster-profile" type="button" data-open="${esc(p.id)}">View Profile</button>
       </div>
     </article>`;
   }).join("");
   document.querySelectorAll("[data-open]").forEach((el) => {
-    el.addEventListener("click", () => openProfile(el.dataset.open));
-    el.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openProfile(el.dataset.open); } });
+    el.addEventListener("click", (e) => { e.stopPropagation(); openProfile(el.dataset.open); });
   });
+  wireCardFlips($("rosterGrid"));
   watchCardMotion();
 }
 
 let cardMotionObserver = null;
+function markCardLive(card, on) {
+  card.classList.toggle("card-live", on);
+  const shell = card.closest && card.closest(".card-shell");
+  if (shell) shell.classList.toggle("card-live", on);
+}
+
 function watchCardMotion() {
   armCardFoil();
   if (typeof document === "undefined") return;
   if (cardMotionObserver) cardMotionObserver.disconnect();
   const cards = [...document.querySelectorAll(".bb-card")];
   if (!cards.length || typeof IntersectionObserver === "undefined") {
-    cards.forEach((el) => el.classList.add("card-live"));
+    cards.forEach((el) => markCardLive(el, true));
     return;
   }
   cardMotionObserver = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => entry.target.classList.toggle("card-live", entry.isIntersecting));
+    entries.forEach((entry) => markCardLive(entry.target, entry.isIntersecting));
   }, { rootMargin: "120px" });
   cards.forEach((el) => cardMotionObserver.observe(el));
+}
+
+function foilAimTarget(node) {
+  if (!node || !node.closest) return null;
+  return node.closest(".card-shell") || node.closest(".bb-card");
 }
 
 let foilArmed = false;
@@ -1948,7 +2400,8 @@ function applyGyro() {
   if (motionReduced() || typeof document === "undefined") return;
   const rx = Math.max(-10, Math.min(10, (gyroBeta - 45) * 0.18));
   const ry = Math.max(-12, Math.min(12, gyroGamma * 0.22));
-  document.querySelectorAll(".bb-card.card-live").forEach((card) => {
+  document.querySelectorAll(".card-shell.card-live, .bb-card.card-live").forEach((card) => {
+    if (card.classList.contains("bb-card") && card.closest(".card-shell")) return;
     if (card.classList.contains("is-aim")) return;
     card.style.setProperty("--tilt-x", rx.toFixed(2) + "deg");
     card.style.setProperty("--tilt-y", ry.toFixed(2) + "deg");
@@ -1989,21 +2442,21 @@ function armCardFoil() {
   const fine = () => window.matchMedia && window.matchMedia("(hover: hover) and (pointer: fine)").matches;
   document.addEventListener("pointermove", (e) => {
     if (motionReduced() || e.pointerType === "touch" || !fine()) return;
-    const card = e.target.closest && e.target.closest(".bb-card");
+    const card = foilAimTarget(e.target);
     if (!card) return;
     const r = card.getBoundingClientRect();
     if (!r.width || !r.height) return;
     aimCard(card, (e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height);
   });
   document.addEventListener("pointerout", (e) => {
-    const card = e.target.closest && e.target.closest(".bb-card");
+    const card = foilAimTarget(e.target);
     if (!card) return;
     if (e.relatedTarget && card.contains(e.relatedTarget)) return;
     clearCardAim(card);
   });
   document.addEventListener("pointerup", (e) => {
     if (e.pointerType !== "touch" && e.pointerType !== "pen") return;
-    const card = e.target.closest && e.target.closest(".bb-card");
+    const card = foilAimTarget(e.target);
     if (!card) return;
     burstCard(card);
     askGyro();
@@ -2035,7 +2488,7 @@ function metricsTable(player) {
   }).join("");
   const note = player.type === "pitcher"
     ? "Pitcher grades are 20–99 against the coach benchmarks in METRICS. Those ranges are not published Blast numbers."
-    : `Hitting bands use the published Blast window for <strong>${esc(ageGroup)}</strong> in BLAST_BENCHMARKS. Below Average / Average / Good / Great / Elite, and the 20–99 cuts, are Antonelli. Coaches edit the windows in that table and the curves in gradeBlastMetric.`;
+    : `Blast rows use the published window for <strong>${esc(ageGroup)}</strong>. 10-yard, throwing velocity, med ball, and grip use Antonelli coach-tuneable bands in the same age group. STR grades the better grip hand (the throwing hand is dominant; a single entered hand still counts) and averages it with the med-ball grade. A saved 60-yard time is not used.`;
   return `<div class="table-scroll"><table><thead><tr><th>Metric</th><th>Current</th><th>Previous</th><th>Change</th><th>History</th><th>Band</th><th>Grade</th></tr></thead><tbody>${rows}</tbody></table></div>
   <p class="muted small">${note}</p>`;
 }
@@ -2534,11 +2987,20 @@ function metricBars(player, pairs) {
   return pairs.map(([label, key]) => attrBar(label, normalizeMetric(key, player.metrics && player.metrics[key], age), METRICS[key].label)).join("");
 }
 
+function athleticBars(player) {
+  const age = activeAgeGroup(player);
+  const pairs = [["10-YD", "tenYard"], ["THROW", "throwVelo"], ["MED", "medBall"]];
+  const grip = strengthResults(player).find((row) => row.id === "grip");
+  return pairs.map(([label, key]) => attrBar(label, normalizeMetric(key, player.metrics && player.metrics[key], age), METRICS[key].label)).join("")
+    + attrBar("GRIP", grip ? grip.grade : null, "Grip strength, better hand");
+}
+
 function attributePanel(player) {
   const g = gradesFor(player);
   const groups = [];
   if (player.type !== "pitcher") {
     groups.push({ title: player.type === "two-way" ? "Hitting tools" : "Tools", bars: toolBars(g.hitterSubs || g.subs) });
+    groups.push({ title: "Speed, arm, strength", bars: athleticBars(player) });
     groups.push({ title: "Blast grades", bars: metricBars(player, HITTER_BAR_KEYS) });
   }
   if (player.type !== "hitter") {
@@ -2606,9 +3068,12 @@ function growAttrBars() {
 
 function playerFromArchive(card) {
   return {
+    id: `${card.seasonLabel || "retired"}-${card.name || "card"}`,
     name: card.name, age: card.age, ageGroup: card.ageGroup, team: card.team, archetype: card.archetype,
     photo: card.photo || "", position: card.position, secondaryPosition: card.secondaryPosition || "",
+    height: card.height || "", weight: card.weight || "", hometown: card.hometown || "",
     bats: card.bats, throws: card.throws, type: card.type, classYear: card.classYear || "",
+    currentSeason: card.seasonLabel || "", strengthNote: card.strengthNote || "",
     metrics: card.metrics || {}, earnedQuirks: [], coachQuirks: [],
   };
 }
@@ -2624,7 +3089,7 @@ function faceFromArchive(card) {
 
 function archiveBars(card) {
   const stored = card.metricGrades || {};
-  const hitKeys = ["BAT", "PWR", "PLANE", "QUICK", "CONN"];
+  const hitKeys = ["POW", "CON", "SPD", "THW", "STR", "BAT", "PWR", "PLANE", "QUICK", "CONN"];
   const pitchKeys = ["VEL", "BRK", "CNTL", "STM"];
   const subs = card.subGrades || [];
   const groups = [];
@@ -2647,7 +3112,9 @@ function archiveBars(card) {
 }
 
 function archiveMetricsTable(card) {
-  const rows = metricKeysFor(card.type).map((key) => {
+  const storedGrades = card.metricGrades || {};
+  const keys = metricKeysFor(card.type).filter((key) => storedGrades[key]);
+  const rows = keys.map((key) => {
     const meta = METRICS[key];
     const row = (card.metricGrades || {})[key] || {};
     const band = row.band ? `<span class="band-chip band-${esc(row.band.key)}">${esc(row.band.label)}</span>` : "—";
@@ -2665,7 +3132,9 @@ function archivePerks(card) {
 }
 
 function archiveSide(card) {
-  const rows = metricKeysFor(card.type).map((key) => {
+  const storedGrades = card.metricGrades || {};
+  const keys = metricKeysFor(card.type).filter((key) => storedGrades[key]);
+  const rows = keys.map((key) => {
     const meta = METRICS[key];
     const row = (card.metricGrades || {})[key] || {};
     const band = row.band ? `<span class="band-chip band-${esc(row.band.key)}">${esc(row.band.label)}</span>` : "";
@@ -2710,14 +3179,14 @@ function openProfile(id, opts) {
   const built = p.type === "pitcher"
     ? "Pitcher overall uses velocity 30%, breaking stuff 25%, command 30%, and stamina 15%."
     : p.type === "two-way"
-      ? `Hitting half is graded at <strong>${esc(group)}</strong> on Blast windows. Bat speed is 40% of that half. Overall is the average of the hitter grade and the pitcher grade.`
-      : `Graded at <strong>${esc(group)}</strong> on Blast Motion windows. Bat speed is 40% of the hitter overall — the largest weight.`;
+      ? `Hitting half is graded at <strong>${esc(group)}</strong>. Bat speed stays 40% of that half. SPD, THW, and STR are modest and drop out when blank. Overall averages the hitter grade and the pitcher grade. The front shows POW, CON, SPD, THW, and STR.`
+      : `Graded at <strong>${esc(group)}</strong>. Bat speed is 40% of the hitter overall. SPD, THW, and STR are left out when those tests are blank. The front reads POW, CON, SPD, THW, STR.`;
   const fact = (label, value) => `<div class="show-fact"><b>${value}</b><span>${label}</span></div>`;
   $("rosterView").hidden = true;
   $("profileView").hidden = false;
   $("profileContent").innerHTML = `
     <div class="show-top">
-      <div class="show-card">${cardHTML(p, true)}</div>
+      <div class="show-card">${cardHTML(p, true, null, { flip: true })}</div>
       <div class="show-identity">
         <h2 class="show-name">${names.first ? `<span class="first">${esc(names.first)}</span>` : ""}<span class="last">${esc(names.last)}</span></h2>
         <div class="show-posrow">
@@ -2815,6 +3284,7 @@ function openProfile(id, opts) {
     }
   });
   growAttrBars();
+  wireCardFlips($("profileContent"));
   watchCardMotion();
   if (opts && opts.tab) {
     const tabBtn = document.querySelector(`.show-tab[data-tab="${opts.tab}"]`);
@@ -2843,7 +3313,7 @@ function openRetired(id, index) {
       <button class="btn btn-ghost" type="button" id="backCurrentBtn">Back to current card</button>
     </div>
     <div class="show-top">
-      <div class="show-card">${cardHTML(like, true, face)}</div>
+      <div class="show-card">${cardHTML(like, true, face, { flip: true })}</div>
       <div class="show-identity">
         <h2 class="show-name">${names.first ? `<span class="first">${esc(names.first)}</span>` : ""}<span class="last">${esc(names.last)}</span></h2>
         <div class="show-posrow">
@@ -2904,6 +3374,7 @@ function openRetired(id, index) {
   });
   $("backCurrentBtn").addEventListener("click", () => openProfile(id, { tab: "collection" }));
   growAttrBars();
+  wireCardFlips($("profileContent"));
   watchCardMotion();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
@@ -3066,7 +3537,7 @@ function fillArchetypes(type, selected) {
 
 function sliderBounds(key) {
   const m = METRICS[key];
-  if (m.blast) return { min: m.entryMin, max: m.entryMax };
+  if (m.blast || m.coach) return { min: m.entryMin, max: m.entryMax };
   const sliderMin = m.invert ? m.low - 0.4 : Math.floor(m.low - (m.high - m.low) * 0.15);
   const sliderMax = m.invert ? m.high + 0.4 : Math.ceil(m.high + (m.high - m.low) * 0.08);
   return { min: sliderMin, max: sliderMax };
@@ -3076,20 +3547,26 @@ function renderMetricFields(playerLike) {
   const keys = metricKeysFor(playerLike.type);
   const ageGroup = activeAgeGroup(playerLike);
   const defaults = defaultMetrics(playerLike.type, ageGroup);
-  $("metricFields").innerHTML = keys.map((k) => {
+  const note = playerLike.type === "pitcher" ? "" : `<div class="metric-row">
+      <label for="f-strengthNote">Med ball note <small>Ball weight and throw type. The default is a 6 lb rotational / scoop throw. The med-ball bands assume that throw — edit STRENGTH_TESTS if the ball changes. STR averages this throw with grip strength.</small></label>
+      <input id="f-strengthNote" type="text" value="${esc(playerLike.strengthNote != null ? playerLike.strengthNote : DEFAULT_STRENGTH_NOTE)}">
+    </div>`;
+  $("metricFields").innerHTML = note + keys.map((k) => {
     const m = METRICS[k];
-    const val = playerLike.metrics[k] ?? defaults[k];
+    const stored = playerLike.metrics ? playerLike.metrics[k] : null;
+    const has = metricNumber(stored) != null;
+    const sliderVal = has ? stored : defaults[k];
     const bounds = sliderBounds(k);
-    const scored = m.blast ? gradeBlastMetric(k, val, ageGroup) : null;
-    const grade = normalizeMetric(k, val, ageGroup);
-    const band = scored && scored.band
-      ? `<span class="band-chip band-${scored.band.key}" id="band-${k}">${esc(scored.band.label)}</span>`
+    const grade = has ? normalizeMetric(k, stored, ageGroup) : null;
+    const bandInfo = has ? bandForGrade(grade) : null;
+    const band = m.coach || m.blast
+      ? `<span class="band-chip ${bandInfo ? "band-" + bandInfo.key : ""}" id="band-${k}">${bandInfo ? esc(bandInfo.label) : "—"}</span>`
       : "";
     return `<div class="metric-row">
       <label for="m-${k}">${m.label} <small>${esc(m.help)} • ${esc(benchmarkCaption(k, ageGroup))}</small></label>
       <div class="metric-inputs">
-        <input type="range" id="range-${k}" data-metric="${k}" min="${bounds.min}" max="${bounds.max}" step="${m.step}" value="${val}">
-        <input type="number" id="m-${k}" data-metric="${k}" step="${m.step}" value="${val}">
+        <input type="range" id="range-${k}" data-metric="${k}" min="${bounds.min}" max="${bounds.max}" step="${m.step}" value="${sliderVal}">
+        <input type="number" id="m-${k}" data-metric="${k}" step="${m.step}" value="${has ? stored : ""}" placeholder="blank">
         <span class="muted small">${esc(m.unit.trim())}</span>
         <span class="grade-chip" id="grade-${k}">${grade ?? "—"}</span>
         ${band}
@@ -3105,7 +3582,7 @@ function renderMetricFields(playerLike) {
       const grade = normalizeMetric(k, num.value, group);
       $(`grade-${k}`).textContent = grade ?? "—";
       const bandEl = $(`band-${k}`);
-      if (bandEl && METRICS[k].blast) {
+      if (bandEl && (METRICS[k].blast || METRICS[k].coach)) {
         const band = bandForGrade(grade);
         bandEl.textContent = band ? band.label : "—";
         bandEl.className = band ? `band-chip band-${band.key}` : "band-chip";
@@ -3160,7 +3637,13 @@ function renderEarnPreview() {
 function formPlayerLike() {
   const type = $("f-type").value;
   const metrics = {};
-  metricKeysFor(type).forEach((k) => { const el = $(`m-${k}`); if (el) metrics[k] = parseFloat(el.value); });
+  metricKeysFor(type).forEach((k) => {
+    const el = $(`m-${k}`);
+    if (!el || el.value === "") return;
+    const n = parseFloat(el.value);
+    if (!Number.isNaN(n)) metrics[k] = n;
+  });
+  const noteEl = $("f-strengthNote");
   return {
     id: $("f-id").value || "temp", name: $("f-name").value || "New Player",
     age: parseInt($("f-age").value, 10) || 16,
@@ -3170,6 +3653,7 @@ function formPlayerLike() {
     bats: $("f-bats").value, throws: $("f-throws").value, type, archetype: $("f-archetype").value,
     strengths: linesToArray($("f-strengths").value), improvements: linesToArray($("f-improvements").value),
     photo: pendingPhotoData || "",
+    strengthNote: noteEl ? noteEl.value.trim() : "",
     metrics, history: {},
     ageGroupPinned: ($("f-ageGroup").value || "") !== ageGroupFromAge(parseInt($("f-age").value, 10) || 16),
   };
@@ -3219,9 +3703,10 @@ function openModal(player) {
 function closeModal() { $("playerModal").hidden = true; }
 
 const SHOWDOWN_TOOLS = [
-  ["BAT", "Bat Speed"], ["PWR", "Power"], ["PLANE", "Plane"], ["QUICK", "Quickness"], ["CONN", "Connection"],
+  ["POW", "Power"], ["CON", "Contact"], ["SPD", "Speed"], ["THW", "Throw"], ["STR", "Strength"],
   ["VEL", "Velocity"], ["BRK", "Breaking / Offspeed"], ["CNTL", "Control"], ["STM", "Stamina"],
 ];
+const SHOWDOWN_TOOL_METRIC = { SPD: "tenYard", THW: "throwVelo" };
 
 function sdCompare(aGrade, bGrade) {
   if (aGrade == null || bGrade == null || Number.isNaN(Number(aGrade)) || Number.isNaN(Number(bGrade))) {
@@ -3241,7 +3726,8 @@ function sdRow(fields) {
 function sdRawGap(key, trailer, leader) {
   const meta = METRICS[key];
   if (!meta) return "";
-  const mode = (BLAST_BENCHMARKS[key] && BLAST_BENCHMARKS[key].mode) || "higher";
+  const coach = coachSpecFor(key);
+  const mode = (BLAST_BENCHMARKS[key] && BLAST_BENCHMARKS[key].mode) || (coach && coach.mode) || (meta.invert ? "lower" : "higher");
   if (mode === "ideal" || mode === "ope") return "";
   const have = (player) => player.metrics && player.metrics[key] != null && !Number.isNaN(Number(player.metrics[key]));
   if (!have(trailer) || !have(leader)) return "";
@@ -3288,13 +3774,13 @@ function buildShowdown(a, b) {
     const bHas = Object.prototype.hasOwnProperty.call(bSubs, key);
     if (!aHas && !bHas) return;
     rows.push(sdRow({
-      id: key, label, section: "tools", metricKey: null,
+      id: key, label, section: "tools", metricKey: SHOWDOWN_TOOL_METRIC[key] || null,
       aGrade: aHas ? aSubs[key] : null, bGrade: bHas ? bSubs[key] : null,
       aText: aHas && aSubs[key] != null ? String(aSubs[key]) : "—",
       bText: bHas && bSubs[key] != null ? String(bSubs[key]) : "—",
     }));
   });
-  [...BLAST_KEYS, ...PITCHER_KEYS].forEach((key) => {
+  [...BLAST_KEYS, ...athleticKeys(), ...PITCHER_KEYS].forEach((key) => {
     const meta = METRICS[key];
     const aOn = metricKeysFor(a.type).includes(key);
     const bOn = metricKeysFor(b.type).includes(key);
@@ -3303,7 +3789,7 @@ function buildShowdown(a, b) {
     const bGrade = bOn ? normalizeMetric(key, b.metrics && b.metrics[key], activeAgeGroup(b)) : null;
     const raw = (player, on) => !on || !player.metrics ? "" : `${formatMetric(key, player.metrics[key])}${meta.unit} · ${activeAgeGroup(player)}`;
     rows.push(sdRow({
-      id: key, label: meta.label, section: BLAST_KEYS.includes(key) ? "hit" : "pitch", metricKey: key,
+      id: key, label: meta.label, section: PITCHER_KEYS.includes(key) ? "pitch" : "hit", metricKey: key,
       aGrade, bGrade,
       aText: aGrade == null ? "—" : String(aGrade),
       bText: bGrade == null ? "—" : String(bGrade),
