@@ -83,12 +83,12 @@ input:focus,select:focus,textarea:focus{outline:2px solid rgba(201,162,39,.45);b
 .bb-card.tier-diamond{background:linear-gradient(155deg,#000 0%,#171204 42%,#3a2c07 72%,#050505 100%);border-color:var(--gold-bright);box-shadow:0 14px 34px rgba(0,0,0,.55), inset 0 0 0 2px rgba(212,175,55,.65), inset 0 0 52px rgba(212,175,55,.38)}
 .card-visual{position:absolute;inset:0;z-index:2;display:flex;align-items:flex-start;justify-content:center}
 .card-photo{width:100%;height:100%;object-fit:cover;object-position:center 22%;display:block}
-.card-silhouette{width:78%;height:62%;margin-top:6%;filter:drop-shadow(0 10px 14px rgba(0,0,0,.35))}
+.card-silhouette{width:82%;height:64%;margin-top:4%;filter:drop-shadow(0 10px 14px rgba(0,0,0,.35))}
 .card-silhouette .sil-body{stroke:rgba(10,10,10,.94);fill:none;stroke-linecap:round;stroke-linejoin:round}
-.card-silhouette .sil-fill{fill:rgba(10,10,10,.94)}
+.card-silhouette .sil-fill{fill:rgba(10,10,10,.94);stroke:none}
 .card-silhouette .sil-accent{stroke:rgba(255,255,255,.92);fill:none;stroke-linecap:round}
 .tier-bronze .card-silhouette .sil-body,.tier-diamond .card-silhouette .sil-body{stroke:#f2d060}
-.tier-bronze .card-silhouette .sil-fill,.tier-diamond .card-silhouette .sil-fill{fill:#f2d060}
+.tier-bronze .card-silhouette .sil-fill,.tier-diamond .card-silhouette .sil-fill{fill:#f2d060;stroke:none}
 .tier-bronze .card-silhouette,.tier-diamond .card-silhouette{filter:drop-shadow(0 10px 14px rgba(0,0,0,.65))}
 .card-brand{position:absolute;top:14px;left:14px;z-index:7;line-height:1}
 .card-brand b{display:block;font-size:11px;letter-spacing:1.6px;text-shadow:0 1px 6px rgba(0,0,0,.45)}
@@ -113,7 +113,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid rgba(201,162,39,.45);b
 .header-star{width:38px;height:38px;flex:none;filter:drop-shadow(0 2px 5px rgba(0,0,0,.5))}
 .photo-silhouette{width:82%;height:72%}
 .photo-silhouette .sil-body{stroke:#f2d060;fill:none;stroke-linecap:round;stroke-linejoin:round}
-.photo-silhouette .sil-fill{fill:#f2d060}
+.photo-silhouette .sil-fill{fill:#f2d060;stroke:none}
 .card-name{text-align:right;min-width:0}
 .card-name .archetype{display:block;font-size:10px;font-weight:900;letter-spacing:1.5px;color:var(--gold-bright);text-transform:uppercase;text-shadow:0 1px 5px rgba(0,0,0,.6)}
 .card-name h3,.card-name h2{margin:3px 0 5px;text-transform:uppercase;line-height:.98;letter-spacing:.3px;text-shadow:0 2px 8px rgba(0,0,0,.65);overflow-wrap:anywhere}
