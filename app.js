@@ -518,6 +518,40 @@ function tierFor(overall) {
   return { key: "bronze", label: "BRONZE" };
 }
 
+const TIER_RANK = { bronze: 0, silver: 1, gold: 2, diamond: 3 };
+const TIER_LABEL = { bronze: "BRONZE", silver: "SILVER", gold: "GOLD", diamond: "DIAMOND" };
+
+function gradeSnapshot(player) {
+  const overall = gradesFor(player).overall;
+  const tier = tierFor(overall).key;
+  return { overall, tier };
+}
+
+/* Pure decision for overall / tier celebrations. `seen` is the last acknowledged
+   overall and tier. A missing seen is a silent init. A higher tier is a tier-up
+   (the overall jump rides along). A higher overall inside the same tier is an
+   overall-up. Any drop is a silent baseline move. */
+function planGradeCelebration(seen, next) {
+  const valid = seen && typeof seen.overall === "number" && Object.prototype.hasOwnProperty.call(TIER_RANK, seen.tier);
+  if (!valid) return { kind: "init", mark: { overall: next.overall, tier: next.tier } };
+  if (TIER_RANK[next.tier] > TIER_RANK[seen.tier]) {
+    return { kind: "tier-up", fromOverall: seen.overall, toOverall: next.overall, fromTier: seen.tier, toTier: next.tier, delta: next.overall - seen.overall };
+  }
+  if (next.overall > seen.overall) {
+    return { kind: "overall-up", fromOverall: seen.overall, toOverall: next.overall, fromTier: seen.tier, toTier: next.tier, delta: next.overall - seen.overall };
+  }
+  if (next.overall < seen.overall || TIER_RANK[next.tier] < TIER_RANK[seen.tier]) {
+    return { kind: "silent", mark: { overall: next.overall, tier: next.tier } };
+  }
+  return { kind: "same" };
+}
+
+function takeGradeCelebration(player) {
+  const plan = planGradeCelebration(player.gradeSeen, gradeSnapshot(player));
+  if (plan.mark) player.gradeSeen = plan.mark;
+  return plan;
+}
+
 /*
  * Player Perks (inspired by MLB The Show quirks; the on-screen name is Player Perks).
  * Show names and effects are the MLB The Show 26 active list on
@@ -721,6 +755,7 @@ function seedSampleEarns() {
     p.earnedQuirks = [];
     syncEarnedQuirks(p, "2026-05-01");
     p.earnedQuirks.forEach((e) => { e.seen = true; });
+    p.gradeSeen = gradeSnapshot(p);
   });
 }
 seedSampleEarns();
@@ -925,9 +960,11 @@ function bandHTML(key, value, ageGroup) {
 }
 
 /* ---------- Card rendering ---------- */
-function cardHTML(player, large) {
-  const { subs, overall } = gradesFor(player);
-  const tier = tierFor(overall);
+function cardHTML(player, large, face) {
+  const graded = gradesFor(player);
+  const overall = face && face.overall != null ? face.overall : graded.overall;
+  const tier = face && face.tier ? { key: face.tier, label: TIER_LABEL[face.tier] || tierFor(overall).label } : tierFor(overall);
+  const { subs } = graded;
   const shownSubs = player.type === "two-way" && !large ? subs.slice(0, 5) : subs;
   const visual = player.photo
     ? `<img class="card-photo" src="${esc(player.photo)}" alt="Photo of ${esc(player.name)}">`
@@ -1257,6 +1294,266 @@ function collectReveal() {
   else renderRoster();
 }
 
+function topGainText(player) {
+  const age = activeAgeGroup(player);
+  let best = null;
+  metricKeysFor(player.type).forEach((key) => {
+    const h = histOf(player, key);
+    if (h.length < 2) return;
+    const before = h[h.length - 2];
+    const after = h[h.length - 1];
+    if (before === after || !metricImproved(key, before, after, age)) return;
+    const g0 = normalizeMetric(key, before, age);
+    const g1 = normalizeMetric(key, after, age);
+    const gain = g0 == null || g1 == null ? 0 : g1 - g0;
+    if (!best || gain > best.gain) best = { key, before, after, gain };
+  });
+  if (!best) return "";
+  const meta = METRICS[best.key];
+  return `${meta.label} ${formatMetric(best.key, best.before)} → ${formatMetric(best.key, best.after)}${meta.unit || ""}`;
+}
+
+let celebrateQueue = [];
+let celebratePos = 0;
+let celebrateReplay = false;
+let celebrateTimers = [];
+let celebrateAfter = null;
+let celebrateTicking = null;
+
+function clearCelebTimers() {
+  celebrateTimers.forEach((id) => clearTimeout(id));
+  celebrateTimers = [];
+  if (celebrateTicking) { clearInterval(celebrateTicking); celebrateTicking = null; }
+}
+
+function laterCeleb(fn, ms) {
+  const id = setTimeout(fn, ms);
+  celebrateTimers.push(id);
+}
+
+function paintCelebrateCard(player, overall, tier) {
+  const slot = $("celebrateCard");
+  if (!slot) return;
+  slot.innerHTML = cardHTML(player, true, { overall, tier });
+  const card = slot.querySelector(".bb-card");
+  if (card) card.classList.add("card-live");
+}
+
+function burstBits(count) {
+  const fx = $("celebrateFx");
+  if (!fx) return;
+  fx.innerHTML = "";
+  for (let i = 0; i < count; i++) {
+    const el = document.createElement("i");
+    el.className = i % 5 === 0 ? "cele-bit cele-ray" : "cele-bit";
+    el.style.setProperty("--rot", (Math.random() * 360).toFixed(0) + "deg");
+    el.style.setProperty("--dist", (80 + Math.random() * 150).toFixed(0) + "px");
+    el.style.animationDelay = (Math.random() * 0.1).toFixed(2) + "s";
+    fx.appendChild(el);
+  }
+}
+
+function landCelebration(player, item) {
+  clearCelebTimers();
+  const root = $("celebrate");
+  if (!root) return;
+  root.classList.add("is-done");
+  root.classList.remove("is-shake", "is-shake-hard");
+  paintCelebrateCard(player, item.toOverall, item.toTier);
+  const delta = item.toOverall - item.fromOverall;
+  $("celebrateScore").textContent = `${item.fromOverall} → ${item.toOverall}${delta > 0 ? "  +" + delta : ""}`;
+  $("celebrateTierName").textContent = item.kind === "tier-up" ? (TIER_LABEL[item.toTier] || "") : "";
+  $("celebrateTitle").textContent = item.kind === "tier-up" ? "Tier up" : "Overall up";
+  $("celebrateCollect").hidden = false;
+  $("celebrateSkip").hidden = true;
+  $("celebrateCollect").focus();
+}
+
+function tickOverall(item, done) {
+  let n = item.fromOverall;
+  const end = item.toOverall;
+  const write = () => {
+    const badge = document.querySelector("#celebrateCard .overall-diamond b");
+    if (badge) badge.textContent = String(n);
+    $("celebrateScore").textContent = n >= end ? `${item.fromOverall} → ${end}  +${end - item.fromOverall}` : `${item.fromOverall} → ${n}`;
+  };
+  write();
+  if (n >= end) { done(); return; }
+  const stepMs = Math.min(160, Math.max(50, Math.round(800 / Math.max(1, end - n))));
+  celebrateTicking = setInterval(() => {
+    n += 1;
+    write();
+    if (n >= end) {
+      clearInterval(celebrateTicking);
+      celebrateTicking = null;
+      done();
+    }
+  }, stepMs);
+}
+
+function runOverallUp(player, item) {
+  $("celebrate").classList.add("is-energized");
+  laterCeleb(() => tickOverall(item, () => {
+    burstBits(18);
+    landCelebration(player, item);
+  }), 650);
+}
+
+function runTierUp(player, item) {
+  const root = $("celebrate");
+  laterCeleb(() => root.classList.add("is-shake"), 700);
+  laterCeleb(() => root.classList.add("is-shake-hard"), 1500);
+  laterCeleb(() => {
+    root.classList.add("is-boom");
+    burstBits(40);
+    paintCelebrateCard(player, item.toOverall, item.toTier);
+    $("celebrateTierName").textContent = TIER_LABEL[item.toTier] || "";
+    $("celebrateScore").textContent = `${item.fromOverall} → ${item.toOverall}  +${item.delta}`;
+  }, 2300);
+  laterCeleb(() => landCelebration(player, item), 3100);
+}
+
+function showCelebration() {
+  const item = celebrateQueue[celebratePos];
+  if (!item) { endCelebrationQueue(); return; }
+  const player = players.find((p) => p.id === item.playerId);
+  if (!player) { celebratePos += 1; showCelebration(); return; }
+  clearCelebTimers();
+  const root = $("celebrate");
+  root.hidden = false;
+  root.className = "celebrate " + (item.kind === "tier-up" ? "is-tier" : "is-overall");
+  if (motionReduced()) root.classList.add("is-reduced");
+  $("celebratePlayer").textContent = player.name;
+  $("celebrateReason").textContent = item.reason || "";
+  $("celebrateTitle").textContent = item.kind === "tier-up" ? "New tier" : "Overall up";
+  $("celebrateTierName").textContent = "";
+  $("celebrateScore").textContent = item.kind === "overall-up" ? String(item.fromOverall) : "";
+  $("celebrateSkip").hidden = false;
+  $("celebrateCollect").hidden = true;
+  $("celebrateCollect").textContent = celebrateReplay ? "Close" : "Collect";
+  const fx = $("celebrateFx");
+  if (fx) fx.innerHTML = "";
+  paintCelebrateCard(player, item.fromOverall, item.fromTier);
+  if (motionReduced()) { landCelebration(player, item); return; }
+  if (item.kind === "tier-up") runTierUp(player, item);
+  else runOverallUp(player, item);
+}
+
+function closeCelebration() {
+  clearCelebTimers();
+  const root = document.getElementById && document.getElementById("celebrate");
+  if (root) {
+    root.hidden = true;
+    root.className = "celebrate";
+  }
+  celebrateQueue = [];
+  celebratePos = 0;
+  celebrateReplay = false;
+}
+
+function endCelebrationQueue() {
+  const after = celebrateAfter;
+  celebrateAfter = null;
+  closeCelebration();
+  if (selectedId) openProfile(selectedId);
+  else renderRoster();
+  if (after) after();
+}
+
+function beginCelebrations(items, after) {
+  celebrateAfter = after || null;
+  celebrateReplay = false;
+  celebrateQueue = (items || []).slice();
+  celebratePos = 0;
+  if (!celebrateQueue.length) {
+    const fn = celebrateAfter;
+    celebrateAfter = null;
+    if (fn) fn();
+    return;
+  }
+  showCelebration();
+}
+
+function ackCelebration(item) {
+  const player = players.find((p) => p.id === item.playerId);
+  if (!player) return;
+  player.gradeSeen = { overall: item.toOverall, tier: item.toTier };
+  savePlayers();
+}
+
+function collectCelebration() {
+  const item = celebrateQueue[celebratePos];
+  if (item && !celebrateReplay) ackCelebration(item);
+  if (celebrateReplay) { closeCelebration(); return; }
+  celebratePos += 1;
+  if (celebratePos < celebrateQueue.length) { showCelebration(); return; }
+  endCelebrationQueue();
+}
+
+function skipCelebration() {
+  const item = celebrateQueue[celebratePos];
+  const player = item && players.find((p) => p.id === item.playerId);
+  if (!item || !player) { collectCelebration(); return; }
+  if ($("celebrate").classList.contains("is-done")) { collectCelebration(); return; }
+  landCelebration(player, item);
+}
+
+function previewOverallUp(playerId) {
+  const player = players.find((p) => p.id === playerId);
+  if (!player) return;
+  const snap = gradeSnapshot(player);
+  const fromOverall = Math.max(20, snap.overall - 3);
+  celebrateReplay = true;
+  celebrateAfter = null;
+  celebrateQueue = [{
+    kind: "overall-up",
+    playerId,
+    fromOverall,
+    toOverall: snap.overall,
+    fromTier: snap.tier,
+    toTier: snap.tier,
+    delta: snap.overall - fromOverall,
+    reason: "Preview: the card celebrates when the overall climbs.",
+  }];
+  celebratePos = 0;
+  showCelebration();
+}
+
+function previewTierUp(playerId) {
+  const player = players.find((p) => p.id === playerId);
+  if (!player) return;
+  const snap = gradeSnapshot(player);
+  const order = ["bronze", "silver", "gold", "diamond"];
+  const idx = order.indexOf(snap.tier);
+  let fromTier = snap.tier;
+  let toTier = order[Math.min(order.length - 1, idx + 1)];
+  let fromOverall = snap.overall;
+  let toOverall = snap.overall;
+  if (idx >= order.length - 1) {
+    fromTier = "gold";
+    toTier = "diamond";
+    fromOverall = Math.min(89, snap.overall - 1);
+    toOverall = snap.overall;
+  } else {
+    toOverall = toTier === "silver" ? Math.max(snap.overall, 70) : toTier === "gold" ? Math.max(snap.overall, 80) : Math.max(snap.overall, 90);
+    if (toOverall <= fromOverall) toOverall = fromOverall + 1;
+  }
+  celebrateReplay = true;
+  celebrateAfter = null;
+  celebrateQueue = [{
+    kind: "tier-up",
+    playerId,
+    fromOverall,
+    toOverall,
+    fromTier,
+    toTier,
+    delta: toOverall - fromOverall,
+    reason: "Preview: crossing 70, 80, or 90 rebuilds the card.",
+  }];
+  celebratePos = 0;
+  showCelebration();
+}
+
 function openProfile(id) {
   const p = players.find((x) => x.id === id);
   if (!p) return;
@@ -1276,6 +1573,8 @@ function openProfile(id) {
       ${cardHTML(p, true)}
       <div class="profile-actions">
         <button class="btn btn-red" type="button" id="editProfileBtn">Edit Metrics / Profile</button>
+        <button class="btn btn-ghost" type="button" id="previewOverallBtn">Preview overall-up</button>
+        <button class="btn btn-ghost" type="button" id="previewTierBtn">Preview tier-up</button>
         <button class="btn btn-ghost" type="button" id="deleteProfileBtn">Delete Player</button>
       </div>
       <div class="panel" style="margin-top:16px">
@@ -1306,6 +1605,8 @@ function openProfile(id) {
   });
   const previewBtn = $("previewRevealBtn");
   if (previewBtn) previewBtn.addEventListener("click", () => previewReveal(p.id));
+  $("previewOverallBtn").addEventListener("click", () => previewOverallUp(p.id));
+  $("previewTierBtn").addEventListener("click", () => previewTierUp(p.id));
   $("deleteProfileBtn").addEventListener("click", () => {
     if (confirm(`Delete ${p.name}? This cannot be undone (Reset Sample Data only restores the 5 sample players).`)) {
       players = players.filter((x) => x.id !== p.id);
@@ -1577,13 +1878,19 @@ function bindApp() {
       players.push(like);
       saved = like;
     }
+    const plan = takeGradeCelebration(saved);
     const added = syncEarnedQuirks(saved);
     savePlayers();
     closeModal();
     renderRoster();
     if (selectedId) openProfile(selectedId);
     else if (!existing) openProfile(like.id);
-    if (added.length) startReveal(added.map((rec) => ({ playerId: saved.id, quirkId: rec.id })));
+    const celeb = (plan.kind === "tier-up" || plan.kind === "overall-up")
+      ? [{ ...plan, playerId: saved.id, reason: topGainText(saved) }]
+      : [];
+    beginCelebrations(celeb, () => {
+      if (added.length) startReveal(added.map((rec) => ({ playerId: saved.id, quirkId: rec.id })));
+    });
   });
 
   $("resetBtn").addEventListener("click", () => {
@@ -1597,16 +1904,29 @@ function bindApp() {
 
   const collectBtn = $("quirkCollectBtn");
   if (collectBtn) collectBtn.addEventListener("click", onRevealButton);
+  const celebCollect = $("celebrateCollect");
+  const celebSkip = $("celebrateSkip");
+  if (celebCollect) celebCollect.addEventListener("click", collectCelebration);
+  if (celebSkip) celebSkip.addEventListener("click", skipCelebration);
   let earnedDirty = false;
   const pendingReveal = [];
+  const pendingCeleb = [];
   players.forEach((p) => {
     if (!Array.isArray(p.coachQuirks)) p.coachQuirks = [];
+    const plan = takeGradeCelebration(p);
+    if (plan.mark) earnedDirty = true;
+    if (plan.kind === "tier-up" || plan.kind === "overall-up") {
+      pendingCeleb.push({ ...plan, playerId: p.id, reason: topGainText(p) });
+    }
     if (syncEarnedQuirks(p).length) earnedDirty = true;
     unseenEarns(p).forEach((rec) => pendingReveal.push({ playerId: p.id, quirkId: rec.id }));
   });
+  pendingCeleb.sort((a, b) => (a.kind === "tier-up" ? 0 : 1) - (b.kind === "tier-up" ? 0 : 1));
   if (earnedDirty) savePlayers();
   renderRoster();
-  if (pendingReveal.length) startReveal(pendingReveal);
+  beginCelebrations(pendingCeleb, () => {
+    if (pendingReveal.length) startReveal(pendingReveal);
+  });
 }
 
 bindApp();

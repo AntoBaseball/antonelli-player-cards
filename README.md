@@ -46,6 +46,7 @@ Pages only serves what is on `main`. If the app landed through a pull request, m
 - **5 sample players** (see note below), covering Power Hitter, Contact/Leadoff, Ace, Closer, and Two-Way archetypes. Tiers follow the grades: with the sample Blast numbers, the roster spans Bronze, Silver, and Gold.
 - **Profile detail view** — click any player for: archetype explanation ("what type of player is he?"), strengths, areas to improve, Player Perks (earned training perks and coach-awarded Show perks), a metrics table (current, previous, change, history sparkline, band, per-metric grade), and the large baseball card side-by-side. Hitter bands are Below Average / Average / Good / Great / Elite for the player's age group.
 - **Player Perks** — up to three perks on the card front. Training perks unlock from milestones and stay once earned. A new perk opens a sealed pack once. Show perks are coach-awarded. See [Player Perks](#player-perks).
+- **Celebrations** — an overall climb plays a short card bounce and count-up. Crossing into Silver, Gold, or Diamond takes over the screen. See [Celebrations](#celebrations).
 - **Baseball card (front, v2 — Topps / MLB The Show style)** — vertical portrait card (5:7, the classic 2.5"×3.5" ratio). The player visual fills the card over a geometric black & gold background with a stitched/dashed frame edge:
   - **Diamond-shaped overall badge** (rotated diamond, clip-path) in the **top-right** with the overall number.
   - **Player name in bold italic uppercase at bottom-right**, with a gold position bar under it (`CF - R/R` = position + bats/throws), team/age line, and a small archetype label.
@@ -267,6 +268,19 @@ Cards carry a slow gold sheen while they are on screen. On a desktop that can ho
 
 A new Player Perk opens as a sealed black-and-gold foil pack (A-star, “PLAYER PERKS”, a shimmer). Nothing tears until the player clicks **Open Pack**. The top rip, a shine burst, and the perk card slide out, then the card flips to the name, description, milestone, and player. Several new perks are in one pack: after the open, **Next Perk** walks through them, and the last button is **Add to my card**. **Open again** on the profile replays that pack and does not clear the seen flag. `prefers-reduced-motion` turns the sheen, tilt, glow, pack shimmer, rip, and flip off. Open Pack then fades straight to the perk face. There is no tear.
 
+## Celebrations
+
+The card remembers the last overall and tier the player has already been shown (`gradeSeen` on the player, saved with everything else in `localStorage`).
+
+- The first time a player is seen — samples, a new card, or an older save with no `gradeSeen` — the app stores the current overall and tier and stays quiet.
+- **Overall up** plays when the overall number rises and the tier does not. The card bounces, the sheen speeds up, the badge counts from the old number to the new one, a +N line pops, and a few gold bits fly. About 2 seconds, then **Collect**.
+- **Tier up** plays only when the tier rises: Silver at 70, Gold at 80, Diamond at 90. The screen goes black, a spotlight hits the card, the card shakes and then shakes harder, a flash and particle burst hit, and the card comes back in the new tier color with the tier name and the new overall. About 4 seconds. **Skip** jumps to that payoff. **Collect** is what marks it seen.
+- A drop in overall or tier updates `gradeSeen` immediately and does not celebrate.
+- Collect writes the new overall and tier into `gradeSeen`. Reload before Collect plays the same celebration again. After Collect, that value does not play again.
+- **Preview overall-up** and **Preview tier-up** on the profile replay the motion for a coach. They do not change `gradeSeen`.
+
+One save can earn a tier, an overall jump, and new perks. The order is tier-up, then overall-up, then the Player Perks pack. A tier-up already shows the new overall, so that save does not also open an overall-up. Nothing is dropped: each step stays queued until its Collect (or, for a perk, Open Pack and Add to my card). `prefers-reduced-motion` skips the shake, bounce, count-up, flash, and particles and shows the new number and tier immediately.
+
 ## Sample data note
 
 ⚠️ **All 5 players are invented for this prototype** (Mason Carter, Eli Ramirez, Noah Bennett, Connor Walsh, Dylan Brooks). Names, metrics, strengths, and history are fictional and do not represent real people. The app labels this in a banner on the page itself.
@@ -277,7 +291,7 @@ A new Player Perk opens as a sealed black-and-gold foil pack (A-star, “PLAYER 
 |---|---|
 | `index.html` | Page structure: roster, profile, add/edit modal |
 | `styles.css` | Antonelli black & gold branding, v2 portrait-card tiers, responsive layout |
-| `app.js` | Sample data, Blast benchmarks, Player Perks, grade formula, card rendering, localStorage persistence |
+| `app.js` | Sample data, Blast benchmarks, Player Perks, celebrations, grade formula, card rendering, localStorage persistence |
 | `assets/` | Antonelli block, script, and star logos (see Brand assets) |
 | `README.md` | This file |
 
