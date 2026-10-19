@@ -51,7 +51,7 @@ Pages only serves what is on `main`. If the app landed through a pull request, m
   - **Antonelli star + team code watermark at bottom-left** (star redrawn as clean inline SVG — see Brand assets; team code derived from the team name, e.g. `Antonelli 17U` → `A17U`).
   - **Sub-grade strip** across the bottom of the card so tool grades stay readable without cluttering the visual.
   - **Tier design (all in the black & gold family)** so crossing 70/80/90 is obvious: Bronze <70 = muted bronze-gold, darker; Silver 70–79 = silver-grey with a gold frame; Gold 80–89 = rich, bright gold; Diamond 90+ = black card with bright gold glow/trim and the **only cyan accent in the app — the diamond badge** — so Diamond still pops like the reference card.
-- **Photo upload + silhouette fallback** — in Add/Edit, upload a player photo (JPG/PNG). It is read in the browser, downscaled to max 800px, stored as a data URL with the player in `localStorage`, and shown full-bleed on the card and profile. **Clear photo / use silhouette** removes it. With no photo, the card shows a solid filled silhouette: a hitter in a loaded stance for hitters and two-way players, mirrored when bats is L (bats R, bats S, or a missing bats value uses the right-handed stance), and a pitcher at leg lift for pitchers (black on lighter Silver/Gold tiers, gold on dark Bronze/Diamond). All 5 sample players have `photo: ""`, so they demonstrate the silhouette.
+- **Photo upload + logo placeholder** — in Add/Edit, upload a player photo (JPG/PNG). It is read in the browser, downscaled to max 800px, stored as a data URL with the player in `localStorage`, and shown full-bleed on the card and profile. **Clear photo / use logo** removes it. With no photo, the card and profile show the Antonelli A-star (`assets/antonelli-a-star.png`) centered in the photo area, at its natural aspect ratio, over the tier gradient. The small team-code star stays in the name bar, drawn a little smaller so it does not compete with the logo. All 5 sample players have `photo: ""`, so they show the logo.
 - **Edit / Add player** — "Edit Metrics / Profile" on a profile, or "+ Add Player" in the header. Metrics use synced sliders + number inputs; the overall, sub-grades, and tier update **live** in the form preview before you save. Saving a changed metric appends it to that metric's history, so the previous value, delta arrow, and sparkline show progress.
 - **Persistence** — all changes save to browser `localStorage` (key: `antonelli-player-cards-v1`), so a refresh keeps your edits. **Reset Sample Data** (header) restores the original 5 sample players.
 - **Responsive** — works on mobile; cards and profile stack cleanly on small screens.
@@ -67,6 +67,7 @@ Antonelli Baseball's main colors are **black and gold** (`#d4af37` / `#c9a227`, 
 | `assets/antonelli-block.png` | ANTONELLI in black italic block letters with gold outline (dark grunge banner) | Header logo (shown at natural aspect ratio, never distorted) |
 | `assets/antonelli-script.png` | Antonelli in black script with gold outline + swoosh (cream/pale-gold banner) | Hero brand banner |
 | `assets/antonelli-star.png` | White star with black/gold outline | Cropped from the source banner to the star only — the original banner's `#TEAMTRITON`/sponsor text is **not** used anywhere. On cards and in the header the star is actually drawn as a clean inline SVG (white fill, black outline, gold inner outline) matching this asset, so it stays crisp and transparent at any size. |
+| `assets/antonelli-a-star.png` | Black star, gold outline, white “A” | Placeholder on a card or profile when the player has no uploaded photo. Shown centered, unstretched, over the tier background. |
 
 ## How the overall grade is calculated
 
@@ -95,7 +96,7 @@ Because grades are calculated — never stored — editing any metric immediatel
 |---|---|
 | `index.html` | Page structure: roster, profile, add/edit modal |
 | `styles.css` | Antonelli black & gold branding, v2 portrait-card tiers, responsive layout |
-| `app.js` | Sample data, grade formula, card/silhouette/photo rendering, localStorage persistence |
+| `app.js` | Sample data, grade formula, card/logo/photo rendering, localStorage persistence |
 | `assets/` | Antonelli block, script, and star logos (see Brand assets) |
 | `README.md` | This file |
 

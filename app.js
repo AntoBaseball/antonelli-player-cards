@@ -225,26 +225,9 @@ function teamCode(team) {
 function starSVG(cls) {
   return `<svg class="${cls || "card-star"}" viewBox="0 0 100 100" aria-hidden="true"><polygon points="50,3 62,37 98,37 69,58 80,96 50,73 20,96 31,58 2,37 38,37" fill="#ffffff" stroke="#0a0a0a" stroke-width="5" stroke-linejoin="round"/><polygon points="50,3 62,37 98,37 69,58 80,96 50,73 20,96 31,58 2,37 38,37" transform="translate(50 50) scale(0.8) translate(-50 -50)" fill="none" stroke="#d4af37" stroke-width="3" stroke-linejoin="round"/></svg>`;
 }
-// Solid filled silhouettes (one path each). Right-handed hitter faces the
-// pitcher on the left, bat cocked up over the rear shoulder. Left-handed is
-// that path mirrored. Pitchers use a leg-lift pose. Two-way players use the
-// hitter pose for their bats side. Missing or switch (S) bats default to right.
-const HITTER_SILHOUETTE = "M21.2 312.2L81.3 314.0L85.7 312.0L86.7 307.3L83.7 303.6L66.1 301.9L66.2 296.5L47.2 233.8L49.0 231.0L103.6 189.1L117.0 187.8L167.1 232.0L169.6 236.3L154.2 296.8L154.6 302.3L138.3 303.8L135.7 307.2L136.7 311.8L141.0 314.0L202.6 314.0L205.4 313.2L207.7 310.7L208.2 304.6L205.9 302.1L202.7 300.8L198.1 300.9L193.7 303.1L168.3 303.1L167.2 302.3L183.2 239.7L189.5 233.9L190.5 226.9L187.2 221.3L181.7 218.3L139.4 180.6L148.0 151.7L139.9 120.9L145.8 112.5L146.4 109.0L144.3 105.4L139.6 104.5L131.5 112.5L125.5 107.0L131.4 103.5L133.8 100.0L133.4 94.8L128.5 89.5L158.6 22.4L158.6 17.2L155.7 14.0L150.7 14.3L146.9 19.2L144.6 19.8L119.4 91.2L106.2 102.7L97.7 102.4L92.4 79.5L101.1 71.3L104.2 63.0L103.8 58.1L102.0 53.4L98.7 49.4L94.2 46.2L87.5 43.8L81.6 43.2L70.2 45.9L65.4 49.0L61.7 53.0L59.4 57.6L58.3 64.2L49.3 66.6L45.0 70.0L45.3 72.8L48.3 74.7L55.6 75.7L63.5 74.6L69.9 78.7L79.6 81.8L84.1 102.1L72.8 102.9L71.1 104.1L60.6 131.5L68.6 164.2L79.9 182.1L35.6 216.2L29.9 218.8L26.7 222.9L25.8 226.4L26.4 230.6L28.7 234.3L33.7 237.9L52.9 301.0L51.7 302.1L23.3 300.6L17.5 302.9L15.8 306.5L17.2 309.9L21.2 312.2Z";
-const PITCHER_SILHOUETTE = "M45.5 154.4L44.6 155.6L31.5 156.7L29.4 158.9L29.6 161.9L33.4 164.2L69.0 162.2L72.3 160.0L72.5 157.0L70.1 154.6L57.8 154.9L56.6 154.0L61.5 117.1L62.8 116.1L116.9 145.1L129.1 162.0L146.7 162.6L154.3 236.3L157.2 242.6L161.4 301.9L160.2 303.1L143.7 303.6L140.8 306.5L140.9 310.7L143.1 313.2L145.9 314.0L205.2 314.0L209.1 312.4L210.6 309.3L210.0 305.6L205.9 302.0L201.9 301.7L197.9 303.1L175.0 303.1L173.8 301.9L174.5 298.2L171.0 241.7L173.0 234.5L165.9 163.0L167.5 160.9L179.5 128.7L173.5 92.7L172.0 89.7L202.4 67.8L204.7 63.6L188.4 26.3L189.3 20.8L187.0 16.2L182.5 14.0L177.9 14.8L174.4 18.3L173.6 22.9L175.8 27.4L181.0 30.3L193.0 60.9L165.7 80.3L156.6 69.5L142.8 69.3L141.7 68.4L140.2 51.9L147.1 45.9L149.3 41.5L150.0 36.5L154.3 32.2L154.2 28.6L150.8 25.9L136.0 23.0L129.9 23.3L124.4 25.9L120.8 29.4L118.7 33.8L117.7 40.5L82.3 45.3L81.6 48.7L84.5 50.8L121.4 46.8L128.2 51.9L129.7 68.5L116.8 69.8L111.9 86.2L78.0 92.7L71.7 88.9L65.1 88.2L57.6 91.2L50.0 91.9L45.3 95.1L42.5 99.9L42.5 106.0L45.2 110.7L50.8 114.9L45.5 154.4Z";
-
-function silhouetteHand(bats) {
-  return String(bats || "").trim().toUpperCase() === "L" ? "L" : "R";
-}
-
-function silhouetteSVG(type, cls, bats) {
-  const klass = cls || "card-silhouette";
-  if (type === "pitcher") {
-    return `<svg class="${klass}" viewBox="0 0 240 320" data-pose="pitcher" role="img" aria-label="Pitcher silhouette"><path class="sil-fill" d="${PITCHER_SILHOUETTE}"/></svg>`;
-  }
-  const hand = silhouetteHand(bats);
-  const mirror = hand === "L" ? ' transform="translate(240 0) scale(-1 1)"' : "";
-  const label = hand === "L" ? "Left-handed hitter silhouette" : "Right-handed hitter silhouette";
-  return `<svg class="${klass}" viewBox="0 0 240 320" data-pose="hitter-${hand.toLowerCase()}" role="img" aria-label="${label}"><path class="sil-fill"${mirror} d="${HITTER_SILHOUETTE}"/></svg>`;
+// No uploaded photo: the Antonelli A-star sits in the card's photo area.
+function logoPlaceholder() {
+  return `<img class="card-logo" src="assets/antonelli-a-star.png" alt="Antonelli Baseball">`;
 }
 function initials(name) { return name.trim().split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase() || "AB"; }
 function esc(s) { return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
@@ -297,9 +280,9 @@ function cardHTML(player, large) {
   const shownSubs = player.type === "two-way" && !large ? subs.slice(0, 5) : subs;
   const visual = player.photo
     ? `<img class="card-photo" src="${esc(player.photo)}" alt="Photo of ${esc(player.name)}">`
-    : silhouetteSVG(player.type, null, player.bats);
+    : logoPlaceholder();
   return `
-  <div class="bb-card tier-${tier.key} ${large ? "large" : ""}">
+  <div class="bb-card tier-${tier.key} ${large ? "large" : ""} ${player.photo ? "" : "logo-placeholder"}">
     <div class="card-visual">${visual}</div>
     <div class="card-brand"><b>ANTONELLI</b><span>${tier.label}</span></div>
     <div class="overall-diamond"><div><b>${overall}</b><span>OVR</span></div></div>
@@ -462,9 +445,7 @@ function updatePhotoPreview() {
   if (pendingPhotoData) {
     el.innerHTML = `<img src="${esc(pendingPhotoData)}" alt="Selected player photo preview">`;
   } else {
-    const silType = $("f-type") ? $("f-type").value : "hitter";
-    const silBats = $("f-bats") ? $("f-bats").value : "R";
-    el.innerHTML = silhouetteSVG(silType, "photo-silhouette", silBats) + "<span>No photo — silhouette</span>";
+    el.innerHTML = `<img class="preview-logo" src="assets/antonelli-a-star.png" alt="Antonelli Baseball"><span>No photo — logo</span>`;
   }
 }
 
@@ -597,8 +578,6 @@ $("f-type").addEventListener("change", () => {
   updateLivePreview();
   updatePhotoPreview();
 });
-$("f-bats").addEventListener("change", updatePhotoPreview);
-
 $("playerForm").addEventListener("input", updateLivePreview);
 $("f-photo").addEventListener("change", (e) => handlePhotoFile(e.target.files && e.target.files[0]));
 $("clearPhotoBtn").addEventListener("click", () => { pendingPhotoData = ""; $("f-photo").value = ""; updatePhotoPreview(); });
