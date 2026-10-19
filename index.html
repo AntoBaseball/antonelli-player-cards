@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Antonelli Baseball — Player Profiles & Baseball Cards</title>
+<meta name="description" content="Antonelli Baseball player profiles, metrics, and MLB The Show-style baseball cards that improve as players develop.">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <svg class="header-star" viewBox="0 0 100 100" aria-hidden="true"><polygon points="50,3 62,37 98,37 69,58 80,96 50,73 20,96 31,58 2,37 38,37" fill="#ffffff" stroke="#0a0a0a" stroke-width="5" stroke-linejoin="round"/><polygon points="50,3 62,37 98,37 69,58 80,96 50,73 20,96 31,58 2,37 38,37" transform="translate(50 50) scale(0.8) translate(-50 -50)" fill="none" stroke="#d4af37" stroke-width="3" stroke-linejoin="round"/></svg>
+    <img class="header-logo" src="assets/antonelli-block.png" alt="Antonelli Baseball">
+    <div>
+      <div class="brand-name">PLAYER <span>PROFILES</span></div>
+      <div class="brand-sub">Baseball Cards • Metrics • Development</div>
+    </div>
+  </div>
+  <nav class="top-actions">
+    <button class="btn btn-ghost" id="resetBtn" type="button">Reset Sample Data</button>
+    <button class="btn btn-red" id="addPlayerBtn" type="button">+ Add Player</button>
+  </nav>
+</header>
+
+<div class="sample-banner" role="note">
+  <strong>SAMPLE DATA:</strong> All 5 players below are invented for this prototype. Names, teams within the sample, and metrics are fictional — no real players are used. Sample players have no photos, so their cards show the Antonelli logo.
+</div>
+
+<main class="container">
+  <!-- ROSTER VIEW -->
+  <section id="rosterView">
+    <div class="hero">
+      <div>
+        <img class="hero-logo" src="assets/antonelli-script.png" alt="Antonelli script logo">
+        <p class="eyebrow">DEVELOPMENT • METRICS • GRADES</p>
+        <h1>Every rep moves the card.</h1>
+        <p class="hero-text">Track what a hitter or pitcher does well, what to work on next, and how their metrics translate into an overall grade — just like MLB The Show. Edit a metric and the card upgrades live.</p>
+      </div>
+      <div class="hero-stats" id="heroStats"></div>
+    </div>
+
+    <div class="controls card-panel">
+      <div class="control grow">
+        <label for="searchInput">Search players</label>
+        <input id="searchInput" type="search" placeholder="Search by name, position, archetype, team…">
+      </div>
+      <div class="control">
+        <label for="typeFilter">Player type</label>
+        <select id="typeFilter">
+          <option value="all">All types</option>
+          <option value="hitter">Hitters</option>
+          <option value="pitcher">Pitchers</option>
+          <option value="two-way">Two-Way</option>
+        </select>
+      </div>
+      <div class="control">
+        <label for="teamFilter">Team / Age</label>
+        <select id="teamFilter"><option value="all">All teams</option></select>
+      </div>
+      <div class="control">
+        <label for="sortSelect">Sort</label>
+        <select id="sortSelect">
+          <option value="overall-desc">Overall: High → Low</option>
+          <option value="overall-asc">Overall: Low → High</option>
+          <option value="name">Name A–Z</option>
+          <option value="age-desc">Oldest first</option>
+          <option value="age-asc">Youngest first</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="section-head">
+      <h2>Roster <span id="rosterCount" class="count"></span></h2>
+      <p class="muted">Click any player or card to open the full profile.</p>
+    </div>
+    <div id="rosterGrid" class="roster-grid"></div>
+    <div id="emptyState" class="empty" hidden>
+      <h3>No players match those filters</h3>
+      <p>Try a different search or filter, or add a new player.</p>
+      <button class="btn btn-red" type="button" onclick="document.getElementById('addPlayerBtn').click()">+ Add Player</button>
+    </div>
+  </section>
+
+  <!-- PROFILE VIEW -->
+  <section id="profileView" hidden>
+    <button class="btn btn-ghost" id="backBtn" type="button">← Back to Roster</button>
+    <div id="profileContent" class="profile-layout"></div>
+  </section>
+</main>
+
+<!-- ADD / EDIT MODAL -->
+<div id="playerModal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modal-backdrop" id="modalBackdrop"></div>
+  <div class="modal-card">
+    <div class="modal-head">
+      <h2 id="modalTitle">Add Player</h2>
+      <button class="icon-btn" id="closeModalBtn" type="button" aria-label="Close">✕</button>
+    </div>
+    <form id="playerForm">
+      <input type="hidden" id="f-id">
+      <div class="form-grid">
+        <div class="field grow2"><label for="f-name">Full name *</label><input id="f-name" required placeholder="e.g. Alex Morgan"></div>
+        <div class="field"><label for="f-age">Age</label><input id="f-age" type="number" min="8" max="25" step="1" value="16"></div>
+        <div class="field"><label for="f-class">Class / Grade</label><input id="f-class" placeholder="e.g. Junior / 11th"></div>
+        <div class="field"><label for="f-team">Team</label><input id="f-team" placeholder="e.g. Antonelli 16U"></div>
+        <div class="field"><label for="f-position">Position</label><input id="f-position" placeholder="e.g. SS, OF, RHP, C"></div>
+        <div class="field"><label for="f-bats">Bats</label><select id="f-bats"><option>L</option><option selected>R</option><option>S</option></select></div>
+        <div class="field"><label for="f-throws">Throws</label><select id="f-throws"><option>L</option><option selected>R</option></select></div>
+        <div class="field"><label for="f-type">Player type *</label>
+          <select id="f-type"><option value="hitter">Hitter</option><option value="pitcher">Pitcher</option><option value="two-way">Two-Way</option></select>
+        </div>
+        <div class="field grow2"><label for="f-archetype">Archetype</label>
+          <select id="f-archetype"></select>
+        </div>
+        <div class="field grow2">
+          <label for="f-photo">Player photo (optional)</label>
+          <input id="f-photo" type="file" accept="image/*">
+          <div class="photo-editor">
+            <div id="photoPreview" class="photo-preview" aria-live="polite"></div>
+            <div>
+              <p class="muted small" style="margin:0 0 8px">Upload a JPG/PNG and it is resized (max 800px), saved with the player in this browser, and shown on the card. No photo? The card shows the Antonelli logo instead.</p>
+              <button class="btn btn-ghost" type="button" id="clearPhotoBtn">Clear photo / use logo</button>
+            </div>
+          </div>
+        </div>
+        <div class="field grow2"><label for="f-strengths">Strengths — one per line</label><textarea id="f-strengths" rows="3" placeholder="Drives the ball to all fields&#10;Quick first step on defense"></textarea></div>
+        <div class="field grow2"><label for="f-improvements">Areas to improve — one per line</label><textarea id="f-improvements" rows="3" placeholder="Improve two-strike approach&#10;Add strength for bat speed"></textarea></div>
+      </div>
+
+      <h3 class="form-section">Metrics — drag or type. Overall updates live.</h3>
+      <p class="muted small">On Save, changed metrics are appended to that player's history so the sparkline and “previous” value show progress.</p>
+      <div id="metricFields"></div>
+
+      <div class="live-preview" id="livePreview"></div>
+
+      <div class="form-actions">
+        <button class="btn btn-ghost" type="button" id="cancelBtn">Cancel</button>
+        <button class="btn btn-red" type="submit">Save Player</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<footer class="footer">
+  <strong>Antonelli Baseball</strong> — Prototype v2 • Sample data only • Grades are a coaching guide, not a scouting guarantee. See README.md for the formula and next steps.
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
