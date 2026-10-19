@@ -1753,6 +1753,37 @@ function bandHTML(key, value, ageGroup) {
   return `<span class="band-chip band-${scored.band.key}">${esc(scored.band.label)}</span>`;
 }
 
+/* ---------- Card foil ---------- */
+function foilPhase(id) {
+  let n = 0;
+  const s = String(id || "card");
+  for (let i = 0; i < s.length; i++) n = (n * 33 + s.charCodeAt(i)) >>> 0;
+  return (n % 5200) / 1000;
+}
+
+function sparkleHTML(tier, seed, quiet) {
+  const base = { bronze: 3, silver: 5, gold: 8, diamond: 11 }[tier] || 4;
+  const count = quiet ? Math.max(2, Math.ceil(base / 2)) : base;
+  let n = (Math.round(seed * 1000) || 1) >>> 0;
+  const bits = [];
+  for (let i = 0; i < count; i++) {
+    n = (n * 1664525 + 1013904223) >>> 0;
+    const edge = n % 3;
+    const along = 10 + (n % 70);
+    const inset = 3 + ((n >>> 8) % 6);
+    let left = inset;
+    let top = along;
+    if (edge === 0) { left = along; top = inset; }
+    else if (edge === 1) { left = 100 - inset; top = along; }
+    const delay = ((n >>> 12) % 3400) / 1000;
+    const dur = (1.5 + ((n >>> 20) % 18) / 10).toFixed(2);
+    const badge = tier === "diamond" && i < 2;
+    const pos = badge ? `left:${i === 0 ? 58 : 88}%;top:${i === 0 ? 2 : 18}%` : `left:${left}%;top:${top}%`;
+    bits.push(`<i class="${badge ? "sp-badge" : ""}" style="${pos};--sp-d:${delay.toFixed(2)}s;--sp-t:${dur}s"></i>`);
+  }
+  return `<div class="card-sparks" aria-hidden="true">${bits.join("")}</div>`;
+}
+
 /* ---------- Card rendering ---------- */
 function cardHTML(player, large, face) {
   const graded = gradesFor(player);
@@ -1770,13 +1801,18 @@ function cardHTML(player, large, face) {
   const quirkShown = quirkList.slice(0, 3);
   const quirkExtra = quirkList.length - quirkShown.length;
   const quirkHTML = quirkShown.length ? `<div class="card-quirks">${quirkShown.map((q) => `<span class="q-badge ${q.kind === "coach" ? "q-coach" : "q-earned"}" title="${esc(q.name)}">${q.icon} ${esc(q.name)}</span>`).join("")}${quirkExtra > 0 ? `<span class="q-badge q-more">+${quirkExtra}</span>` : ""}</div>` : "";
+  const quiet = !!(face && face.quiet);
+  const phase = foilPhase(player.id || player.name);
+  const badgeSpark = tier.key === "diamond" ? `<i class="badge-spark" aria-hidden="true"></i>` : "";
   return `
-  <div class="bb-card tier-${tier.key} ${large ? "large" : ""} ${player.photo ? "" : "logo-placeholder"}">
+  <div class="bb-card tier-${tier.key} ${large ? "large" : ""} ${quiet ? "foil-dim" : ""} ${player.photo ? "" : "logo-placeholder"}" style="--foil-delay:${phase.toFixed(2)}s">
     <div class="card-visual">${visual}</div>
-    <div class="card-holo" aria-hidden="true"></div>
+    <div class="card-foil" aria-hidden="true"></div>
+    <div class="card-glare" aria-hidden="true"></div>
+    ${sparkleHTML(tier.key, phase, quiet)}
     <div class="card-brand"><b>ANTONELLI</b><span>${tier.label}</span></div>
     ${quirkHTML}
-    <div class="overall-diamond"><div><b>${overall}</b><span>OVR</span></div></div>
+    <div class="overall-diamond"><div><b>${overall}</b><span>OVR</span></div>${badgeSpark}</div>
     <div class="card-bottom">
       <div class="card-meta-row">
         <div class="team-mark">${starSVG()}<span class="team-code">${esc(teamCode(player.team))}</span></div>
@@ -1857,6 +1893,8 @@ function renderRoster() {
 
 let cardMotionObserver = null;
 function watchCardMotion() {
+  armCardFoil();
+  if (typeof document === "undefined") return;
   if (cardMotionObserver) cardMotionObserver.disconnect();
   const cards = [...document.querySelectorAll(".bb-card")];
   if (!cards.length || typeof IntersectionObserver === "undefined") {
@@ -1867,6 +1905,113 @@ function watchCardMotion() {
     entries.forEach((entry) => entry.target.classList.toggle("card-live", entry.isIntersecting));
   }, { rootMargin: "120px" });
   cards.forEach((el) => cardMotionObserver.observe(el));
+}
+
+let foilArmed = false;
+let gyroState = "idle";
+let gyroPending = false;
+let gyroBeta = 0;
+let gyroGamma = 0;
+
+function clearCardAim(card) {
+  if (!card) return;
+  card.classList.remove("is-aim");
+  if (!card.classList.contains("is-gyro")) {
+    card.style.removeProperty("--tilt-x");
+    card.style.removeProperty("--tilt-y");
+    card.style.removeProperty("--gx");
+    card.style.removeProperty("--gy");
+  }
+}
+
+function aimCard(card, px, py) {
+  const ry = (px - 0.5) * 16;
+  const rx = (0.5 - py) * 12;
+  card.style.setProperty("--tilt-x", rx.toFixed(2) + "deg");
+  card.style.setProperty("--tilt-y", ry.toFixed(2) + "deg");
+  card.style.setProperty("--gx", ((px - 0.5) * 90).toFixed(1) + "%");
+  card.style.setProperty("--gy", ((py - 0.5) * 36).toFixed(1) + "%");
+  card.classList.add("is-aim");
+}
+
+function burstCard(card) {
+  if (motionReduced()) return;
+  card.classList.remove("is-burst");
+  void card.offsetWidth;
+  card.classList.add("is-burst");
+  clearTimeout(card._foilBurst);
+  card._foilBurst = setTimeout(() => card.classList.remove("is-burst"), 740);
+}
+
+function applyGyro() {
+  gyroPending = false;
+  if (motionReduced() || typeof document === "undefined") return;
+  const rx = Math.max(-10, Math.min(10, (gyroBeta - 45) * 0.18));
+  const ry = Math.max(-12, Math.min(12, gyroGamma * 0.22));
+  document.querySelectorAll(".bb-card.card-live").forEach((card) => {
+    if (card.classList.contains("is-aim")) return;
+    card.style.setProperty("--tilt-x", rx.toFixed(2) + "deg");
+    card.style.setProperty("--tilt-y", ry.toFixed(2) + "deg");
+    card.style.setProperty("--gx", (ry * 4).toFixed(1) + "%");
+    card.style.setProperty("--gy", (-rx * 3).toFixed(1) + "%");
+    card.classList.add("is-gyro");
+  });
+}
+
+function onGyro(e) {
+  if (e.gamma == null || motionReduced()) return;
+  gyroBeta = e.beta || 0;
+  gyroGamma = e.gamma;
+  if (gyroPending) return;
+  gyroPending = true;
+  requestAnimationFrame(applyGyro);
+}
+
+function startGyro() {
+  if (gyroState === "on") return;
+  window.addEventListener("deviceorientation", onGyro);
+  gyroState = "on";
+}
+
+function askGyro() {
+  if (gyroState !== "idle" || !window.DeviceOrientationEvent) return;
+  if (typeof DeviceOrientationEvent.requestPermission !== "function") return;
+  gyroState = "asking";
+  DeviceOrientationEvent.requestPermission().then((res) => {
+    if (res === "granted") startGyro();
+    else gyroState = "off";
+  }).catch(() => { gyroState = "off"; });
+}
+
+function armCardFoil() {
+  if (foilArmed || typeof document === "undefined" || !document.addEventListener) return;
+  foilArmed = true;
+  const fine = () => window.matchMedia && window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  document.addEventListener("pointermove", (e) => {
+    if (motionReduced() || e.pointerType === "touch" || !fine()) return;
+    const card = e.target.closest && e.target.closest(".bb-card");
+    if (!card) return;
+    const r = card.getBoundingClientRect();
+    if (!r.width || !r.height) return;
+    aimCard(card, (e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height);
+  });
+  document.addEventListener("pointerout", (e) => {
+    const card = e.target.closest && e.target.closest(".bb-card");
+    if (!card) return;
+    if (e.relatedTarget && card.contains(e.relatedTarget)) return;
+    clearCardAim(card);
+  });
+  document.addEventListener("pointerup", (e) => {
+    if (e.pointerType !== "touch" && e.pointerType !== "pen") return;
+    const card = e.target.closest && e.target.closest(".bb-card");
+    if (!card) return;
+    burstCard(card);
+    askGyro();
+  });
+  if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission !== "function") {
+    const coarse = window.matchMedia && (window.matchMedia("(hover: none)").matches || window.matchMedia("(pointer: coarse)").matches);
+    if (coarse) startGyro();
+  }
 }
 
 /* ---------- Profile ---------- */
@@ -2133,6 +2278,7 @@ function paintCelebrateCard(player, overall, tier) {
   slot.innerHTML = cardHTML(player, true, { overall, tier });
   const card = slot.querySelector(".bb-card");
   if (card) card.classList.add("card-live");
+  watchCardMotion();
 }
 
 function burstBits(count) {
@@ -2472,7 +2618,7 @@ function faceFromArchive(card) {
     .concat((card.assignedPerks || []).map((q) => ({ ...q, kind: "coach" })));
   return {
     overall: card.overall, tier: card.tier, subs: card.subGrades || [],
-    ageGroup: card.ageGroup, age: card.age, classYear: card.classYear || "", quirks,
+    ageGroup: card.ageGroup, age: card.age, classYear: card.classYear || "", quirks, quiet: true,
   };
 }
 
@@ -2669,6 +2815,7 @@ function openProfile(id, opts) {
     }
   });
   growAttrBars();
+  watchCardMotion();
   if (opts && opts.tab) {
     const tabBtn = document.querySelector(`.show-tab[data-tab="${opts.tab}"]`);
     if (tabBtn) tabBtn.click();
@@ -2757,6 +2904,7 @@ function openRetired(id, index) {
   });
   $("backCurrentBtn").addEventListener("click", () => openProfile(id, { tab: "collection" }));
   growAttrBars();
+  watchCardMotion();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
@@ -2840,6 +2988,7 @@ function showSeasonReveal() {
     <div class="season-col"><p class="celebrate-kicker">Retired ${esc(info.retiredSeason)} · ${esc(info.retiredGroup)}</p>${retired ? cardHTML(playerFromArchive(retired), true, faceFromArchive(retired)) : ""}</div>
     <div class="season-col"><p class="celebrate-kicker">New card ${esc(info.seasonLabel)} · ${esc(info.ageGroup)}</p>${cardHTML(player, true, { overall: info.overall, tier: info.tier, age: info.age, ageGroup: info.ageGroup })}</div>`;
   box.hidden = false;
+  watchCardMotion();
 }
 
 function finishSeasonQueue() {
@@ -3345,6 +3494,7 @@ function runShowdownFaceoff() {
   $("sd-card-b").innerHTML = cardHTML(b, true);
   $("sd-card-a").querySelectorAll(".bb-card").forEach((card) => card.classList.add("card-live"));
   $("sd-card-b").querySelectorAll(".bb-card").forEach((card) => card.classList.add("card-live"));
+  watchCardMotion();
   if (motionReduced()) {
     box.classList.add("is-reduced", "is-results");
     revealShowdownResults();
