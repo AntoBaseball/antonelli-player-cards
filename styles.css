@@ -357,6 +357,69 @@ th{font-size:11px;letter-spacing:.7px;text-transform:uppercase;color:var(--muted
 .season-col{width:min(280px,86vw)}
 .season-col .celebrate-kicker{text-align:center}
 .season-reveal .celebrate-tiername{min-height:0}
+.showdown{position:fixed;inset:0;z-index:110;background:#070707;color:#f6f1e4;overflow:auto;padding:18px 16px 32px}
+.showdown[hidden]{display:none}
+.sd-pick[hidden],.sd-face[hidden],.sd-results[hidden]{display:none !important}
+.sd-pick{max-width:480px;margin:8vh auto;background:#141414;border:1px solid var(--gold);border-radius:16px;padding:20px;display:grid;gap:8px}
+.sd-pick h2{margin:0;font-family:Impact,"Arial Black",system-ui,sans-serif;font-style:italic;color:var(--gold-bright);font-size:40px}
+.sd-pick select{margin-bottom:6px}
+.sd-warn{color:#e7c56a;font-weight:800;margin:0}
+.sd-face{position:fixed;inset:0;z-index:2;min-height:100vh;display:flex;align-items:center;justify-content:center;gap:16px;background:#070707}
+.sd-card{width:min(280px,36vw);flex:none}
+.sd-card .bb-card{width:100%}
+.sd-left{transform:translateX(-75vw)}
+.sd-right{transform:translateX(75vw)}
+.sd-vs{width:108px;height:108px;flex:none;border-radius:50%;display:grid;place-items:center;position:relative;z-index:2;opacity:0;transform:scale(.2);
+  background:radial-gradient(circle at 40% 35%,#fff6c8,#f2d060 42%,#8a6508 78%,#111);color:#111;border:3px solid #fff;box-shadow:0 0 28px rgba(242,208,96,.75)}
+.sd-vs b{font-family:Impact,"Arial Black",system-ui,sans-serif;font-style:italic;font-size:36px;line-height:1}
+.sd-vs-star{position:absolute;top:8px;width:22px;height:22px;background:url("assets/antonelli-a-star.png") center/contain no-repeat}
+.showdown.is-go .sd-left{animation:sd-in-left .72s cubic-bezier(.18,.8,.2,1) both}
+.showdown.is-go .sd-right{animation:sd-in-right .72s cubic-bezier(.18,.8,.2,1) both}
+.showdown.is-go .sd-vs{animation:sd-vs-pop .38s .62s cubic-bezier(.2,.8,.2,1) both}
+.showdown.is-clash .sd-face{animation:sd-clash .26s linear 2}
+.showdown.is-results .sd-face{display:none}
+.sd-skip{position:absolute;top:8px;right:8px}
+.sd-results{max-width:980px;margin:0 auto}
+.sd-banner{text-align:center}
+.sd-banner h2{margin:0;font-family:Impact,"Arial Black",system-ui,sans-serif;font-style:italic;font-size:clamp(36px,6vw,64px);color:var(--gold-bright);line-height:.9}
+.sd-tally{font-weight:800;font-size:18px}
+.sd-note{color:#b7aa8a;font-size:13px;line-height:1.45}
+.sd-names{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;font-weight:900;margin:8px 0 4px}
+.sd-names span:last-child{text-align:right}
+.sd-section{margin-top:14px}
+.sd-section h3,.sd-chase h3{margin:0 0 6px;color:var(--gold);font-size:13px;letter-spacing:1px;text-transform:uppercase}
+.sd-row{display:grid;grid-template-columns:minmax(0,1fr) 120px minmax(0,1fr);gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid #2a2a2a}
+.sd-side{display:flex;align-items:baseline;gap:8px;min-width:0}
+.sd-side b{font-size:22px;font-family:Impact,"Arial Black",system-ui,sans-serif;font-style:italic}
+.sd-side small{color:#d9d0b8;font-size:12px}
+.sd-side.b{justify-content:flex-end;text-align:right}
+.sd-side.is-lead b{color:#7dffa8}
+.sd-mid{text-align:center}
+.sd-mid span{display:block;font-size:12px;font-weight:800;letter-spacing:.3px}
+.sd-mid strong{color:var(--gold-bright)}
+.sd-chip{font-style:normal;font-weight:900;font-size:14px}
+.sd-chip.up{color:#7dffa8}
+.sd-chip.down{color:#e2c27a}
+.sd-chip.even{color:#b7aa8a}
+.sd-row.is-exhibit{opacity:.95}
+.sd-perk-lists{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sd-perk-lists h4{margin:0 0 4px}
+.sd-chase-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.sd-chase{background:#141414;border:1px solid #3a3218;border-radius:14px;padding:12px 14px}
+.sd-chase ol{margin:6px 0 0;padding-left:18px;line-height:1.45}
+.sd-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+@keyframes sd-in-left{from{transform:translateX(-75vw)}to{transform:none}}
+@keyframes sd-in-right{from{transform:translateX(75vw)}to{transform:none}}
+@keyframes sd-vs-pop{from{opacity:0;transform:scale(.2)}to{opacity:1;transform:scale(1)}}
+@keyframes sd-clash{0%,100%{transform:translateX(0)}30%{transform:translateX(-8px)}70%{transform:translateX(8px)}}
+@media (prefers-reduced-motion:reduce){
+  .sd-left,.sd-right,.sd-vs,.showdown.is-go .sd-left,.showdown.is-go .sd-right,.showdown.is-go .sd-vs,.showdown.is-clash .sd-face{animation:none !important;transform:none;opacity:1}
+}
+@media (max-width:700px){
+  .sd-row,.sd-names{grid-template-columns:minmax(0,1fr) 72px minmax(0,1fr)}
+  .sd-chase-grid,.sd-perk-lists{grid-template-columns:1fr}
+  .sd-card{width:min(220px,42vw)}
+}
 /* Modal */
 .modal{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:14px}
 .modal[hidden]{display:none}

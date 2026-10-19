@@ -2599,6 +2599,7 @@ function openProfile(id, opts) {
           <button class="btn btn-red" type="button" id="editProfileBtn">Edit Metrics / Profile</button>
           <button class="btn btn-ghost" type="button" id="previewOverallBtn">Preview overall-up</button>
           <button class="btn btn-ghost" type="button" id="previewTierBtn">Preview tier-up</button>
+          <button class="btn btn-ghost" type="button" id="showdownProfileBtn">Challenge in Showdown</button>
           <button class="btn btn-ghost" type="button" id="rolloverBtn">Start New Season (Sept 1 Rollover)</button>
           <button class="btn btn-ghost" type="button" id="deleteProfileBtn">Delete Player</button>
         </div>
@@ -2656,6 +2657,8 @@ function openProfile(id, opts) {
   $("previewOverallBtn").addEventListener("click", () => previewOverallUp(p.id));
   $("previewTierBtn").addEventListener("click", () => previewTierUp(p.id));
   $("rolloverBtn").addEventListener("click", () => askRollover(p.id));
+  const showdownProfileBtn = $("showdownProfileBtn");
+  if (showdownProfileBtn) showdownProfileBtn.addEventListener("click", () => openShowdownPicker(p.id));
   document.querySelectorAll("[data-archive]").forEach((btn) => {
     btn.addEventListener("click", () => openRetired(p.id, Number(btn.dataset.archive)));
   });
@@ -3066,6 +3069,292 @@ function openModal(player) {
 
 function closeModal() { $("playerModal").hidden = true; }
 
+const SHOWDOWN_TOOLS = [
+  ["BAT", "Bat Speed"], ["PWR", "Power"], ["PLANE", "Plane"], ["QUICK", "Quickness"], ["CONN", "Connection"],
+  ["VEL", "Velocity"], ["BRK", "Breaking / Offspeed"], ["CNTL", "Control"], ["STM", "Stamina"],
+];
+
+function sdCompare(aGrade, bGrade) {
+  if (aGrade == null || bGrade == null || Number.isNaN(Number(aGrade)) || Number.isNaN(Number(bGrade))) {
+    return { winner: null, delta: null, aSign: null, bSign: null, shared: false };
+  }
+  const diff = Number(aGrade) - Number(bGrade);
+  if (diff === 0) return { winner: "tie", delta: 0, aSign: 0, bSign: 0, shared: true };
+  return { winner: diff > 0 ? "a" : "b", delta: Math.abs(diff), aSign: diff, bSign: -diff, shared: true };
+}
+
+function sdRow(fields) {
+  const cmp = sdCompare(fields.aGrade, fields.bGrade);
+  const counted = fields.exhibit ? false : cmp.shared;
+  return { ...fields, ...cmp, counted };
+}
+
+function sdRawGap(key, trailer, leader) {
+  const meta = METRICS[key];
+  if (!meta) return "";
+  const mode = (BLAST_BENCHMARKS[key] && BLAST_BENCHMARKS[key].mode) || "higher";
+  if (mode === "ideal" || mode === "ope") return "";
+  const have = (player) => player.metrics && player.metrics[key] != null && !Number.isNaN(Number(player.metrics[key]));
+  if (!have(trailer) || !have(leader)) return "";
+  const need = mode === "lower" ? Number(trailer.metrics[key]) - Number(leader.metrics[key]) : Number(leader.metrics[key]) - Number(trailer.metrics[key]);
+  if (!(need > 0)) return "";
+  const shown = formatMetric(key, need);
+  return mode === "lower" ? ` · ${shown}${meta.unit} quicker` : ` · +${shown}${meta.unit}`;
+}
+
+function sdChase(rows, trailerSide, trailer, leader) {
+  const first = String(leader.name || "them").split(" ")[0];
+  return rows
+    .filter((row) => row.counted && row.winner && row.winner !== "tie" && row.winner !== trailerSide)
+    .sort((x, y) => x.delta - y.delta || x.label.localeCompare(y.label))
+    .slice(0, 3)
+    .map((row) => {
+      const raw = row.metricKey ? sdRawGap(row.metricKey, trailer, leader) : "";
+      return { id: row.id, delta: row.delta, label: row.label, text: `+${row.delta} ${row.label} to catch ${first}${raw}` };
+    });
+}
+
+function sdTally(a, b, aWins, bWins, compared) {
+  const an = String(a.name || "A").split(" ")[0];
+  const bn = String(b.name || "B").split(" ")[0];
+  if (!compared) return "No shared categories to tally.";
+  if (aWins === bWins) return aWins === 0 ? `Dead even across ${compared} categories.` : `Split showdown, ${aWins} categories each.`;
+  return aWins > bWins ? `${an} takes ${aWins} of ${compared} categories.` : `${bn} takes ${bWins} of ${compared} categories.`;
+}
+
+function buildShowdown(a, b) {
+  if (!a || !b || !a.id || !b.id || a.id === b.id) return { ok: false, reason: "same" };
+  const ga = gradesFor(a);
+  const gb = gradesFor(b);
+  const ta = tierFor(ga.overall);
+  const tb = tierFor(gb.overall);
+  const aSubs = Object.fromEntries(ga.subs.map((s) => [s.key, s.grade]));
+  const bSubs = Object.fromEntries(gb.subs.map((s) => [s.key, s.grade]));
+  const rows = [
+    sdRow({ id: "overall", label: "Overall", section: "card", aGrade: ga.overall, bGrade: gb.overall, aText: String(ga.overall), bText: String(gb.overall) }),
+    sdRow({ id: "tier", label: "Tier", section: "card", aGrade: TIER_RANK[ta.key], bGrade: TIER_RANK[tb.key], aText: ta.label, bText: tb.label }),
+  ];
+  SHOWDOWN_TOOLS.forEach(([key, label]) => {
+    const aHas = Object.prototype.hasOwnProperty.call(aSubs, key);
+    const bHas = Object.prototype.hasOwnProperty.call(bSubs, key);
+    if (!aHas && !bHas) return;
+    rows.push(sdRow({
+      id: key, label, section: "tools", metricKey: null,
+      aGrade: aHas ? aSubs[key] : null, bGrade: bHas ? bSubs[key] : null,
+      aText: aHas && aSubs[key] != null ? String(aSubs[key]) : "—",
+      bText: bHas && bSubs[key] != null ? String(bSubs[key]) : "—",
+    }));
+  });
+  [...BLAST_KEYS, ...PITCHER_KEYS].forEach((key) => {
+    const meta = METRICS[key];
+    const aOn = metricKeysFor(a.type).includes(key);
+    const bOn = metricKeysFor(b.type).includes(key);
+    if (!aOn && !bOn) return;
+    const aGrade = aOn ? normalizeMetric(key, a.metrics && a.metrics[key], activeAgeGroup(a)) : null;
+    const bGrade = bOn ? normalizeMetric(key, b.metrics && b.metrics[key], activeAgeGroup(b)) : null;
+    const raw = (player, on) => !on || !player.metrics ? "" : `${formatMetric(key, player.metrics[key])}${meta.unit} · ${activeAgeGroup(player)}`;
+    rows.push(sdRow({
+      id: key, label: meta.label, section: BLAST_KEYS.includes(key) ? "hit" : "pitch", metricKey: key,
+      aGrade, bGrade,
+      aText: aGrade == null ? "—" : String(aGrade),
+      bText: bGrade == null ? "—" : String(bGrade),
+      aRaw: raw(a, aOn), bRaw: raw(b, bOn),
+    }));
+  });
+  const aPerks = (a.earnedQuirks || []).filter((rec) => TRAINING_BY_ID[rec.id]);
+  const bPerks = (b.earnedQuirks || []).filter((rec) => TRAINING_BY_ID[rec.id]);
+  rows.push(sdRow({
+    id: "perks", label: "Perks earned", section: "exhibit", exhibit: true,
+    aGrade: aPerks.length, bGrade: bPerks.length,
+    aText: String(aPerks.length), bText: String(bPerks.length),
+    aNames: aPerks.map((rec) => TRAINING_BY_ID[rec.id].name),
+    bNames: bPerks.map((rec) => TRAINING_BY_ID[rec.id].name),
+  }));
+  const scored = rows.filter((row) => row.counted);
+  const aWins = scored.filter((row) => row.winner === "a").length;
+  const bWins = scored.filter((row) => row.winner === "b").length;
+  const ties = scored.filter((row) => row.winner === "tie").length;
+  const overall = rows.find((row) => row.id === "overall");
+  const overallWinner = overall && overall.winner !== "tie" ? overall.winner : "tie";
+  const an = String(a.name || "A").split(" ")[0];
+  const bn = String(b.name || "B").split(" ")[0];
+  const note = "Grades are vs each player's own age group. Raw numbers are the actual readings, side by side."
+    + (a.type !== b.type ? " Only categories on both cards are scored. A dash is not on that card, and it is not a loss." : "");
+  return {
+    ok: true,
+    aId: a.id, bId: b.id, aName: a.name, bName: b.name,
+    aGroup: activeAgeGroup(a), bGroup: activeAgeGroup(b),
+    rows, aWins, bWins, ties, compared: scored.length,
+    tally: sdTally(a, b, aWins, bWins, scored.length),
+    overallWinner,
+    headline: overallWinner === "tie" ? "Dead Even Showdown" : `${overallWinner === "a" ? an : bn} leads the showdown`,
+    note,
+    chaseA: sdChase(rows, "a", a, b),
+    chaseB: sdChase(rows, "b", b, a),
+  };
+}
+
+let showdownTimers = [];
+function clearShowdownTimers() {
+  showdownTimers.forEach((id) => clearTimeout(id));
+  showdownTimers = [];
+}
+
+function sdOptions(selectedId) {
+  return players.slice().sort((a, b) => a.name.localeCompare(b.name)).map((p) => {
+    const overall = gradesFor(p).overall;
+    return `<option value="${esc(p.id)}" ${p.id === selectedId ? "selected" : ""}>${esc(p.name)} · ${esc(activeAgeGroup(p))} · ${overall}</option>`;
+  }).join("");
+}
+
+function sdRefreshWarn() {
+  const a = $("sd-a");
+  const b = $("sd-b");
+  const start = $("sd-start");
+  const warn = $("sd-warn");
+  if (!a || !b || !start || !warn) return;
+  const same = a.value && a.value === b.value;
+  warn.hidden = !same;
+  start.disabled = !a.value || !b.value || same;
+}
+
+function openShowdownPicker(preselectId) {
+  const box = $("showdown");
+  if (!box) return;
+  clearShowdownTimers();
+  box.hidden = false;
+  box.scrollTop = 0;
+  const previousB = $("sd-b") ? $("sd-b").value : "";
+  box.classList.remove("is-go", "is-clash", "is-results", "is-reduced");
+  $("showdownPick").hidden = false;
+  $("showdownFace").hidden = true;
+  $("showdownResults").hidden = true;
+  const ids = players.map((p) => p.id);
+  const aId = preselectId && ids.includes(preselectId) ? preselectId : (players[0] && players[0].id);
+  const fallback = players.find((p) => p.id !== aId);
+  const bId = previousB && previousB !== aId && ids.includes(previousB) ? previousB : (fallback && fallback.id);
+  $("sd-a").innerHTML = sdOptions(aId);
+  $("sd-b").innerHTML = sdOptions(bId || aId);
+  sdRefreshWarn();
+}
+
+function closeShowdown() {
+  clearShowdownTimers();
+  const box = $("showdown");
+  if (box) {
+    box.hidden = true;
+    box.classList.remove("is-go", "is-clash", "is-results", "is-reduced");
+  }
+}
+
+function sdChip(row, side) {
+  if (!row.shared) return "";
+  if (row.winner === "tie") return `<em class="sd-chip even">EVEN</em>`;
+  const sign = side === "a" ? row.aSign : row.bSign;
+  const text = `${sign > 0 ? "+" : ""}${sign}`;
+  return `<em class="sd-chip ${sign > 0 ? "up" : "down"}">${text}</em>`;
+}
+
+function sdCenter(row) {
+  if (!row.shared) return "—";
+  if (row.winner === "tie") return "EVEN";
+  return `${row.winner === "a" ? "A" : "B"} +${row.delta}`;
+}
+
+function renderShowdownResults() {
+  const a = players.find((p) => p.id === $("sd-a").value);
+  const b = players.find((p) => p.id === $("sd-b").value);
+  const result = buildShowdown(a, b);
+  const host = $("showdownResults");
+  if (!host) return;
+  if (!result.ok) {
+    host.innerHTML = `<p>Pick two different current-season cards.</p>`;
+    host.hidden = false;
+    return;
+  }
+  const sections = [["card", "The card"], ["tools", "Tools"], ["hit", "Hitting metrics"], ["pitch", "Pitch metrics"], ["exhibit", "Exhibition"]];
+  const body = sections.map(([key, title]) => {
+    const list = result.rows.filter((row) => row.section === key);
+    if (!list.length) return "";
+    const rows = list.map((row) => `<div class="sd-row ${row.exhibit ? "is-exhibit" : ""} ${row.winner === "a" ? "lead-a" : row.winner === "b" ? "lead-b" : ""}">
+        <div class="sd-side a ${row.winner === "a" ? "is-lead" : ""}"><b>${esc(row.aText)}</b>${row.aRaw ? `<small>${esc(row.aRaw)}</small>` : ""}${sdChip(row, "a")}</div>
+        <div class="sd-mid"><span>${esc(row.label)}</span><strong>${esc(sdCenter(row))}</strong></div>
+        <div class="sd-side b ${row.winner === "b" ? "is-lead" : ""}">${sdChip(row, "b")}${row.bRaw ? `<small>${esc(row.bRaw)}</small>` : ""}<b>${esc(row.bText)}</b></div>
+      </div>`).join("");
+    const extra = key === "exhibit" ? `<p class="sd-note">Training perks earned this season. The count is not part of the tally.</p>
+      <div class="sd-perk-lists"><div><h4>${esc(result.aName.split(" ")[0])}</h4><p>${esc((list[0].aNames || []).join(", ") || "None yet")}</p></div><div><h4>${esc(result.bName.split(" ")[0])}</h4><p>${esc((list[0].bNames || []).join(", ") || "None yet")}</p></div></div>` : "";
+    return `<section class="sd-section"><h3>${title}</h3>${rows}${extra}</section>`;
+  }).join("");
+  const chaseList = (items, name) => items.length
+    ? `<ol>${items.map((item) => `<li>${esc(item.text)}</li>`).join("")}</ol>`
+    : `<p>No chase targets. ${esc(name)} is even or ahead in the scored categories.</p>`;
+  host.innerHTML = `
+    <div class="sd-banner">
+      <p class="celebrate-kicker">SHOWDOWN</p>
+      <h2>${esc(result.headline)}</h2>
+      <p class="sd-tally">${esc(result.tally)}</p>
+      <p class="sd-note">${esc(result.note)} Current season cards only.</p>
+    </div>
+    <div class="sd-names"><span>${esc(result.aName)} · ${esc(result.aGroup)}</span><span>VS</span><span>${esc(result.bName)} · ${esc(result.bGroup)}</span></div>
+    ${body}
+    <div class="sd-chase-grid">
+      <section class="sd-chase"><h3>${esc(result.aName.split(" ")[0])}'s chase targets</h3>${chaseList(result.chaseA, result.aName.split(" ")[0])}</section>
+      <section class="sd-chase"><h3>${esc(result.bName.split(" ")[0])}'s chase targets</h3>${chaseList(result.chaseB, result.bName.split(" ")[0])}</section>
+    </div>
+    <div class="sd-actions">
+      <button class="btn btn-red" type="button" id="sd-rematch">Rematch</button>
+      <button class="btn btn-ghost" type="button" id="sd-change">Change players</button>
+      <button class="btn btn-ghost" type="button" id="sd-view-a">View ${esc(result.aName.split(" ")[0])}</button>
+      <button class="btn btn-ghost" type="button" id="sd-view-b">View ${esc(result.bName.split(" ")[0])}</button>
+      <button class="btn btn-ghost" type="button" id="sd-close">Close</button>
+    </div>`;
+  host.hidden = false;
+  $("sd-rematch").addEventListener("click", runShowdownFaceoff);
+  $("sd-change").addEventListener("click", () => openShowdownPicker($("sd-a").value));
+  $("sd-view-a").addEventListener("click", () => { const id = $("sd-a").value; closeShowdown(); openProfile(id); });
+  $("sd-view-b").addEventListener("click", () => { const id = $("sd-b").value; closeShowdown(); openProfile(id); });
+  $("sd-close").addEventListener("click", closeShowdown);
+}
+
+function revealShowdownResults() {
+  clearShowdownTimers();
+  const box = $("showdown");
+  if (!box) return;
+  box.scrollTop = 0;
+  box.classList.add("is-results");
+  $("showdownFace").hidden = true;
+  $("showdownPick").hidden = true;
+  renderShowdownResults();
+}
+
+function skipShowdown() { revealShowdownResults(); }
+
+function runShowdownFaceoff() {
+  const a = players.find((p) => p.id === $("sd-a").value);
+  const b = players.find((p) => p.id === $("sd-b").value);
+  const check = buildShowdown(a, b);
+  if (!check.ok) { sdRefreshWarn(); return; }
+  const box = $("showdown");
+  clearShowdownTimers();
+  box.scrollTop = 0;
+  box.classList.remove("is-go", "is-clash", "is-results", "is-reduced");
+  $("showdownPick").hidden = true;
+  $("showdownResults").hidden = true;
+  $("showdownFace").hidden = false;
+  $("sd-card-a").innerHTML = cardHTML(a, true);
+  $("sd-card-b").innerHTML = cardHTML(b, true);
+  $("sd-card-a").querySelectorAll(".bb-card").forEach((card) => card.classList.add("card-live"));
+  $("sd-card-b").querySelectorAll(".bb-card").forEach((card) => card.classList.add("card-live"));
+  if (motionReduced()) {
+    box.classList.add("is-reduced", "is-results");
+    revealShowdownResults();
+    return;
+  }
+  requestAnimationFrame(() => box.classList.add("is-go"));
+  showdownTimers.push(setTimeout(() => box.classList.add("is-clash"), 720));
+  showdownTimers.push(setTimeout(revealShowdownResults, 2000));
+}
+
 function bindApp() {
   if (typeof document === "undefined" || !document.getElementById || !document.getElementById("rosterGrid")) return;
   const banner = document.getElementById("migrationBanner");
@@ -3084,6 +3373,7 @@ function bindApp() {
     if (e.key !== "Escape") return;
     closeModal();
     closeSeasonConfirm();
+    closeShowdown();
   });
 
   $("f-type").addEventListener("change", () => {
@@ -3181,6 +3471,13 @@ function bindApp() {
   if (seasonCancel) seasonCancel.addEventListener("click", closeSeasonConfirm);
   if (seasonBackdrop) seasonBackdrop.addEventListener("click", closeSeasonConfirm);
   if (seasonCollect) seasonCollect.addEventListener("click", collectSeasonReveal);
+  const showdownBtn = $("showdownBtn");
+  if (showdownBtn) showdownBtn.addEventListener("click", () => openShowdownPicker(null));
+  if ($("sd-start")) $("sd-start").addEventListener("click", runShowdownFaceoff);
+  if ($("sd-cancel")) $("sd-cancel").addEventListener("click", closeShowdown);
+  if ($("sd-skip")) $("sd-skip").addEventListener("click", skipShowdown);
+  if ($("sd-a")) $("sd-a").addEventListener("change", sdRefreshWarn);
+  if ($("sd-b")) $("sd-b").addEventListener("change", sdRefreshWarn);
   let earnedDirty = false;
   const pendingReveal = [];
   const pendingCeleb = [];

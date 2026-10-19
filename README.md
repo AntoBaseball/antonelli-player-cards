@@ -47,6 +47,7 @@ Pages only serves what is on `main`. If the app landed through a pull request, m
 - **Profile detail view** — click a card for a dark player screen: large card, huge name, position diamond, quick facts, and tabs for Attributes, Metrics & History, Player Perks, Strengths & Growth, and Collection. See [Player profile](#player-profile) and [Seasons](#seasons).
 - **Player Perks** — up to three perks on the card front. Training perks unlock from milestones and stay once earned. A new perk opens a sealed pack once. Show perks are coach-awarded. See [Player Perks](#player-perks).
 - **Celebrations** — an overall climb plays a short card bounce and count-up. Crossing into Silver, Gold, or Diamond takes over the screen. See [Celebrations](#celebrations).
+- **Showdown** — compare two current-season cards, category by category, with a short face-off and chase targets. See [Showdown](#showdown).
 - **Baseball card (front, v2 — Topps / MLB The Show style)** — vertical portrait card (5:7, the classic 2.5"×3.5" ratio). The player visual fills the card over a geometric black & gold background with a stitched/dashed frame edge:
   - **Diamond-shaped overall badge** (rotated diamond, clip-path) in the **top-right** with the overall number.
   - **Player name in bold italic uppercase at bottom-right**, with a gold position bar under it (`CF - R/R` = position + bats/throws), team/age line, and a small archetype label.
@@ -322,6 +323,24 @@ After rollover, a **New Season, New Chase** reveal shows the retired card and th
 
 The Collection tab lists seasons with Antonelli, the best overall, and how many seasons were Gold or better. Mason's sample roster includes a fictional `2025-26` 16U card (final overall frozen at Gold). Dylan's includes a fictional `2024-25` 12U card. Those two cards ship with a fresh sample roster or Reset Sample Data. They are not added to a browser that already had players saved.
 
+## Showdown
+
+Showdown puts two **current-season** cards against each other. Retired collection cards are not in it. Open it from **Showdown** on the roster, or **Challenge in Showdown** on a profile (that player is already Player A). The same player cannot be picked twice.
+
+The intro slides Player A in from the left and Player B from the right, then pops an Antonelli star **VS** badge and a short clash. It lasts about two seconds. **Skip** jumps to the results. `prefers-reduced-motion` skips the slide and opens the results immediately.
+
+Each shared category shows both grades, the raw reading when there is one, and the gap. The center says `A +5` or `B +3`. The leader’s chip is `+N` and the trailer’s chip is `-N`. A tie says `EVEN`. Overall and tier are always shared. Tool grades (BAT, PWR, PLANE, QUICK, CONN, VEL, BRK, CNTL, STM) and metric grades are shared only when both cards have that category. A hitter against a pitcher still compares overall and tier. Hitting rows show the hitter’s number and a dash for the pitcher, and those dashes are not losses. A two-way player brings both sets; the opponent is scored only on the rows they also have.
+
+Grades are versus each player’s own age group. Raw mph, degrees, and seconds are the absolute readings, shown beside the grade so a harder window is visible.
+
+The banner follows the overall: the higher overall leads, and the same overall is **Dead Even Showdown**. Under that, the tally counts shared categories only (`Mason takes 6 of 9 categories`). Ties count in the 9 and for neither player.
+
+**Perks earned this season** is an exhibition row. The counts and the names are shown, and they are not part of the tally, so a longer perk list cannot decide the showdown.
+
+**Chase targets** are the three closest categories the trailer can flip, smallest grade gap first. Copy stays on the chase (`+4 Bat Speed to catch Eli`). When the raw number is a simple higher-or-lower reading, the line adds the raw gap (`+3 mph`). Ideal-window metrics (attack angle, connection, on-plane) stay on the grade, because “closer” is not a straight add.
+
+**Rematch** runs the face-off again. **Change players** returns to the picker. **View profile** opens that player’s current card. Showdowns are not saved.
+
 ## Sample data note
 
 ⚠️ **All 5 players are invented for this prototype** (Mason Carter, Eli Ramirez, Noah Bennett, Connor Walsh, Dylan Brooks). Names, metrics, strengths, and history are fictional and do not represent real people. The app labels this in a banner on the page itself.
@@ -332,7 +351,7 @@ The Collection tab lists seasons with Antonelli, the best overall, and how many 
 |---|---|
 | `index.html` | Page structure: roster, profile, add/edit modal |
 | `styles.css` | Antonelli black & gold branding, v2 portrait-card tiers, responsive layout |
-| `app.js` | Sample data, Blast benchmarks, Player Perks, celebrations, seasons, grade formula, card rendering, localStorage persistence |
+| `app.js` | Sample data, Blast benchmarks, Player Perks, celebrations, seasons, Showdown, grade formula, card rendering, localStorage persistence |
 | `assets/` | Antonelli block, script, and star logos (see Brand assets) |
 | `README.md` | This file |
 

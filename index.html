@@ -74,8 +74,11 @@
     </div>
 
     <div class="section-head">
-      <h2>Roster <span id="rosterCount" class="count"></span></h2>
-      <p class="muted">Click any player or card to open the full profile.</p>
+      <div>
+        <h2>Roster <span id="rosterCount" class="count"></span></h2>
+        <p class="muted">Click any player or card to open the full profile.</p>
+      </div>
+      <button class="btn btn-red" id="showdownBtn" type="button">Showdown</button>
     </div>
     <div id="rosterGrid" class="roster-grid"></div>
     <div id="emptyState" class="empty" hidden>
@@ -242,6 +245,29 @@
     <p class="celebrate-reason" id="seasonRevealReason"></p>
     <button class="btn btn-red" type="button" id="seasonRevealCollect">Start the chase</button>
   </div>
+</div>
+
+<div id="showdown" class="showdown" hidden role="dialog" aria-modal="true" aria-labelledby="showdownTitle">
+  <div class="sd-pick" id="showdownPick">
+    <h2 id="showdownTitle">Showdown</h2>
+    <p class="sd-note">Current season cards only. Retired cards stay in the collection.</p>
+    <label for="sd-a">Player A</label>
+    <select id="sd-a"></select>
+    <label for="sd-b">Player B</label>
+    <select id="sd-b"></select>
+    <p id="sd-warn" class="sd-warn" hidden>Pick two different players.</p>
+    <div class="sd-actions">
+      <button class="btn btn-ghost" type="button" id="sd-cancel">Cancel</button>
+      <button class="btn btn-red" type="button" id="sd-start">Start Showdown</button>
+    </div>
+  </div>
+  <div class="sd-face" id="showdownFace" hidden>
+    <div class="sd-card sd-left" id="sd-card-a"></div>
+    <div class="sd-vs" aria-hidden="true"><span class="sd-vs-star"></span><b>VS</b></div>
+    <div class="sd-card sd-right" id="sd-card-b"></div>
+    <button class="btn btn-ghost sd-skip" type="button" id="sd-skip">Skip</button>
+  </div>
+  <div class="sd-results" id="showdownResults" hidden></div>
 </div>
 
 <script src="app.js"></script>
