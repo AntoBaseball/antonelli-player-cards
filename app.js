@@ -301,13 +301,14 @@ const SAMPLE_PLAYERS = [
     team: "Antonelli 17U", position: "OF / 1B", bats: "L", throws: "L", type: "hitter", archetype: "Power Hitter", photo: "",
     strengths: ["Drives the ball in the air to the pull side with real carry", "Strong, physical swing — top bat speed on the team", "Patient in hitter's counts; hunts pitches he can lift"],
     improvements: ["Stay on plane against breaking balls down and away", "Shorten the two-strike swing without giving up bat speed", "First-step quickness on outfield reads"],
+    coachQuirks: ["dead-red", "unfazed"],
     metrics: { batSpeed: 69, peakHandSpeed: 22, attackAngle: 12, verticalBatAngle: -28, timeToContact: 0.155, powerKw: 3.9, rotationalAcceleration: 16, onPlaneEfficiency: 76, earlyConnection: 92, connectionAtImpact: 88 },
     history: {
-      batSpeed: metricHistory(69, [63, 65, 67]), peakHandSpeed: metricHistory(22, [19, 20, 21]),
-      attackAngle: metricHistory(12, [8, 9, 11]), verticalBatAngle: metricHistory(-28, [-22, -24, -26]),
-      timeToContact: metricHistory(0.155, [0.175, 0.168, 0.160]), powerKw: metricHistory(3.9, [3.2, 3.4, 3.7]),
-      rotationalAcceleration: metricHistory(16, [12, 13.5, 15]), onPlaneEfficiency: metricHistory(76, [68, 71, 74]),
-      earlyConnection: metricHistory(92, [84, 87, 90]), connectionAtImpact: metricHistory(88, [82, 84, 86]),
+      batSpeed: metricHistory(69, [63, 65, 67]), peakHandSpeed: metricHistory(22, [20, 20.5, 21]),
+      attackAngle: metricHistory(12, [11, 11.5, 12]), verticalBatAngle: metricHistory(-28, [-26, -27, -27]),
+      timeToContact: metricHistory(0.155, [0.160, 0.158, 0.156]), powerKw: metricHistory(3.9, [3.2, 3.5, 3.7]),
+      rotationalAcceleration: metricHistory(16, [13, 14, 15]), onPlaneEfficiency: metricHistory(76, [73, 74, 75]),
+      earlyConnection: metricHistory(92, [90, 91, 91]), connectionAtImpact: metricHistory(88, [86, 87, 87]),
     },
   },
   {
@@ -315,13 +316,14 @@ const SAMPLE_PLAYERS = [
     team: "Antonelli 15U", position: "SS / 2B", bats: "R", throws: "R", type: "hitter", archetype: "Contact / Leadoff", photo: "",
     strengths: ["Short, quick swing that finds the barrel", "Advanced strike-zone awareness for his age", "Instinctive base runner; quick first step out of the box"],
     improvements: ["Add strength so bat speed can climb toward varsity range", "Keep the bat on plane against high fastballs", "Stay connected when he tries to drive a pitch"],
+    coachQuirks: ["table-setter", "first-pitch"],
     metrics: { batSpeed: 58, peakHandSpeed: 19, attackAngle: 8, verticalBatAngle: -22, timeToContact: 0.17, powerKw: 2.4, rotationalAcceleration: 11, onPlaneEfficiency: 72, earlyConnection: 90, connectionAtImpact: 89 },
     history: {
-      batSpeed: metricHistory(58, [52, 54, 56]), peakHandSpeed: metricHistory(19, [16, 17, 18]),
-      attackAngle: metricHistory(8, [5, 6, 7]), verticalBatAngle: metricHistory(-22, [-18, -19, -21]),
-      timeToContact: metricHistory(0.17, [0.19, 0.185, 0.178]), powerKw: metricHistory(2.4, [1.9, 2.1, 2.25]),
-      rotationalAcceleration: metricHistory(11, [8, 9, 10]), onPlaneEfficiency: metricHistory(72, [66, 68, 70]),
-      earlyConnection: metricHistory(90, [82, 85, 88]), connectionAtImpact: metricHistory(89, [83, 85, 87]),
+      batSpeed: metricHistory(58, [56, 57, 57.5]), peakHandSpeed: metricHistory(19, [18, 18.5, 18.5]),
+      attackAngle: metricHistory(8, [5, 6, 7]), verticalBatAngle: metricHistory(-22, [-20, -21, -22]),
+      timeToContact: metricHistory(0.17, [0.19, 0.182, 0.176]), powerKw: metricHistory(2.4, [2.25, 2.3, 2.35]),
+      rotationalAcceleration: metricHistory(11, [10, 10.5, 10.5]), onPlaneEfficiency: metricHistory(72, [66, 68, 70]),
+      earlyConnection: metricHistory(90, [86, 88, 89]), connectionAtImpact: metricHistory(89, [85, 86, 88]),
     },
   },
   {
@@ -329,11 +331,12 @@ const SAMPLE_PLAYERS = [
     team: "Antonelli 16U", position: "RHP", bats: "R", throws: "R", type: "pitcher", archetype: "Ace", photo: "",
     strengths: ["Fastball carries through the top of the zone", "Repeats delivery and pounds the strike zone", "Breaking ball lands for strikes and chase swings"],
     improvements: ["Hold velocity deeper into outings (5th-6th inning)", "Develop a firm changeup vs. left-handed hitters", "Quicker move to hold runners at first"],
+    coachQuirks: ["outlier-1", "pressure-cooker"],
     metrics: { fastballVelo: 90, spinRate: 2450, strikePct: 69, whiffPct: 38, pitchCapacity: 95 },
     history: {
       fastballVelo: metricHistory(90, [83, 86, 88]), spinRate: metricHistory(2450, [2150, 2280, 2380]),
-      strikePct: metricHistory(69, [60, 64, 67]), whiffPct: metricHistory(38, [27, 31, 35]),
-      pitchCapacity: metricHistory(95, [70, 80, 88]),
+      strikePct: metricHistory(69, [60, 64, 67]), whiffPct: metricHistory(38, [34, 35, 37]),
+      pitchCapacity: metricHistory(95, [85, 88, 92]),
     },
   },
   {
@@ -341,10 +344,11 @@ const SAMPLE_PLAYERS = [
     team: "Antonelli 17U", position: "RHP", bats: "R", throws: "R", type: "pitcher", archetype: "Closer", photo: "",
     strengths: ["Electric one-inning stuff; fastball jumps on hitters", "Slider generates swing-and-miss in leverage counts", "Attacks hitters — not afraid of contact in the zone"],
     improvements: ["Command can scatter when he overthrows", "Throw first-pitch strikes more consistently", "Build routine for back-to-back days"],
+    coachQuirks: ["stopper", "outlier-2"],
     metrics: { fastballVelo: 91, spinRate: 2480, strikePct: 61, whiffPct: 41, pitchCapacity: 52 },
     history: {
-      fastballVelo: metricHistory(91, [87, 89, 90]), spinRate: metricHistory(2480, [2300, 2400, 2450]),
-      strikePct: metricHistory(61, [57, 59, 60]), whiffPct: metricHistory(41, [34, 37, 39]),
+      fastballVelo: metricHistory(91, [89.5, 90, 90.5]), spinRate: metricHistory(2480, [2300, 2360, 2420]),
+      strikePct: metricHistory(61, [57, 59, 60]), whiffPct: metricHistory(41, [34, 36, 39]),
       pitchCapacity: metricHistory(52, [45, 48, 50]),
     },
   },
@@ -353,19 +357,20 @@ const SAMPLE_PLAYERS = [
     team: "Antonelli 14U", position: "C / RHP", bats: "R", throws: "R", type: "two-way", archetype: "Two-Way Player", photo: "",
     strengths: ["Strong arm behind the plate and on the mound", "Competitive at-bats; battles with two strikes", "Athletic frame with room to add strength"],
     improvements: ["Receiving and blocking consistency behind the plate", "Bat speed — stay connected through the turn", "Pitching mechanics: stay closed longer to improve command"],
+    coachQuirks: ["pop-time", "unfazed"],
     metrics: {
       batSpeed: 51, peakHandSpeed: 17, attackAngle: 6, verticalBatAngle: -25, timeToContact: 0.19, powerKw: 1.8, rotationalAcceleration: 8.5, onPlaneEfficiency: 64, earlyConnection: 78, connectionAtImpact: 84,
       fastballVelo: 76, spinRate: 1950, strikePct: 58, whiffPct: 22, pitchCapacity: 62,
     },
     history: {
-      batSpeed: metricHistory(51, [46, 48, 50]), peakHandSpeed: metricHistory(17, [15, 15.5, 16.5]),
-      attackAngle: metricHistory(6, [3, 4, 5]), verticalBatAngle: metricHistory(-25, [-18, -20, -23]),
-      timeToContact: metricHistory(0.19, [0.21, 0.205, 0.198]), powerKw: metricHistory(1.8, [1.3, 1.5, 1.65]),
-      rotationalAcceleration: metricHistory(8.5, [6, 7, 8]), onPlaneEfficiency: metricHistory(64, [58, 60, 62]),
-      earlyConnection: metricHistory(78, [70, 73, 76]), connectionAtImpact: metricHistory(84, [78, 80, 82]),
-      fastballVelo: metricHistory(76, [71, 73, 75]), spinRate: metricHistory(1950, [1800, 1880, 1920]),
-      strikePct: metricHistory(58, [52, 55, 57]), whiffPct: metricHistory(22, [17, 19, 21]),
-      pitchCapacity: metricHistory(62, [50, 55, 59]),
+      batSpeed: metricHistory(51, [48, 49, 50]), peakHandSpeed: metricHistory(17, [16, 16.5, 16.5]),
+      attackAngle: metricHistory(6, [4, 5, 5]), verticalBatAngle: metricHistory(-25, [-22, -23, -24]),
+      timeToContact: metricHistory(0.19, [0.205, 0.200, 0.195]), powerKw: metricHistory(1.8, [1.55, 1.65, 1.7]),
+      rotationalAcceleration: metricHistory(8.5, [7.5, 8, 8.2]), onPlaneEfficiency: metricHistory(64, [60, 61, 63]),
+      earlyConnection: metricHistory(78, [74, 75, 77]), connectionAtImpact: metricHistory(84, [80, 81, 82]),
+      fastballVelo: metricHistory(76, [73, 74, 75]), spinRate: metricHistory(1950, [1850, 1880, 1920]),
+      strikePct: metricHistory(58, [54, 55, 57]), whiffPct: metricHistory(22, [18, 19, 21]),
+      pitchCapacity: metricHistory(62, [52, 56, 59]),
     },
   },
 ];
@@ -512,6 +517,213 @@ function tierFor(overall) {
   if (overall >= 70) return { key: "silver", label: "SILVER" };
   return { key: "bronze", label: "BRONZE" };
 }
+
+/*
+ * Player Perks (inspired by MLB The Show quirks; the on-screen name is Player Perks).
+ * Show names and effects are the MLB The Show 26 active list on
+ * https://showzone.gg/players/quirks (21 quirks, all written as situational
+ * boosts). None of those 21 are penalties, so none were dropped. Descriptions
+ * below are rewritten for youth coaching. Show perks are coach-awarded
+ * because this app does not have in-game situation data.
+ * TRAINING_QUIRKS are original Antonelli badges. They unlock from milestones
+ * in this table and stay once earned (earnedQuirks on the player).
+ */
+const SHOW_QUIRKS = [
+  { id: "dead-red", name: "Dead Red", icon: "🔴", category: "Hitting", criteria: "Award when he does his best work against fastballs.", description: "Hunts velocity and squares up fastballs when he is on time." },
+  { id: "breaking-ball", name: "Breaking Ball Hitter", icon: "🪝", category: "Hitting", criteria: "Award when he stays through spin instead of bailing out.", description: "Handles breaking balls — stays in the zone and lets the ball travel." },
+  { id: "bad-ball", name: "Bad Ball Hitter", icon: "🎯", category: "Hitting", criteria: "Award when he can still do damage on a pitch just off the plate.", description: "Spoils a close pitch and still finds the barrel when it is a little out of the zone." },
+  { id: "first-pitch", name: "First-Pitch Hitter", icon: "1️⃣", category: "Hitting", criteria: "Award when he attacks a good first pitch instead of watching a strike.", description: "Ready on the first pitch and jumps a strike he can drive." },
+  { id: "unfazed", name: "Unfazed", icon: "😤", category: "Hitting", criteria: "Award for a calm, dangerous two-strike at-bat.", description: "Shortens up with two strikes and still competes — the at-bat is not over." },
+  { id: "situational", name: "Situational Hitter", icon: "🥉", category: "Hitting", criteria: "Award when he moves a runner from third with less than two outs.", description: "Puts the ball in play with a runner on third and gets the run in." },
+  { id: "table-setter", name: "Table Setter", icon: "🧹", category: "Hitting", criteria: "Award for getting on with nobody on and starting an inning.", description: "Gets the line moving — a tough out when the bases are empty." },
+  { id: "pinch-hitter", name: "Pinch Hitter", icon: "🔔", category: "Hitting", criteria: "Award when he produces in a one at-bat role off the bench.", description: "Walks up cold and still has a quality at-bat." },
+  { id: "outlier-1", name: "Outlier I", icon: "💨", category: "Pitching", criteria: "Award when the fastball plays above the group and misses bats up.", description: "Fastball has extra life — it plays above the usual velocity for his age." },
+  { id: "outlier-2", name: "Outlier II", icon: "2️⃣", category: "Pitching", criteria: "Award when a second pitch has its own swing-and-miss velocity or bite.", description: "The second pitch is a weapon, not just a show-me pitch." },
+  { id: "break-outlier", name: "Break Outlier", icon: "🌀", category: "Pitching", criteria: "Award when the breaking ball still snaps late in the outing.", description: "Breaker keeps its shape when he is tired — it does not hang." },
+  { id: "pressure-cooker", name: "Pressure Cooker", icon: "🔥", category: "Pitching", criteria: "Award when he pitches better with runners on than with the bases empty.", description: "Settles in with traffic on the bases and makes the next pitch." },
+  { id: "stopper", name: "Stopper", icon: "🛑", category: "Pitching", criteria: "Award when he takes the ball while the team is behind and stops the inning.", description: "Wants the ball when the team is chasing a lead." },
+  { id: "pickoff", name: "Pick Off Artist", icon: "👈", category: "Pitching", criteria: "Award for a pickoff move that actually holds runners.", description: "Holds runners with a quick, legal move. They stop leaning." },
+  { id: "pop-time", name: "Catcher Pop Time", icon: "🧤", category: "Fielding", criteria: "Award when his exchange and throw keep runners honest.", description: "Gets the ball out of the glove quickly and throws a strike to second." },
+  { id: "fighter", name: "Fighter", icon: "⚔️", category: "Intangibles", criteria: "Award for his best baseball late in close games.", description: "Plays his best when the game is late and the score is tight." },
+  { id: "rally-monkey", name: "Rally Monkey", icon: "🐒", category: "Intangibles", criteria: "Award when he sparks a rally while the team is behind.", description: "Energy goes up when the team is trailing — he starts the comeback." },
+  { id: "homebody", name: "Homebody", icon: "🏠", category: "Intangibles", criteria: "Award when he plays his best in home games.", description: "Feeds off a home crowd and plays loose in his own park." },
+  { id: "road-warrior", name: "Road Warrior", icon: "🚌", category: "Intangibles", criteria: "Award when he travels well and plays the same game on the road.", description: "Same routine, same energy, on the road as at home." },
+  { id: "day-player", name: "Day Player", icon: "☀️", category: "Intangibles", criteria: "Award when day games are his best version.", description: "Shows up ready for an early first pitch." },
+  { id: "night-player", name: "Night Player", icon: "🌙", category: "Intangibles", criteria: "Award when night games are his best version.", description: "Settles in under the lights and plays free." },
+];
+
+function histOf(player, key) {
+  const raw = player && player.history && player.history[key];
+  if (Array.isArray(raw) && raw.length) return raw.map(Number).filter((n) => !Number.isNaN(n));
+  const v = player && player.metrics && player.metrics[key];
+  return v == null || Number.isNaN(Number(v)) ? [] : [Number(v)];
+}
+function gainOf(player, key) {
+  const h = histOf(player, key);
+  if (h.length < 2) return null;
+  return h[h.length - 1] - h[0];
+}
+function spreadOf(player, key) {
+  const h = histOf(player, key);
+  if (h.length < 4) return null;
+  return Math.max(...h) - Math.min(...h);
+}
+function logsOf(player, key) { return histOf(player, key).length; }
+function roundedGain(n, places) {
+  const f = 10 ** places;
+  const v = Math.round(n * f) / f;
+  return (v > 0 ? "+" : "") + String(v);
+}
+function closerBy(player, key, target, minDeg) {
+  const h = histOf(player, key);
+  if (h.length < 2 || target == null) return false;
+  return (Math.abs(h[0] - target) - Math.abs(h[h.length - 1] - target)) >= minDeg - 1e-9;
+}
+
+const TRAINING_QUIRKS = [
+  { id: "heat-check", name: "Heat Check", icon: "🔥", category: "Training", priority: 96, description: "Bat speed jumped at least 5 mph across this training block.",
+    test: (p) => { const g = gainOf(p, "batSpeed"); return g != null && g >= 5; },
+    milestone: (p) => `Earned: Bat Speed ${roundedGain(gainOf(p, "batSpeed"), 1)} mph this training block` },
+  { id: "bat-speed-builder", name: "Bat Speed Builder", icon: "⚡", category: "Training", priority: 74, description: "Bat speed is up at least 3 mph from the first logged swing.",
+    test: (p) => { const g = gainOf(p, "batSpeed"); return g != null && g >= 3 && g < 5; },
+    milestone: (p) => `Earned: Bat Speed ${roundedGain(gainOf(p, "batSpeed"), 1)} mph this training block` },
+  { id: "power-surge", name: "Power Surge", icon: "💥", category: "Training", priority: 88, description: "Power is up at least 0.40 kW — more bat speed and acceleration into the ball.",
+    test: (p) => { const g = gainOf(p, "powerKw"); return g != null && g >= 0.4; },
+    milestone: (p) => `Earned: Power ${roundedGain(gainOf(p, "powerKw"), 2)} kW this training block` },
+  { id: "plane-climber", name: "Plane Climber", icon: "📐", category: "Training", priority: 78, description: "On-plane efficiency climbed at least 5 points. More of the swing is on the barrel plane.",
+    test: (p) => { const g = gainOf(p, "onPlaneEfficiency"); return g != null && g >= 5; },
+    milestone: (p) => `Earned: On-Plane Efficiency ${roundedGain(gainOf(p, "onPlaneEfficiency"), 0)} points` },
+  { id: "quick-trigger", name: "Quick Trigger", icon: "⏱️", category: "Training", priority: 76, description: "Time to contact got at least 0.015 seconds faster.",
+    test: (p) => { const g = gainOf(p, "timeToContact"); return g != null && Math.round(g * 1000) <= -15; },
+    milestone: (p) => `Earned: Time to Contact ${roundedGain(gainOf(p, "timeToContact"), 3)} s` },
+  { id: "fast-twitch", name: "Fast Twitch", icon: "🌀", category: "Training", priority: 80, description: "Rotational acceleration is up at least 2 g. The barrel gets to speed sooner.",
+    test: (p) => { const g = gainOf(p, "rotationalAcceleration"); return g != null && g >= 2; },
+    milestone: (p) => `Earned: Rotational Acceleration ${roundedGain(gainOf(p, "rotationalAcceleration"), 1)} g` },
+  { id: "quick-hands", name: "Quick Hands", icon: "✋", category: "Training", priority: 64, description: "Peak hand speed is up at least 2 mph.",
+    test: (p) => { const g = gainOf(p, "peakHandSpeed"); return g != null && g >= 2; },
+    milestone: (p) => `Earned: Peak Hand Speed ${roundedGain(gainOf(p, "peakHandSpeed"), 1)} mph` },
+  { id: "metronome", name: "Metronome", icon: "🎯", category: "Training", priority: 56, description: "Four or more check-ins, and bat speed or fastball velocity stayed inside a 2.5 mph window.",
+    test: (p) => {
+      const key = p.type === "pitcher" ? "fastballVelo" : "batSpeed";
+      const s = spreadOf(p, key);
+      return s != null && s <= 2.5;
+    },
+    milestone: (p) => {
+      const key = p.type === "pitcher" ? "fastballVelo" : "batSpeed";
+      const label = key === "batSpeed" ? "Bat speed" : "Fastball";
+      return `Earned: ${label} stayed within ${roundedGain(spreadOf(p, key), 1).replace("+", "")} mph across ${logsOf(p, key)} check-ins`;
+    } },
+  { id: "added-gas", name: "Added Gas", icon: "🚀", category: "Training", priority: 86, description: "Fastball velocity is up at least 3 mph.",
+    test: (p) => { const g = gainOf(p, "fastballVelo"); return g != null && g >= 3; },
+    milestone: (p) => `Earned: Fastball ${roundedGain(gainOf(p, "fastballVelo"), 1)} mph` },
+  { id: "spin-lab", name: "Spin Lab", icon: "🧲", category: "Training", priority: 68, description: "Fastball spin is up at least 150 rpm.",
+    test: (p) => { const g = gainOf(p, "spinRate"); return g != null && g >= 150; },
+    milestone: (p) => `Earned: Spin ${roundedGain(gainOf(p, "spinRate"), 0)} rpm` },
+  { id: "strike-painter", name: "Strike Painter", icon: "🎨", category: "Training", priority: 66, description: "Strike percentage is up at least 5 points.",
+    test: (p) => { const g = gainOf(p, "strikePct"); return g != null && g >= 5; },
+    milestone: (p) => `Earned: Strike % ${roundedGain(gainOf(p, "strikePct"), 0)} points` },
+  { id: "whiff-maker", name: "Whiff Maker", icon: "💨", category: "Training", priority: 70, description: "Offspeed whiff rate is up at least 6 points.",
+    test: (p) => { const g = gainOf(p, "whiffPct"); return g != null && g >= 6; },
+    milestone: (p) => `Earned: Whiff % ${roundedGain(gainOf(p, "whiffPct"), 0)} points` },
+  { id: "deep-start", name: "Deep Start", icon: "🔋", category: "Training", priority: 58, description: "Pitch capacity is up at least 12 pitches before stuff fades.",
+    test: (p) => { const g = gainOf(p, "pitchCapacity"); return g != null && g >= 12; },
+    milestone: (p) => `Earned: Pitch capacity ${roundedGain(gainOf(p, "pitchCapacity"), 0)} pitches` },
+  { id: "both-sides", name: "Both Sides", icon: "⚔️", category: "Training", priority: 84, description: "A two-way player who got better on the mound and in the batter's box in the same block.",
+    test: (p) => {
+      if (p.type !== "two-way") return false;
+      const hit = (gainOf(p, "batSpeed") || 0) >= 2 || (gainOf(p, "powerKw") || 0) >= 0.25 || (gainOf(p, "onPlaneEfficiency") || 0) >= 3;
+      const pit = (gainOf(p, "fastballVelo") || 0) >= 2 || (gainOf(p, "strikePct") || 0) >= 3 || (gainOf(p, "spinRate") || 0) >= 100;
+      return hit && pit;
+    },
+    milestone: () => "Earned: a real gain on both the hitting side and the pitching side" },
+  { id: "diamond-standard", name: "Diamond Standard", icon: "💎", category: "Training", priority: 98, description: "Overall grade reached Diamond (90+).",
+    test: (p) => gradesFor(p).overall >= 90,
+    milestone: (p) => `Earned: overall ${gradesFor(p).overall} hit Diamond` },
+  { id: "gold-standard", name: "Gold Standard", icon: "🥇", category: "Training", priority: 94, description: "Overall grade reached Gold (80–89).",
+    test: (p) => { const o = gradesFor(p).overall; return o >= 80 && o < 90; },
+    milestone: (p) => `Earned: overall ${gradesFor(p).overall} hit Gold` },
+  { id: "silver-standard", name: "Silver Standard", icon: "🥈", category: "Training", priority: 72, description: "Overall grade reached Silver (70–79).",
+    test: (p) => { const o = gradesFor(p).overall; return o >= 70 && o < 80; },
+    milestone: (p) => `Earned: overall ${gradesFor(p).overall} hit Silver` },
+  { id: "elite-barrel", name: "Elite Barrel", icon: "👑", category: "Training", priority: 100, description: "Bat speed graded Elite for his age group.",
+    test: (p) => { const g = normalizeMetric("batSpeed", p.metrics && p.metrics.batSpeed, activeAgeGroup(p)); return g != null && g >= 90; },
+    milestone: (p) => `Earned: Bat Speed ${p.metrics.batSpeed} mph is Elite at ${activeAgeGroup(p)}` },
+  { id: "great-barrel", name: "Great Barrel", icon: "🌟", category: "Training", priority: 92, description: "Bat speed graded Great for his age group.",
+    test: (p) => { const g = normalizeMetric("batSpeed", p.metrics && p.metrics.batSpeed, activeAgeGroup(p)); return g != null && g >= 80 && g < 90; },
+    milestone: (p) => `Earned: Bat Speed ${p.metrics.batSpeed} mph is Great at ${activeAgeGroup(p)}` },
+  { id: "stay-connected", name: "Stay Connected", icon: "🤝", category: "Training", priority: 62, description: "Early connection or connection at impact moved at least 4° closer to 90°.",
+    test: (p) => closerBy(p, "earlyConnection", 90, 4) || closerBy(p, "connectionAtImpact", 90, 4),
+    milestone: (p) => closerBy(p, "earlyConnection", 90, 4) ? "Earned: Early Connection moved at least 4° closer to 90°" : "Earned: Connection at Impact moved at least 4° closer to 90°" },
+  { id: "path-finder", name: "Path Finder", icon: "↗️", category: "Training", priority: 60, description: "Attack angle moved at least 2° closer to the Blast window's center for his age group.",
+    test: (p) => {
+      const band = BLAST_BENCHMARKS.attackAngle.bands[activeAgeGroup(p)];
+      return !!(band && closerBy(p, "attackAngle", band.target, 2));
+    },
+    milestone: (p) => `Earned: Attack angle moved closer to the ${activeAgeGroup(p)} target` },
+  { id: "three-tool-climb", name: "Three-Tool Climb", icon: "📈", category: "Training", priority: 82, description: "Bat speed, power, and on-plane efficiency all moved up in the same block.",
+    test: (p) => (gainOf(p, "batSpeed") || 0) >= 2 && (gainOf(p, "powerKw") || 0) >= 0.3 && (gainOf(p, "onPlaneEfficiency") || 0) >= 4,
+    milestone: () => "Earned: bat speed, power, and on-plane efficiency all climbed together" },
+  { id: "cage-rat", name: "Cage Rat", icon: "🏋️", category: "Training", priority: 40, description: "Four or more check-ins logged on at least four different metrics. The work is on the card.",
+    test: (p) => metricKeysFor(p.type).filter((k) => logsOf(p, k) >= 4).length >= 4,
+    milestone: (p) => `Earned: 4+ check-ins on ${metricKeysFor(p.type).filter((k) => logsOf(p, k) >= 4).length} metrics` },
+];
+
+const SHOW_BY_ID = Object.fromEntries(SHOW_QUIRKS.map((q) => [q.id, q]));
+const TRAINING_BY_ID = Object.fromEntries(TRAINING_QUIRKS.map((q) => [q.id, q]));
+
+function todayStamp() {
+  try { return new Date().toISOString().slice(0, 10); } catch (e) { return "2026-01-01"; }
+}
+
+function syncEarnedQuirks(player, earnedAt) {
+  if (!player.earnedQuirks || !Array.isArray(player.earnedQuirks)) player.earnedQuirks = [];
+  const have = new Set(player.earnedQuirks.map((e) => e && e.id));
+  const stamp = earnedAt || todayStamp();
+  const added = [];
+  TRAINING_QUIRKS.forEach((q) => {
+    if (have.has(q.id) || !q.test(player)) return;
+    let milestone = q.description;
+    try { milestone = q.milestone(player); } catch (e) { /* keep description */ }
+    const rec = { id: q.id, milestone, earnedAt: stamp, seen: false };
+    player.earnedQuirks.push(rec);
+    added.push(rec);
+  });
+  return added;
+}
+
+function markQuirkSeen(player, id) {
+  const rec = (player.earnedQuirks || []).find((e) => e && e.id === id);
+  if (!rec || rec.seen) return false;
+  rec.seen = true;
+  return true;
+}
+
+function unseenEarns(player) {
+  return (player.earnedQuirks || []).filter((e) => e && e.seen !== true && TRAINING_BY_ID[e.id]);
+}
+
+function displayQuirks(player) {
+  const earned = (player.earnedQuirks || []).map((rec) => {
+    const q = TRAINING_BY_ID[rec.id];
+    if (!q) return null;
+    return { ...q, kind: "earned", milestone: rec.milestone, earnedAt: rec.earnedAt };
+  }).filter(Boolean).sort((a, b) => b.priority - a.priority);
+  const coach = (player.coachQuirks || []).map((id) => {
+    const q = SHOW_BY_ID[id];
+    return q ? { ...q, kind: "coach", milestone: q.criteria } : null;
+  }).filter(Boolean);
+  return [...earned, ...coach];
+}
+
+function seedSampleEarns() {
+  SAMPLE_PLAYERS.forEach((p) => {
+    p.coachQuirks = p.coachQuirks || [];
+    p.earnedQuirks = [];
+    syncEarnedQuirks(p, "2026-05-01");
+    p.earnedQuirks.forEach((e) => { e.seen = true; });
+  });
+}
+seedSampleEarns();
 
 function metricKeysFor(type) {
   if (type === "pitcher") return PITCHER_KEYS;
@@ -721,10 +933,16 @@ function cardHTML(player, large) {
     ? `<img class="card-photo" src="${esc(player.photo)}" alt="Photo of ${esc(player.name)}">`
     : logoPlaceholder();
   const group = activeAgeGroup(player);
+  const quirkList = displayQuirks(player);
+  const quirkShown = quirkList.slice(0, 3);
+  const quirkExtra = quirkList.length - quirkShown.length;
+  const quirkHTML = quirkShown.length ? `<div class="card-quirks">${quirkShown.map((q) => `<span class="q-badge ${q.kind === "coach" ? "q-coach" : "q-earned"}" title="${esc(q.name)}">${q.icon} ${esc(q.name)}</span>`).join("")}${quirkExtra > 0 ? `<span class="q-badge q-more">+${quirkExtra}</span>` : ""}</div>` : "";
   return `
   <div class="bb-card tier-${tier.key} ${large ? "large" : ""} ${player.photo ? "" : "logo-placeholder"}">
     <div class="card-visual">${visual}</div>
+    <div class="card-holo" aria-hidden="true"></div>
     <div class="card-brand"><b>ANTONELLI</b><span>${tier.label}</span></div>
+    ${quirkHTML}
     <div class="overall-diamond"><div><b>${overall}</b><span>OVR</span></div></div>
     <div class="card-bottom">
       <div class="card-meta-row">
@@ -801,6 +1019,21 @@ function renderRoster() {
     el.addEventListener("click", () => openProfile(el.dataset.open));
     el.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openProfile(el.dataset.open); } });
   });
+  watchCardMotion();
+}
+
+let cardMotionObserver = null;
+function watchCardMotion() {
+  if (cardMotionObserver) cardMotionObserver.disconnect();
+  const cards = [...document.querySelectorAll(".bb-card")];
+  if (!cards.length || typeof IntersectionObserver === "undefined") {
+    cards.forEach((el) => el.classList.add("card-live"));
+    return;
+  }
+  cardMotionObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => entry.target.classList.toggle("card-live", entry.isIntersecting));
+  }, { rootMargin: "120px" });
+  cards.forEach((el) => cardMotionObserver.observe(el));
 }
 
 /* ---------- Profile ---------- */
@@ -827,6 +1060,201 @@ function metricsTable(player) {
     : `Hitting bands use the published Blast window for <strong>${esc(ageGroup)}</strong> in BLAST_BENCHMARKS. Below Average / Average / Good / Great / Elite, and the 20–99 cuts, are Antonelli. Coaches edit the windows in that table and the curves in gradeBlastMetric.`;
   return `<div class="table-scroll"><table><thead><tr><th>Metric</th><th>Current</th><th>Previous</th><th>Change</th><th>History</th><th>Band</th><th>Grade</th></tr></thead><tbody>${rows}</tbody></table></div>
   <p class="muted small">${note}</p>`;
+}
+
+function quirksPanel(player) {
+  const earned = displayQuirks(player).filter((q) => q.kind === "earned");
+  const coach = displayQuirks(player).filter((q) => q.kind === "coach");
+  const row = (q) => `<button type="button" class="quirk-row" data-replay="${esc(q.id)}">
+      <span class="q-badge ${q.kind === "coach" ? "q-coach" : "q-earned"}">${q.icon}</span>
+      <span><strong>${esc(q.name)}</strong> <span class="quirk-tag">${q.kind === "coach" ? "Coach Awarded" : "Earned"}</span> <span class="quirk-tag">${esc(q.category)}</span><br>
+      <span class="muted small">${esc(q.description)}</span><br>
+      <span class="small">${esc(q.milestone || "")}</span></span>
+    </button>`;
+  const earnedHTML = earned.length ? earned.map(row).join("") : `<p class="muted small">No training perks yet. They appear automatically when a milestone is crossed, and they stay on the card.</p>`;
+  const coachHTML = coach.length ? coach.map(row).join("") : `<p class="muted small">No coach-awarded perks. Add them in Edit.</p>`;
+  return `<p class="muted small">Earned perks come from training milestones and stay once unlocked. Coach Awarded perks are pinned by a coach. Click an earned perk to open its pack again.</p>
+    <div class="quirk-actions"><button class="btn btn-ghost" type="button" id="previewRevealBtn">Open again</button></div>
+    <h4 class="quirk-sub">Earned</h4>${earnedHTML}
+    <h4 class="quirk-sub">Coach Awarded</h4>${coachHTML}`;
+}
+
+let revealQueue = [];
+let revealPos = 0;
+let revealReplay = false;
+
+function replayQuirk(playerId, quirkId) {
+  const player = players.find((p) => p.id === playerId);
+  const q = (player && displayQuirks(player).find((item) => item.id === quirkId)) || TRAINING_BY_ID[quirkId] || SHOW_BY_ID[quirkId];
+  if (!player || !q) return;
+  revealReplay = true;
+  packOpened = false;
+  clearPackTimers();
+  revealQueue = [{ playerId, quirkId, name: player.name, quirk: q }];
+  revealPos = 0;
+  showRevealStep();
+}
+
+function previewReveal(playerId) {
+  const player = players.find((p) => p.id === playerId);
+  if (!player) return;
+  const earned = displayQuirks(player).filter((q) => q.kind === "earned");
+  if (earned.length) { replayQuirk(playerId, earned[0].id); return; }
+  revealReplay = true;
+  packOpened = false;
+  clearPackTimers();
+  revealQueue = [{
+    playerId, quirkId: "heat-check", name: player.name,
+    quirk: { ...TRAINING_BY_ID["heat-check"], kind: "earned", milestone: "Preview: this is how a new training perk looks when the pack opens." },
+  }];
+  revealPos = 0;
+  showRevealStep();
+}
+
+function startReveal(items) {
+  revealReplay = false;
+  packOpened = false;
+  clearPackTimers();
+  revealQueue = items.filter((item) => item && item.playerId && item.quirkId);
+  revealPos = 0;
+  if (!revealQueue.length) return;
+  showRevealStep();
+}
+
+let packOpened = false;
+let packTimers = [];
+
+function motionReduced() {
+  return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+}
+
+function clearPackTimers() {
+  packTimers.forEach((id) => clearTimeout(id));
+  packTimers = [];
+}
+
+function later(fn, ms) {
+  const id = setTimeout(fn, ms);
+  packTimers.push(id);
+  return id;
+}
+
+function revealButtonLabel() {
+  if (!packOpened) return "Open Pack";
+  const more = revealPos < revealQueue.length - 1;
+  if (revealReplay) return "Close";
+  return more ? "Next Perk" : "Add to my card";
+}
+
+function fillRevealFace(quirk, player, item) {
+  $("quirkRevealFace").innerHTML = `<span class="q-badge q-earned q-lg">${quirk.icon || "⭐"}</span>
+    <p class="quirk-face-cat">${esc(quirk.category || "Training")}</p>
+    <h3>${esc(quirk.name)}</h3>
+    <p>${esc(quirk.description || "")}</p>
+    <p class="quirk-face-mile">${esc(quirk.milestone || "")}</p>
+    <p class="quirk-face-who">${esc((player && player.name) || item.name || "")}</p>`;
+}
+
+function showRevealStep() {
+  const root = document.getElementById && document.getElementById("quirkReveal");
+  if (!root) return;
+  const item = revealQueue[revealPos];
+  if (!item) { closeReveal(); return; }
+  const player = players.find((p) => p.id === item.playerId);
+  const quirk = item.quirk || (player && displayQuirks(player).find((q) => q.id === item.quirkId)) || TRAINING_BY_ID[item.quirkId];
+  if (!quirk) { revealPos += 1; showRevealStep(); return; }
+  const count = revealQueue.length;
+  const stage = $("perkStage");
+  const flip = $("quirkFlip");
+  const btn = $("quirkCollectBtn");
+  $("quirkRevealPlayer").textContent = (player && player.name) || item.name || "";
+  const packCount = $("perkPackCount");
+  if (packCount) packCount.textContent = count === 1 ? "1 PERK INSIDE" : `${count} PERKS INSIDE`;
+  stage.classList.toggle("has-many", count > 1);
+  root.hidden = false;
+  btn.disabled = false;
+  if (!packOpened) {
+    clearPackTimers();
+    stage.classList.remove("is-tearing", "is-open");
+    fillRevealFace(quirk, player, item);
+    flip.classList.remove("is-revealed");
+    $("quirkRevealTitle").textContent = "Player Perks";
+    $("quirkRevealCount").textContent = count > 1 ? `${count} perks in this pack` : "1 perk in this pack";
+    btn.textContent = "Open Pack";
+    btn.focus();
+    return;
+  }
+  $("quirkRevealTitle").textContent = "Player Perk";
+  $("quirkRevealCount").textContent = count > 1 ? `${revealPos + 1} of ${count}` : "";
+  btn.textContent = revealButtonLabel();
+  flip.classList.remove("is-revealed");
+  fillRevealFace(quirk, player, item);
+  const showFace = () => { flip.classList.add("is-revealed"); btn.focus(); };
+  if (motionReduced()) showFace();
+  else later(showFace, 60);
+}
+
+function openPack() {
+  if (packOpened) return;
+  const stage = $("perkStage");
+  const flip = $("quirkFlip");
+  const btn = $("quirkCollectBtn");
+  if (!stage || !btn || btn.disabled) return;
+  btn.disabled = true;
+  const done = () => {
+    packOpened = true;
+    btn.disabled = false;
+    btn.textContent = revealButtonLabel();
+    $("quirkRevealTitle").textContent = "Player Perk";
+    $("quirkRevealCount").textContent = revealQueue.length > 1 ? `${revealPos + 1} of ${revealQueue.length}` : "";
+    btn.focus();
+  };
+  if (motionReduced()) {
+    stage.classList.add("is-open");
+    flip.classList.add("is-revealed");
+    done();
+    return;
+  }
+  stage.classList.add("is-tearing");
+  later(() => stage.classList.add("is-open"), 680);
+  later(() => flip.classList.add("is-revealed"), 1180);
+  later(done, 1850);
+}
+
+function closeReveal() {
+  clearPackTimers();
+  packOpened = false;
+  const root = document.getElementById && document.getElementById("quirkReveal");
+  if (root) root.hidden = true;
+  const flip = document.getElementById && document.getElementById("quirkFlip");
+  if (flip) flip.classList.remove("is-revealed");
+  const stage = document.getElementById && document.getElementById("perkStage");
+  if (stage) stage.classList.remove("is-tearing", "is-open", "has-many");
+  const btn = document.getElementById && document.getElementById("quirkCollectBtn");
+  if (btn) { btn.disabled = false; btn.textContent = "Open Pack"; }
+  revealQueue = [];
+  revealPos = 0;
+}
+
+function onRevealButton() {
+  if (!packOpened) { openPack(); return; }
+  collectReveal();
+}
+
+function collectReveal() {
+  const item = revealQueue[revealPos];
+  if (item && !revealReplay) {
+    const player = players.find((p) => p.id === item.playerId);
+    if (player && markQuirkSeen(player, item.quirkId)) savePlayers();
+  }
+  if (revealPos < revealQueue.length - 1) {
+    revealPos += 1;
+    showRevealStep();
+    return;
+  }
+  closeReveal();
+  if (selectedId) openProfile(selectedId);
+  else renderRoster();
 }
 
 function openProfile(id) {
@@ -869,9 +1297,15 @@ function openProfile(id) {
         <div class="panel"><h3>✓ What he does well</h3><ul class="list good">${(p.strengths || []).map((s) => `<li>${esc(s)}</li>`).join("") || "<li>—</li>"}</ul></div>
         <div class="panel"><h3>◎ What to improve</h3><ul class="list work">${(p.improvements || []).map((s) => `<li>${esc(s)}</li>`).join("") || "<li>—</li>"}</ul></div>
       </div>
+      <div class="panel"><h3>Player Perks</h3>${quirksPanel(p)}</div>
       <div class="panel"><h3>Metrics &amp; Progress</h3>${metricsTable(p)}</div>
     </div>`;
   $("editProfileBtn").addEventListener("click", () => openModal(p));
+  document.querySelectorAll("[data-replay]").forEach((btn) => {
+    btn.addEventListener("click", () => replayQuirk(p.id, btn.dataset.replay));
+  });
+  const previewBtn = $("previewRevealBtn");
+  if (previewBtn) previewBtn.addEventListener("click", () => previewReveal(p.id));
   $("deleteProfileBtn").addEventListener("click", () => {
     if (confirm(`Delete ${p.name}? This cannot be undone (Reset Sample Data only restores the 5 sample players).`)) {
       players = players.filter((x) => x.id !== p.id);
@@ -979,6 +1413,48 @@ function renderMetricFields(playerLike) {
   });
 }
 
+function checkedCoachQuirks() {
+  return [...document.querySelectorAll("#quirkFields input[data-quirk]:checked")].map((el) => el.value);
+}
+
+function renderQuirkFields(selected) {
+  const box = $("quirkFields");
+  if (!box) return;
+  const picked = new Set(selected || []);
+  const cats = [...new Set(SHOW_QUIRKS.map((q) => q.category))];
+  box.innerHTML = cats.map((cat) => `<fieldset class="quirk-set"><legend>${esc(cat)}</legend>${
+    SHOW_QUIRKS.filter((q) => q.category === cat).map((q) => `<label class="quirk-check"><input type="checkbox" data-quirk value="${esc(q.id)}" ${picked.has(q.id) ? "checked" : ""}> <span>${q.icon} ${esc(q.name)}</span><small>${esc(q.criteria)}</small></label>`).join("")
+  }</fieldset>`).join("");
+}
+
+function provisionalPlayer() {
+  const like = formPlayerLike();
+  const existing = players.find((p) => p.id === like.id) || editingDefaults;
+  const history = existing && existing.history ? structuredClone(existing.history) : {};
+  Object.entries(like.metrics).forEach(([k, v]) => {
+    if (v == null || Number.isNaN(v)) return;
+    const base = history[k] ? history[k].slice() : (existing && existing.metrics && existing.metrics[k] != null ? [existing.metrics[k]] : [v]);
+    if (base[base.length - 1] !== v) base.push(v);
+    history[k] = base.slice(-6);
+  });
+  like.history = history;
+  like.earnedQuirks = existing && existing.earnedQuirks ? structuredClone(existing.earnedQuirks) : [];
+  like.coachQuirks = checkedCoachQuirks();
+  return like;
+}
+
+function renderEarnPreview() {
+  const el = $("quirkEarnPreview");
+  if (!el || !$("f-type")) return;
+  const like = provisionalPlayer();
+  const have = new Set((like.earnedQuirks || []).map((e) => e.id));
+  const fresh = TRAINING_QUIRKS.filter((q) => !have.has(q.id) && q.test(like));
+  const kept = (like.earnedQuirks || []).map((e) => TRAINING_BY_ID[e.id]).filter(Boolean);
+  const freshTxt = fresh.length ? fresh.map((q) => q.name).join(", ") : "none yet";
+  const keptTxt = kept.length ? kept.map((q) => q.name).join(", ") : "none";
+  el.innerHTML = `<strong>Training perks</strong> unlock on their own and stay after they are earned. Already earned: ${esc(keptTxt)}. New if you save now: ${esc(freshTxt)}.`;
+}
+
 function formPlayerLike() {
   const type = $("f-type").value;
   const metrics = {};
@@ -1001,6 +1477,7 @@ function updateLivePreview() {
   const tier = tierFor(overall);
   const groupNote = like.type === "pitcher" ? "" : ` · ${esc(activeAgeGroup(like))}`;
   $("livePreview").innerHTML = `<div>Live Overall${groupNote}<br><b>${overall}</b> <span class="tier-badge">${tier.label}</span></div><div class="pills" style="margin:0">${subs.map((s) => `<span class="pill">${s.key} ${s.grade ?? "—"}</span>`).join("")}</div>`;
+  renderEarnPreview();
 }
 
 function openModal(player) {
@@ -1024,6 +1501,7 @@ function openModal(player) {
   const photoInput = $("f-photo"); if (photoInput) photoInput.value = "";
   updatePhotoPreview();
   const seed = isEdit ? player : { type: "hitter", age: 16, ageGroup: "16U", metrics: defaultMetrics("hitter", "16U") };
+  renderQuirkFields(isEdit ? (player.coachQuirks || []) : []);
   renderMetricFields(seed);
   updateLivePreview();
   $("playerModal").hidden = false;
@@ -1076,8 +1554,10 @@ function bindApp() {
   $("playerForm").addEventListener("submit", (e) => {
     e.preventDefault();
     const like = formPlayerLike();
+    like.coachQuirks = checkedCoachQuirks();
     if (!like.name.trim()) { alert("Please enter a player name."); return; }
     const existing = players.find((p) => p.id === like.id);
+    let saved = existing;
     if (existing) {
       const history = structuredClone(existing.history || {});
       Object.entries(like.metrics).forEach(([k, v]) => {
@@ -1086,18 +1566,24 @@ function bindApp() {
         if (history[k][history[k].length - 1] !== v) history[k].push(v);
         history[k] = history[k].slice(-6);
       });
+      like.earnedQuirks = structuredClone(existing.earnedQuirks || []);
       Object.assign(existing, like, { history });
+      saved = existing;
     } else {
       like.id = "player-" + Date.now().toString(36);
       like.history = {};
+      like.earnedQuirks = [];
       Object.entries(like.metrics).forEach(([k, v]) => { like.history[k] = [v]; });
       players.push(like);
+      saved = like;
     }
+    const added = syncEarnedQuirks(saved);
     savePlayers();
     closeModal();
     renderRoster();
     if (selectedId) openProfile(selectedId);
     else if (!existing) openProfile(like.id);
+    if (added.length) startReveal(added.map((rec) => ({ playerId: saved.id, quirkId: rec.id })));
   });
 
   $("resetBtn").addEventListener("click", () => {
@@ -1109,7 +1595,18 @@ function bindApp() {
     }
   });
 
+  const collectBtn = $("quirkCollectBtn");
+  if (collectBtn) collectBtn.addEventListener("click", onRevealButton);
+  let earnedDirty = false;
+  const pendingReveal = [];
+  players.forEach((p) => {
+    if (!Array.isArray(p.coachQuirks)) p.coachQuirks = [];
+    if (syncEarnedQuirks(p).length) earnedDirty = true;
+    unseenEarns(p).forEach((rec) => pendingReveal.push({ playerId: p.id, quirkId: rec.id }));
+  });
+  if (earnedDirty) savePlayers();
   renderRoster();
+  if (pendingReveal.length) startReveal(pendingReveal);
 }
 
 bindApp();

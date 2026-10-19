@@ -44,7 +44,8 @@ Pages only serves what is on `main`. If the app landed through a pull request, m
 
 - **Roster view** — all players as baseball cards, with search and filters by player type (hitter / pitcher / two-way), team, plus sorting by overall, name, or age.
 - **5 sample players** (see note below), covering Power Hitter, Contact/Leadoff, Ace, Closer, and Two-Way archetypes. Tiers follow the grades: with the sample Blast numbers, the roster spans Bronze, Silver, and Gold.
-- **Profile detail view** — click any player for: archetype explanation ("what type of player is he?"), strengths, areas to improve, a metrics table (current, previous, change, history sparkline, band, per-metric grade), and the large baseball card side-by-side. Hitter bands are Below Average / Average / Good / Great / Elite for the player's age group.
+- **Profile detail view** — click any player for: archetype explanation ("what type of player is he?"), strengths, areas to improve, Player Perks (earned training perks and coach-awarded Show perks), a metrics table (current, previous, change, history sparkline, band, per-metric grade), and the large baseball card side-by-side. Hitter bands are Below Average / Average / Good / Great / Elite for the player's age group.
+- **Player Perks** — up to three perks on the card front. Training perks unlock from milestones and stay once earned. A new perk opens a sealed pack once. Show perks are coach-awarded. See [Player Perks](#player-perks).
 - **Baseball card (front, v2 — Topps / MLB The Show style)** — vertical portrait card (5:7, the classic 2.5"×3.5" ratio). The player visual fills the card over a geometric black & gold background with a stitched/dashed frame edge:
   - **Diamond-shaped overall badge** (rotated diamond, clip-path) in the **top-right** with the overall number.
   - **Player name in bold italic uppercase at bottom-right**, with a gold position bar under it (`CF - R/R` = position + bats/throws), team/age line, and a small archetype label.
@@ -207,6 +208,65 @@ Blast publishes the windows. It does not publish these scoring choices:
 - Hitter sub-grade groups and the 40 / 22 / 18 / 14 / 6 weights.
 - Pitcher velocity, spin, strike %, whiff %, and pitch-capacity ranges. Those stayed in `METRICS` and were never Blast numbers.
 
+## Player Perks
+
+Player Perks are earned badges on the card, inspired by MLB The Show quirks (called Player Perks here). The Show names and effects come from the MLB The Show 26 active list on [ShowZone](https://showzone.gg/players/quirks) (21 quirks). That page describes every one of them as a situational boost. None are penalties, so **0 were excluded**. "Bad Ball Hitter" stays, because it means he can still do damage on a pitch just off the plate.
+
+Two kinds of perks, labeled differently:
+
+- **Earned** — original Antonelli training perks. Checked live from metrics, age-group bands, overall tier, and metric history. The first time a milestone is true, the perk is stored on the player (`earnedQuirks`: id, milestone text, date, `seen`). **Once earned, it stays** even if the number later drops. A new earn opens the pack once. **Add to my card** marks `seen`, so a reload does not show that perk again. Click an earned perk on the profile, or **Open again**, to replay the pack.
+- **Coach Awarded** — the Show list. A coach checks them in Add/Edit. This app does not have at-bat situations (day game, runner on third, fastball vs breaker), so these are not auto-scored.
+
+The card front shows up to 3 perks (earned ones first) plus a +N count. The profile lists every perk, the category, and the milestone.
+
+Training is the largest category (23). The +5 mph bat-speed perk (Heat Check) is separate from the +3 mph perk (Bat Speed Builder): a jump straight to +5 earns Heat Check. If a player already earned +3 and later reaches +5, both stay.
+
+### Training milestones
+
+Edit the thresholds in `TRAINING_QUIRKS` in `app.js`.
+
+| Perk | Milestone |
+|---|---|
+| Heat Check | Bat speed gain ≥ 5 mph from the first logged check-in |
+| Bat Speed Builder | Bat speed gain ≥ 3 mph and under 5 mph |
+| Power Surge | Power gain ≥ 0.40 kW |
+| Plane Climber | On-plane efficiency gain ≥ 5 points |
+| Quick Trigger | Time to contact faster by ≥ 0.015 s |
+| Fast Twitch | Rotational acceleration gain ≥ 2 g |
+| Quick Hands | Peak hand speed gain ≥ 2 mph |
+| Metronome | 4+ check-ins and bat speed (hitters / two-way) or fastball (pitchers) stays inside a 2.5 mph window |
+| Added Gas | Fastball gain ≥ 3 mph |
+| Spin Lab | Spin gain ≥ 150 rpm |
+| Strike Painter | Strike % gain ≥ 5 points |
+| Whiff Maker | Whiff % gain ≥ 6 points |
+| Deep Start | Pitch capacity gain ≥ 12 pitches |
+| Both Sides | Two-way player with a hitting gain and a pitching gain in the same block |
+| Diamond Standard | Overall ≥ 90 |
+| Gold Standard | Overall 80–89 |
+| Silver Standard | Overall 70–79 |
+| Elite Barrel | Bat speed grades Elite for the age group |
+| Great Barrel | Bat speed grades Great for the age group |
+| Stay Connected | Early connection or connection at impact moves ≥ 4° closer to 90° |
+| Path Finder | Attack angle moves ≥ 2° closer to the age-group target |
+| Three-Tool Climb | Bat speed ≥ +2 mph, power ≥ +0.30 kW, and on-plane ≥ +4 points |
+| Cage Rat | 4+ check-ins on at least 4 different metrics |
+
+### Show perks (coach awarded)
+
+Hitting: Dead Red, Breaking Ball Hitter, Bad Ball Hitter, First-Pitch Hitter, Unfazed, Situational Hitter, Table Setter, Pinch Hitter.
+
+Pitching: Outlier I, Outlier II, Break Outlier, Pressure Cooker, Stopper, Pick Off Artist.
+
+Fielding: Catcher Pop Time.
+
+Intangibles: Fighter, Rally Monkey, Homebody, Road Warrior, Day Player, Night Player.
+
+### Motion
+
+Cards carry a slow gold sheen while they are on screen. On a desktop that can hover, and when the user has not asked for reduced motion, hovering a card tilts it slightly and speeds the sheen. Gold and Diamond overall badges glow while the card is on screen; Diamond is the stronger glow. Sheen and badge glow run only while the card is near the viewport.
+
+A new Player Perk opens as a sealed black-and-gold foil pack (A-star, “PLAYER PERKS”, a shimmer). Nothing tears until the player clicks **Open Pack**. The top rip, a shine burst, and the perk card slide out, then the card flips to the name, description, milestone, and player. Several new perks are in one pack: after the open, **Next Perk** walks through them, and the last button is **Add to my card**. **Open again** on the profile replays that pack and does not clear the seen flag. `prefers-reduced-motion` turns the sheen, tilt, glow, pack shimmer, rip, and flip off. Open Pack then fades straight to the perk face. There is no tear.
+
 ## Sample data note
 
 ⚠️ **All 5 players are invented for this prototype** (Mason Carter, Eli Ramirez, Noah Bennett, Connor Walsh, Dylan Brooks). Names, metrics, strengths, and history are fictional and do not represent real people. The app labels this in a banner on the page itself.
@@ -217,7 +277,7 @@ Blast publishes the windows. It does not publish these scoring choices:
 |---|---|
 | `index.html` | Page structure: roster, profile, add/edit modal |
 | `styles.css` | Antonelli black & gold branding, v2 portrait-card tiers, responsive layout |
-| `app.js` | Sample data, Blast benchmarks, grade formula, card/logo/photo rendering, localStorage persistence |
+| `app.js` | Sample data, Blast benchmarks, Player Perks, grade formula, card rendering, localStorage persistence |
 | `assets/` | Antonelli block, script, and star logos (see Brand assets) |
 | `README.md` | This file |
 
