@@ -44,7 +44,7 @@ Pages only serves what is on `main`. If the app landed through a pull request, m
 
 - **Roster view** — all players as baseball cards, with search and filters by player type (hitter / pitcher / two-way), team, plus sorting by overall, name, or age.
 - **5 sample players** (see note below), covering Power Hitter, Contact/Leadoff, Ace, Closer, and Two-Way archetypes. Tiers follow the grades: with the sample Blast numbers, the roster spans Bronze, Silver, and Gold.
-- **Profile detail view** — click any player for: archetype explanation ("what type of player is he?"), strengths, areas to improve, Player Perks (earned training perks and coach-awarded Show perks), a metrics table (current, previous, change, history sparkline, band, per-metric grade), and the large baseball card side-by-side. Hitter bands are Below Average / Average / Good / Great / Elite for the player's age group.
+- **Profile detail view** — click a card for a dark player screen: large card, huge name, position diamond, quick facts, and tabs for Attributes, Metrics & History, Player Perks, and Strengths & Growth. See [Player profile](#player-profile).
 - **Player Perks** — up to three perks on the card front. Training perks unlock from milestones and stay once earned. A new perk opens a sealed pack once. Show perks are coach-awarded. See [Player Perks](#player-perks).
 - **Celebrations** — an overall climb plays a short card bounce and count-up. Crossing into Silver, Gold, or Diamond takes over the screen. See [Celebrations](#celebrations).
 - **Baseball card (front, v2 — Topps / MLB The Show style)** — vertical portrait card (5:7, the classic 2.5"×3.5" ratio). The player visual fills the card over a geometric black & gold background with a stitched/dashed frame edge:
@@ -280,6 +280,27 @@ The card remembers the last overall and tier the player has already been shown (
 - **Preview overall-up** and **Preview tier-up** on the profile replay the motion for a coach. They do not change `gradeSeen`.
 
 One save can earn a tier, an overall jump, and new perks. The order is tier-up, then overall-up, then the Player Perks pack. A tier-up already shows the new overall, so that save does not also open an overall-up. Nothing is dropped: each step stays queued until its Collect (or, for a perk, Open Pack and Add to my card). `prefers-reduced-motion` skips the shake, bounce, count-up, flash, and particles and shows the new number and tier immediately.
+
+## Player profile
+
+The screen that opens from a card is laid out like a baseball-game player page, in Antonelli black and gold. It does not use MLB or The Show logos.
+
+The header puts the animated card on the left, the last name large beside it, a rotated position badge, team, archetype, and a facts grid: overall, tier, bats, throws, secondary position, height, weight, age and age group, team, class/year, and hometown. Overall includes a small chip when the grade moved since the previous saved check-in. That chip is the overall now minus the overall computed from the prior history point on each metric. It is labeled “since last assessment.”
+
+Optional fields added to the player and the add/edit form: `secondaryPosition`, `height`, `weight`, `hometown`. Blank fields show —. Older saves in `localStorage` keep working; missing fields stay blank. The card and roster still print `OF / 1B` when a secondary position is set.
+
+Tabs, left to right:
+
+| Tab | What it holds |
+|---|---|
+| Attributes | Tall bars. Hitters get hitting tools (BAT, PWR, PLANE, QUICK, CONN) and Blast grades (bat speed, hand speed, power, plane, attack, vertical bat angle, time to contact, rotational acceleration, both connections). Pitchers get VEL, BRK, CNTL, STM plus fastball, spin, strike %, whiff %, and capacity. Two-way players get both groups, labeled. |
+| Metrics & History | The existing table: current, previous, change, sparkline, band, grade. |
+| Player Perks | Earned and coach-awarded perks, Open again, and click-to-replay. |
+| Strengths & Growth | Archetype note, how the grade is built, strengths, and areas to improve. |
+
+Bar fill is the 20–99 grade as a percent of 99. Color follows the band: red Below Average (under 50), bronze Average (50–64), gold Good (65–79), green Great (80–89), cyan Elite (90–99). Hover a bar for the band name. Bars grow from the bottom when the profile opens. `prefers-reduced-motion` shows them at full height with no grow. On a narrow screen the bar row scrolls sideways.
+
+The right rail is a Blast snapshot for hitters (raw mph, degrees, seconds, and the age-group band) and a pitch-metric list with a short meter for pitchers. Two-way players get both. Edit, preview overall-up, preview tier-up, and delete stay in the header. Back to roster stays above the screen.
 
 ## Sample data note
 

@@ -298,7 +298,7 @@ function metricHistory(current, prior) {
 const SAMPLE_PLAYERS = [
   {
     id: "sample-mason-carter", name: "Mason Carter", age: 17, ageGroup: "18U", classYear: "Junior / 11th",
-    team: "Antonelli 17U", position: "OF / 1B", bats: "L", throws: "L", type: "hitter", archetype: "Power Hitter", photo: "",
+    team: "Antonelli 17U", position: "OF", secondaryPosition: "1B", height: "6'1\"", weight: "190 lbs", hometown: "Tampa, FL", bats: "L", throws: "L", type: "hitter", archetype: "Power Hitter", photo: "",
     strengths: ["Drives the ball in the air to the pull side with real carry", "Strong, physical swing — top bat speed on the team", "Patient in hitter's counts; hunts pitches he can lift"],
     improvements: ["Stay on plane against breaking balls down and away", "Shorten the two-strike swing without giving up bat speed", "First-step quickness on outfield reads"],
     coachQuirks: ["dead-red", "unfazed"],
@@ -313,7 +313,7 @@ const SAMPLE_PLAYERS = [
   },
   {
     id: "sample-eli-ramirez", name: "Eli Ramirez", age: 15, ageGroup: "16U", classYear: "Sophomore / 10th",
-    team: "Antonelli 15U", position: "SS / 2B", bats: "R", throws: "R", type: "hitter", archetype: "Contact / Leadoff", photo: "",
+    team: "Antonelli 15U", position: "SS", secondaryPosition: "2B", height: "5'9\"", weight: "155 lbs", hometown: "Miami, FL", bats: "R", throws: "R", type: "hitter", archetype: "Contact / Leadoff", photo: "",
     strengths: ["Short, quick swing that finds the barrel", "Advanced strike-zone awareness for his age", "Instinctive base runner; quick first step out of the box"],
     improvements: ["Add strength so bat speed can climb toward varsity range", "Keep the bat on plane against high fastballs", "Stay connected when he tries to drive a pitch"],
     coachQuirks: ["table-setter", "first-pitch"],
@@ -328,7 +328,7 @@ const SAMPLE_PLAYERS = [
   },
   {
     id: "sample-noah-bennett", name: "Noah Bennett", age: 16, ageGroup: "16U", classYear: "Junior / 11th",
-    team: "Antonelli 16U", position: "RHP", bats: "R", throws: "R", type: "pitcher", archetype: "Ace", photo: "",
+    team: "Antonelli 16U", position: "RHP", secondaryPosition: "", height: "6'2\"", weight: "185 lbs", hometown: "Orlando, FL", bats: "R", throws: "R", type: "pitcher", archetype: "Ace", photo: "",
     strengths: ["Fastball carries through the top of the zone", "Repeats delivery and pounds the strike zone", "Breaking ball lands for strikes and chase swings"],
     improvements: ["Hold velocity deeper into outings (5th-6th inning)", "Develop a firm changeup vs. left-handed hitters", "Quicker move to hold runners at first"],
     coachQuirks: ["outlier-1", "pressure-cooker"],
@@ -341,7 +341,7 @@ const SAMPLE_PLAYERS = [
   },
   {
     id: "sample-connor-walsh", name: "Connor Walsh", age: 17, ageGroup: "18U", classYear: "Senior / 12th",
-    team: "Antonelli 17U", position: "RHP", bats: "R", throws: "R", type: "pitcher", archetype: "Closer", photo: "",
+    team: "Antonelli 17U", position: "RHP", secondaryPosition: "", height: "6'3\"", weight: "200 lbs", hometown: "Jacksonville, FL", bats: "R", throws: "R", type: "pitcher", archetype: "Closer", photo: "",
     strengths: ["Electric one-inning stuff; fastball jumps on hitters", "Slider generates swing-and-miss in leverage counts", "Attacks hitters — not afraid of contact in the zone"],
     improvements: ["Command can scatter when he overthrows", "Throw first-pitch strikes more consistently", "Build routine for back-to-back days"],
     coachQuirks: ["stopper", "outlier-2"],
@@ -354,7 +354,7 @@ const SAMPLE_PLAYERS = [
   },
   {
     id: "sample-dylan-brooks", name: "Dylan Brooks", age: 14, ageGroup: "14U", classYear: "Freshman / 9th",
-    team: "Antonelli 14U", position: "C / RHP", bats: "R", throws: "R", type: "two-way", archetype: "Two-Way Player", photo: "",
+    team: "Antonelli 14U", position: "C", secondaryPosition: "RHP", height: "5'10\"", weight: "160 lbs", hometown: "Sarasota, FL", bats: "R", throws: "R", type: "two-way", archetype: "Two-Way Player", photo: "",
     strengths: ["Strong arm behind the plate and on the mound", "Competitive at-bats; battles with two strikes", "Athletic frame with room to add strength"],
     improvements: ["Receiving and blocking consistency behind the plate", "Bat speed — stay connected through the turn", "Pitching mechanics: stay closed longer to improve command"],
     coachQuirks: ["pop-time", "unfazed"],
@@ -820,6 +820,20 @@ function formatMetric(key, value) {
 }
 
 function typeLabel(type) { return { hitter: "Hitter", pitcher: "Pitcher", "two-way": "Two-Way" }[type] || type; }
+function positionLine(player) {
+  const primary = (player && player.position) || "—";
+  const secondary = player && String(player.secondaryPosition || "").trim();
+  return secondary ? `${primary} / ${secondary}` : primary;
+}
+function nameParts(name) {
+  const bits = String(name || "").trim().split(/\s+/).filter(Boolean);
+  if (bits.length < 2) return { first: "", last: (bits[0] || "Player").toUpperCase() };
+  return { first: bits.slice(0, -1).join(" ").toUpperCase(), last: bits[bits.length - 1].toUpperCase() };
+}
+function showOrDash(value) {
+  const text = String(value ?? "").trim();
+  return text ? esc(text) : "—";
+}
 function teamCode(team) {
   const parts = String(team || "Antonelli").trim().split(/\s+/);
   const code = parts.map((w) => (/^\d/.test(w) ? w : w[0])).join("").toUpperCase();
@@ -987,7 +1001,7 @@ function cardHTML(player, large, face) {
         <div class="card-name">
           <span class="archetype">${esc(player.archetype)}</span>
           <${large ? "h2" : "h3"}>${esc(player.name)}</${large ? "h2" : "h3"}>
-          <span class="pos-bar">${esc(player.position)} - ${esc(player.bats)}/${esc(player.throws)}</span>
+          <span class="pos-bar">${esc(positionLine(player))} - ${esc(player.bats)}/${esc(player.throws)}</span>
           <span class="card-teamline">${esc(player.team)} • Age ${esc(player.age)} • ${esc(group)} • ${esc(player.classYear)}</span>
         </div>
       </div>
@@ -1024,7 +1038,7 @@ function renderRoster() {
     if (tf !== "all" && p.type !== tf) return false;
     if (team !== "all" && p.team !== team) return false;
     if (q) {
-      const hay = `${p.name} ${p.position} ${p.archetype} ${p.team} ${p.classYear} ${typeLabel(p.type)} ${activeAgeGroup(p)}`.toLowerCase();
+      const hay = `${p.name} ${positionLine(p)} ${p.archetype} ${p.team} ${p.classYear} ${p.hometown || ""} ${typeLabel(p.type)} ${activeAgeGroup(p)}`.toLowerCase();
       if (!hay.includes(q)) return false;
     }
     return true;
@@ -1045,7 +1059,7 @@ function renderRoster() {
       ${cardHTML(p, false)}
       <div class="roster-info">
         <h3>${esc(p.name)}</h3>
-        <div class="meta">${esc(p.position)} • ${esc(p.team)} • Age ${esc(p.age)} • ${esc(activeAgeGroup(p))} • ${esc(p.classYear)}<br>Bats ${esc(p.bats)} / Throws ${esc(p.throws)} • Overall ${overall}</div>
+        <div class="meta">${esc(positionLine(p))} • ${esc(p.team)} • Age ${esc(p.age)} • ${esc(activeAgeGroup(p))} • ${esc(p.classYear)}<br>Bats ${esc(p.bats)} / Throws ${esc(p.throws)} • Overall ${overall}</div>
         <div class="pills"><span class="pill red">${esc(p.archetype)}</span><span class="pill">${typeLabel(p.type)}</span><span class="pill">${tierFor(overall).label}</span></div>
         <p class="snippet"><strong>Does well:</strong> ${esc((p.strengths || [])[0] || "—")}</p>
         <p class="snippet"><strong>Work on:</strong> ${esc((p.improvements || [])[0] || "—")}</p>
@@ -1554,6 +1568,114 @@ function previewTierUp(playerId) {
   showCelebration();
 }
 
+const HITTER_BAR_KEYS = [
+  ["BAT SPD", "batSpeed"], ["HAND", "peakHandSpeed"], ["POWER", "powerKw"], ["PLANE", "onPlaneEfficiency"],
+  ["ATK", "attackAngle"], ["VBA", "verticalBatAngle"], ["TTC", "timeToContact"], ["ROT", "rotationalAcceleration"],
+  ["EARLY", "earlyConnection"], ["IMPACT", "connectionAtImpact"],
+];
+const PITCH_BAR_KEYS = [
+  ["FB VEL", "fastballVelo"], ["SPIN", "spinRate"], ["STR%", "strikePct"], ["WHIFF", "whiffPct"], ["CAP", "pitchCapacity"],
+];
+
+function gradeTone(grade) {
+  if (grade == null || Number.isNaN(grade)) return "tone-empty";
+  if (grade >= 90) return "tone-elite";
+  if (grade >= 80) return "tone-great";
+  if (grade >= 65) return "tone-good";
+  if (grade >= 50) return "tone-avg";
+  return "tone-low";
+}
+
+function attrBar(label, grade, title) {
+  const band = bandForGrade(grade);
+  const h = grade == null ? 0 : Math.max(8, Math.round((Number(grade) / 99) * 100));
+  const tip = `${title}${band ? " · " + band.label : ""}`;
+  return `<div class="attr-col" title="${esc(tip)}" role="img" aria-label="${esc(tip)} ${grade ?? ""}">
+    <div class="attr-num">${grade == null ? "—" : grade}</div>
+    <div class="attr-track" aria-hidden="true"><i class="attr-fill ${gradeTone(grade)}" style="--h:${h}%"></i></div>
+    <div class="attr-key">${esc(label)}</div>
+  </div>`;
+}
+
+function toolBars(subs) {
+  return (subs || []).map((s) => attrBar(s.key, s.grade, s.label)).join("");
+}
+
+function metricBars(player, pairs) {
+  const age = activeAgeGroup(player);
+  return pairs.map(([label, key]) => attrBar(label, normalizeMetric(key, player.metrics && player.metrics[key], age), METRICS[key].label)).join("");
+}
+
+function attributePanel(player) {
+  const g = gradesFor(player);
+  const groups = [];
+  if (player.type !== "pitcher") {
+    groups.push({ title: player.type === "two-way" ? "Hitting tools" : "Tools", bars: toolBars(g.hitterSubs || g.subs) });
+    groups.push({ title: "Blast grades", bars: metricBars(player, HITTER_BAR_KEYS) });
+  }
+  if (player.type !== "hitter") {
+    groups.push({ title: player.type === "two-way" ? "Pitching tools" : "Tools", bars: toolBars(g.pitcherSubs || g.subs) });
+    groups.push({ title: "Pitch grades", bars: metricBars(player, PITCH_BAR_KEYS) });
+  }
+  return groups.map((group) => `<section class="attr-group"><h3>${esc(group.title)}</h3><div class="attr-strip">${group.bars}</div></section>`).join("")
+    + `<p class="muted small">Bar height is the 20–99 grade. Red is Below Average, bronze is Average, gold is Good, green is Great, cyan is Elite. Hover a bar for the band name.</p>`;
+}
+
+function assessmentDelta(player) {
+  const now = gradesFor(player).overall;
+  const prevMetrics = { ...(player.metrics || {}) };
+  let changed = false;
+  metricKeysFor(player.type).forEach((key) => {
+    const hist = player.history && player.history[key];
+    if (!hist || hist.length < 2) return;
+    prevMetrics[key] = hist[hist.length - 2];
+    if (hist[hist.length - 2] !== hist[hist.length - 1]) changed = true;
+  });
+  if (!changed) return { now, prev: null, delta: null };
+  const prev = gradesFor({ ...player, metrics: prevMetrics }).overall;
+  return { now, prev, delta: now - prev };
+}
+
+function deltaChip(delta) {
+  if (delta == null) return "";
+  const up = delta > 0;
+  const sign = delta > 0 ? "+" : "";
+  const arrow = up ? "↑ " : delta < 0 ? "↓ " : "";
+  return `<em class="delta-chip ${up ? "up" : delta < 0 ? "down" : "flat"}" title="Overall change since the previous saved assessment">${arrow}${sign}${delta}</em>`;
+}
+
+function blastSnapshot(player) {
+  const age = activeAgeGroup(player);
+  const rows = BLAST_KEYS.map((key) => {
+    const meta = METRICS[key];
+    return `<div class="snap-row"><span>${esc(meta.label)}</span><b>${formatMetric(key, player.metrics[key])}${esc(meta.unit)}</b>${bandHTML(key, player.metrics[key], age)}</div>`;
+  }).join("");
+  return `<aside class="side-panel"><h3>Blast snapshot</h3><p class="small muted">${esc(age)} raw numbers</p>${rows}</aside>`;
+}
+
+function pitchPanel(player) {
+  const age = activeAgeGroup(player);
+  const rows = PITCHER_KEYS.map((key) => {
+    const grade = normalizeMetric(key, player.metrics[key], age);
+    const width = grade == null ? 0 : Math.round((grade / 99) * 100);
+    const meta = METRICS[key];
+    return `<div class="meter-row"><span>${esc(meta.label)}</span><div class="meter" title="${esc(meta.label)} grade ${grade ?? "—"}"><i class="${gradeTone(grade)}" style="--w:${width}%"></i></div><b>${formatMetric(key, player.metrics[key])}${esc(meta.unit)}</b></div>`;
+  }).join("");
+  return `<aside class="side-panel"><h3>Pitch metrics</h3>${rows}</aside>`;
+}
+
+function sidePanels(player) {
+  if (player.type === "pitcher") return pitchPanel(player);
+  if (player.type === "two-way") return blastSnapshot(player) + pitchPanel(player);
+  return blastSnapshot(player);
+}
+
+function growAttrBars() {
+  const strips = [...document.querySelectorAll(".attr-strip")];
+  strips.forEach((strip) => strip.classList.remove("is-in"));
+  requestAnimationFrame(() => requestAnimationFrame(() => strips.forEach((strip) => strip.classList.add("is-in"))));
+}
+
 function openProfile(id) {
   const p = players.find((x) => x.id === id);
   if (!p) return;
@@ -1561,44 +1683,89 @@ function openProfile(id) {
   const { subs, overall } = gradesFor(p);
   const tier = tierFor(overall);
   const group = activeAgeGroup(p);
+  const names = nameParts(p.name);
+  const delta = assessmentDelta(p);
+  const pos = String(p.position || "—").split(/[/,]/)[0].trim().slice(0, 4).toUpperCase() || "—";
   const built = p.type === "pitcher"
     ? "Pitcher overall uses velocity 30%, breaking stuff 25%, command 30%, and stamina 15%."
     : p.type === "two-way"
       ? `Hitting half is graded at <strong>${esc(group)}</strong> on Blast windows. Bat speed is 40% of that half. Overall is the average of the hitter grade and the pitcher grade.`
       : `Graded at <strong>${esc(group)}</strong> on Blast Motion windows. Bat speed is 40% of the hitter overall — the largest weight.`;
+  const fact = (label, value) => `<div class="show-fact"><b>${value}</b><span>${label}</span></div>`;
   $("rosterView").hidden = true;
   $("profileView").hidden = false;
   $("profileContent").innerHTML = `
-    <div>
-      ${cardHTML(p, true)}
-      <div class="profile-actions">
-        <button class="btn btn-red" type="button" id="editProfileBtn">Edit Metrics / Profile</button>
-        <button class="btn btn-ghost" type="button" id="previewOverallBtn">Preview overall-up</button>
-        <button class="btn btn-ghost" type="button" id="previewTierBtn">Preview tier-up</button>
-        <button class="btn btn-ghost" type="button" id="deleteProfileBtn">Delete Player</button>
+    <div class="show-top">
+      <div class="show-card">${cardHTML(p, true)}</div>
+      <div class="show-identity">
+        <h2 class="show-name">${names.first ? `<span class="first">${esc(names.first)}</span>` : ""}<span class="last">${esc(names.last)}</span></h2>
+        <div class="show-posrow">
+          <div class="pos-diamond" title="${esc(p.position || "")}"><span>${esc(pos)}</span></div>
+          <div>
+            <div class="show-team">${esc(p.team || "—")}</div>
+            <div class="show-arch">${esc(p.archetype || "—")} · ${esc(typeLabel(p.type))} · ${esc(group)}</div>
+          </div>
+        </div>
+        <div class="show-facts">
+          <div class="show-fact show-fact-overall"><b>${overall}</b>${deltaChip(delta.delta)}<span>Overall${delta.delta == null ? "" : " · since last assessment"}</span></div>
+          ${fact("Tier", esc(tier.label))}
+          ${fact("Bats", esc(p.bats || "—"))}
+          ${fact("Throws", esc(p.throws || "—"))}
+          ${fact("Secondary position", showOrDash(p.secondaryPosition))}
+          ${fact("Height", showOrDash(p.height))}
+          ${fact("Weight", showOrDash(p.weight))}
+          ${fact("Age / group", `${esc(p.age)} · ${esc(group)}`)}
+          ${fact("Team", esc(p.team || "—"))}
+          ${fact("Class / year", showOrDash(p.classYear))}
+          ${fact("Hometown", showOrDash(p.hometown))}
+        </div>
+        <div class="profile-actions">
+          <button class="btn btn-red" type="button" id="editProfileBtn">Edit Metrics / Profile</button>
+          <button class="btn btn-ghost" type="button" id="previewOverallBtn">Preview overall-up</button>
+          <button class="btn btn-ghost" type="button" id="previewTierBtn">Preview tier-up</button>
+          <button class="btn btn-ghost" type="button" id="deleteProfileBtn">Delete Player</button>
+        </div>
       </div>
-      <div class="panel" style="margin-top:16px">
-        <h3>How this grade is built</h3>
-        <p class="small" style="line-height:1.6">Overall <strong>${overall} (${tier.label})</strong>. ${built}</p>
-        <div class="pills">${subs.map((s) => `<span class="pill">${s.key} ${s.grade ?? "—"} — ${esc(s.label)}</span>`).join("")}</div>
-        <p class="muted small">Bronze &lt;70 • Silver 70–79 • Gold 80–89 • Diamond 90+. Edit a metric or the age group and this card updates live.</p>
-      </div>
+      <div class="show-side">${sidePanels(p)}</div>
     </div>
-    <div class="profile-main">
+    <div class="show-tabs" role="tablist">
+      <button class="show-tab is-on" type="button" role="tab" aria-selected="true" data-tab="attributes">Attributes</button>
+      <button class="show-tab" type="button" role="tab" aria-selected="false" data-tab="metrics">Metrics &amp; History</button>
+      <button class="show-tab" type="button" role="tab" aria-selected="false" data-tab="perks">Player Perks</button>
+      <button class="show-tab" type="button" role="tab" aria-selected="false" data-tab="growth">Strengths &amp; Growth</button>
+    </div>
+    <div class="show-panel" data-panel="attributes">${attributePanel(p)}</div>
+    <div class="show-panel" data-panel="metrics" hidden>
+      <div class="panel"><h3>Metrics &amp; progress</h3>${metricsTable(p)}</div>
+    </div>
+    <div class="show-panel" data-panel="perks" hidden>
+      <div class="panel"><h3>Player Perks</h3>${quirksPanel(p)}</div>
+    </div>
+    <div class="show-panel" data-panel="growth" hidden>
       <div class="panel">
-        <p class="eyebrow" style="color:var(--red)">${esc(p.archetype.toUpperCase())} • ${typeLabel(p.type).toUpperCase()} • ${esc(group)}</p>
-        <h2 style="margin-bottom:6px">${esc(p.name)}</h2>
-        <p class="muted">${esc(p.position)} • ${esc(p.team)} • Age ${esc(p.age)} • ${esc(group)} • ${esc(p.classYear)} • Bats ${esc(p.bats)} / Throws ${esc(p.throws)}</p>
         <h3>What type of ${p.type === "pitcher" ? "pitcher" : "player"} is he?</h3>
         <p style="line-height:1.65">${esc(ARCHETYPE_INFO[p.archetype] || "A developing player whose archetype will sharpen as metrics and game performance grow.")}</p>
+        <p class="small" style="line-height:1.6">Overall <strong>${overall} (${tier.label})</strong>. ${built}</p>
+        <div class="pills">${subs.map((s) => `<span class="pill">${s.key} ${s.grade ?? "—"} — ${esc(s.label)}</span>`).join("")}</div>
       </div>
       <div class="two-col">
-        <div class="panel"><h3>✓ What he does well</h3><ul class="list good">${(p.strengths || []).map((s) => `<li>${esc(s)}</li>`).join("") || "<li>—</li>"}</ul></div>
-        <div class="panel"><h3>◎ What to improve</h3><ul class="list work">${(p.improvements || []).map((s) => `<li>${esc(s)}</li>`).join("") || "<li>—</li>"}</ul></div>
+        <div class="panel"><h3>What he does well</h3><ul class="list good">${(p.strengths || []).map((s) => `<li>${esc(s)}</li>`).join("") || "<li>—</li>"}</ul></div>
+        <div class="panel"><h3>What to improve</h3><ul class="list work">${(p.improvements || []).map((s) => `<li>${esc(s)}</li>`).join("") || "<li>—</li>"}</ul></div>
       </div>
-      <div class="panel"><h3>Player Perks</h3>${quirksPanel(p)}</div>
-      <div class="panel"><h3>Metrics &amp; Progress</h3>${metricsTable(p)}</div>
     </div>`;
+  document.querySelectorAll(".show-tab").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".show-tab").forEach((tab) => {
+        const on = tab === btn;
+        tab.classList.toggle("is-on", on);
+        tab.setAttribute("aria-selected", on ? "true" : "false");
+      });
+      document.querySelectorAll(".show-panel").forEach((panel) => {
+        panel.hidden = panel.dataset.panel !== btn.dataset.tab;
+      });
+      if (btn.dataset.tab === "attributes") growAttrBars();
+    });
+  });
   $("editProfileBtn").addEventListener("click", () => openModal(p));
   document.querySelectorAll("[data-replay]").forEach((btn) => {
     btn.addEventListener("click", () => replayQuirk(p.id, btn.dataset.replay));
@@ -1613,6 +1780,7 @@ function openProfile(id) {
       savePlayers(); closeProfile(); renderRoster();
     }
   });
+  growAttrBars();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
@@ -1765,6 +1933,7 @@ function formPlayerLike() {
     age: parseInt($("f-age").value, 10) || 16,
     ageGroup: $("f-ageGroup").value || ageGroupFromAge($("f-age").value),
     classYear: $("f-class").value, team: $("f-team").value || "Antonelli Baseball", position: $("f-position").value || "—",
+    secondaryPosition: $("f-secondary").value.trim(), height: $("f-height").value.trim(), weight: $("f-weight").value.trim(), hometown: $("f-hometown").value.trim(),
     bats: $("f-bats").value, throws: $("f-throws").value, type, archetype: $("f-archetype").value,
     strengths: linesToArray($("f-strengths").value), improvements: linesToArray($("f-improvements").value),
     photo: pendingPhotoData || "",
@@ -1791,6 +1960,10 @@ function openModal(player) {
   $("f-class").value = isEdit ? player.classYear : "";
   $("f-team").value = isEdit ? player.team : "Antonelli 16U";
   $("f-position").value = isEdit ? player.position : "";
+  $("f-secondary").value = isEdit ? (player.secondaryPosition || "") : "";
+  $("f-height").value = isEdit ? (player.height || "") : "";
+  $("f-weight").value = isEdit ? (player.weight || "") : "";
+  $("f-hometown").value = isEdit ? (player.hometown || "") : "";
   $("f-bats").value = isEdit ? player.bats : "R";
   $("f-throws").value = isEdit ? player.throws : "R";
   $("f-type").value = isEdit ? player.type : "hitter";
