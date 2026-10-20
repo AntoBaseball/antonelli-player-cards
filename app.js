@@ -2415,14 +2415,13 @@ function gripBackText(player) {
   const metrics = player.metrics || {};
   const dominant = metricNumber(metrics.gripDominant);
   const other = metricNumber(metrics.gripOther);
-  const hand = player.throws || "—";
+  const hand = esc(player.throws || "—");
   if (dominant == null && other == null) return "—";
-  if (dominant != null && other != null) {
-    const better = dominant >= other ? `throwing hand (${hand})` : "other hand";
-    return `${formatMetric("gripDominant", Math.max(dominant, other))} lbs · better hand, ${better}`;
+  if (dominant != null && other != null && other > dominant) {
+    return `${formatMetric("gripOther", other)} lbs · other hand`;
   }
-  if (dominant != null) return `${formatMetric("gripDominant", dominant)} lbs · throwing hand (${esc(hand)})`;
-  return `${formatMetric("gripOther", other)} lbs · other hand only`;
+  if (dominant != null) return `${formatMetric("gripDominant", dominant)} lbs · ${hand} hand`;
+  return `${formatMetric("gripOther", other)} lbs · other hand`;
 }
 
 function cardBackHTML(player, face, subs, opts) {

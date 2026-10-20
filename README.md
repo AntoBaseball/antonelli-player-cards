@@ -348,7 +348,7 @@ Blast publishes the windows. It does not publish these scoring choices:
 
 Clicking a roster card flips it. It does not open the profile. **View Profile** sits on the card back and again under the roster blurb, so the profile is still one click away. The big card on the profile flips the same way, and so does the big card on a retired season. Enter or Space flips the card that has keyboard focus. Clicking again returns to the front.
 
-The back is a black and gold face: team, age and age group, class, height, weight, hometown, bats/throws, positions, season, every sub-grade, and the raw bat speed, exit velocity with its Antonelli band label, 10-yard dash with its Antonelli band label, throw velocity, med-ball distance with the coach note, grip (better hand called out), and pitcher readings when the player has them.
+The back is a black and gold face: team, age and age group, class, height, weight, hometown, bats/throws, positions, season, every sub-grade, and the raw bat speed, exit velocity with its Antonelli band label, 10-yard dash with its Antonelli band label, throw velocity, med-ball distance with the coach note, grip (short label such as 132 lbs · L hand), and pitcher readings when the player has them.
 
 Collection thumbnails are still buttons. A click opens that retired card. The thumbnail itself does not flip. Showdown and the celebration overlays stay on the front so the clash and the count-up are not interrupted.
 
