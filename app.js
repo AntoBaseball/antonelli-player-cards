@@ -417,11 +417,11 @@ const SAMPLE_PLAYERS = [
       battedDistance: metricHistory(340, [310, 325, 338]),
     },
     readingLog: {
-      exitVelo: [{ value: 95, at: "2026-04-12" }, { value: 84, at: "2026-10-04" }, { value: 87, at: "2026-12-06" }, { value: 89, at: "2027-02-14" }, { value: 92, at: "2027-04-19" }],
-      batSpeed: [{ value: 63, at: "2026-10-04" }, { value: 65, at: "2026-12-06" }, { value: 72, at: "2027-02-14" }, { value: 69, at: "2027-04-19" }],
-      throwVelo: [{ value: 87, at: "2026-03-18" }, { value: 78, at: "2026-10-04" }, { value: 80, at: "2026-12-06" }, { value: 82, at: "2027-02-14" }, { value: 84, at: "2027-04-19" }],
-      tenYard: [{ value: 1.79, at: "2026-05-09" }, { value: 1.95, at: "2026-10-04" }, { value: 1.91, at: "2026-12-06" }, { value: 1.87, at: "2027-02-14" }, { value: 1.84, at: "2027-04-19" }],
-      battedDistance: [{ value: 352, at: "2026-04-28" }, { value: 310, at: "2026-10-04" }, { value: 325, at: "2026-12-06" }, { value: 338, at: "2027-02-14" }, { value: 340, at: "2027-04-19" }],
+      exitVelo: [{ value: 95, at: "2026-04-12" }, { value: 84, at: "2026-09-08" }, { value: 87, at: "2026-09-22" }, { value: 89, at: "2026-10-06" }, { value: 92, at: "2026-10-18" }],
+      batSpeed: [{ value: 63, at: "2026-09-08" }, { value: 65, at: "2026-09-22" }, { value: 72, at: "2026-10-06" }, { value: 69, at: "2026-10-18" }],
+      throwVelo: [{ value: 87, at: "2026-03-18" }, { value: 78, at: "2026-09-08" }, { value: 80, at: "2026-09-22" }, { value: 82, at: "2026-10-06" }, { value: 84, at: "2026-10-18" }],
+      tenYard: [{ value: 1.79, at: "2026-05-09" }, { value: 1.95, at: "2026-09-08" }, { value: 1.91, at: "2026-09-22" }, { value: 1.87, at: "2026-10-06" }, { value: 1.84, at: "2026-10-18" }],
+      battedDistance: [{ value: 352, at: "2026-04-28" }, { value: 310, at: "2026-09-08" }, { value: 325, at: "2026-09-22" }, { value: 338, at: "2026-10-06" }, { value: 340, at: "2026-10-18" }],
     },
   },
   {
@@ -447,11 +447,11 @@ const SAMPLE_PLAYERS = [
       battedDistance: metricHistory(265, [240, 252, 260]),
     },
     readingLog: {
-      exitVelo: [{ value: 78, at: "2025-11-02" }, { value: 70, at: "2026-10-11" }, { value: 72, at: "2026-12-13" }, { value: 73, at: "2027-02-21" }, { value: 75, at: "2027-04-18" }],
-      batSpeed: [{ value: 56, at: "2026-10-11" }, { value: 57, at: "2026-12-13" }, { value: 60, at: "2027-02-21" }, { value: 58, at: "2027-04-18" }],
-      throwVelo: [{ value: 76, at: "2026-01-16" }, { value: 68, at: "2026-10-11" }, { value: 70, at: "2026-12-13" }, { value: 72, at: "2027-02-21" }, { value: 74, at: "2027-04-18" }],
-      tenYard: [{ value: 1.65, at: "2026-02-08" }, { value: 1.82, at: "2026-10-11" }, { value: 1.76, at: "2026-12-13" }, { value: 1.72, at: "2027-02-21" }, { value: 1.68, at: "2027-04-18" }],
-      battedDistance: [{ value: 280, at: "2025-10-20" }, { value: 240, at: "2026-10-11" }, { value: 252, at: "2026-12-13" }, { value: 260, at: "2027-02-21" }, { value: 265, at: "2027-04-18" }],
+      exitVelo: [{ value: 78, at: "2025-11-02" }, { value: 70, at: "2026-09-10" }, { value: 72, at: "2026-09-24" }, { value: 73, at: "2026-10-08" }, { value: 75, at: "2026-10-17" }],
+      batSpeed: [{ value: 56, at: "2026-09-10" }, { value: 57, at: "2026-09-24" }, { value: 60, at: "2026-10-08" }, { value: 58, at: "2026-10-17" }],
+      throwVelo: [{ value: 76, at: "2026-01-16" }, { value: 68, at: "2026-09-10" }, { value: 70, at: "2026-09-24" }, { value: 72, at: "2026-10-08" }, { value: 74, at: "2026-10-17" }],
+      tenYard: [{ value: 1.65, at: "2026-02-08" }, { value: 1.82, at: "2026-09-10" }, { value: 1.76, at: "2026-09-24" }, { value: 1.72, at: "2026-10-08" }, { value: 1.68, at: "2026-10-17" }],
+      battedDistance: [{ value: 280, at: "2025-10-20" }, { value: 240, at: "2026-09-10" }, { value: 252, at: "2026-09-24" }, { value: 260, at: "2026-10-08" }, { value: 265, at: "2026-10-17" }],
     },
   },
   {
@@ -507,11 +507,11 @@ const SAMPLE_PLAYERS = [
       pitchCapacity: metricHistory(62, [52, 56, 59]),
     },
     readingLog: {
-      exitVelo: [{ value: 71, at: "2025-06-14" }, { value: 64, at: "2026-10-18" }, { value: 66, at: "2026-12-20" }, { value: 67, at: "2027-02-28" }, { value: 69, at: "2027-04-16" }],
-      batSpeed: [{ value: 48, at: "2026-10-18" }, { value: 49, at: "2026-12-20" }, { value: 53, at: "2027-02-28" }, { value: 51, at: "2027-04-16" }],
-      throwVelo: [{ value: 73, at: "2025-07-02" }, { value: 64, at: "2026-10-18" }, { value: 66, at: "2026-12-20" }, { value: 68, at: "2027-02-28" }, { value: 70, at: "2027-04-16" }],
-      tenYard: [{ value: 2.02, at: "2025-08-09" }, { value: 2.20, at: "2026-10-18" }, { value: 2.16, at: "2026-12-20" }, { value: 2.12, at: "2027-02-28" }, { value: 2.08, at: "2027-04-16" }],
-      battedDistance: [{ value: 245, at: "2025-05-22" }, { value: 190, at: "2026-10-18" }, { value: 205, at: "2026-12-20" }, { value: 214, at: "2027-02-28" }, { value: 220, at: "2027-04-16" }],
+      exitVelo: [{ value: 71, at: "2025-06-14" }, { value: 64, at: "2026-09-12" }, { value: 66, at: "2026-09-26" }, { value: 67, at: "2026-10-09" }, { value: 69, at: "2026-10-18" }],
+      batSpeed: [{ value: 48, at: "2026-09-12" }, { value: 49, at: "2026-09-26" }, { value: 53, at: "2026-10-09" }, { value: 51, at: "2026-10-18" }],
+      throwVelo: [{ value: 73, at: "2025-07-02" }, { value: 64, at: "2026-09-12" }, { value: 66, at: "2026-09-26" }, { value: 68, at: "2026-10-09" }, { value: 70, at: "2026-10-18" }],
+      tenYard: [{ value: 2.02, at: "2025-08-09" }, { value: 2.20, at: "2026-09-12" }, { value: 2.16, at: "2026-09-26" }, { value: 2.12, at: "2026-10-09" }, { value: 2.08, at: "2026-10-18" }],
+      battedDistance: [{ value: 245, at: "2025-05-22" }, { value: 190, at: "2026-09-12" }, { value: 205, at: "2026-09-26" }, { value: 214, at: "2026-10-09" }, { value: 220, at: "2026-10-18" }],
     },
   },
 ];
@@ -1550,7 +1550,29 @@ const SHOW_BY_ID = Object.fromEntries(SHOW_QUIRKS.map((q) => [q.id, q]));
 const TRAINING_BY_ID = Object.fromEntries(TRAINING_QUIRKS.map((q) => [q.id, q]));
 
 function todayStamp() {
-  try { return new Date().toISOString().slice(0, 10); } catch (e) { return "2026-01-01"; }
+  try {
+    const d = nowDate();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${d.getFullYear()}-${m}-${day}`;
+  } catch (e) { return "2026-01-01"; }
+}
+
+/* A reading date is YYYY-MM-DD and cannot be after today. Empty means today. */
+function readingDateError(value, today) {
+  const day = today || todayStamp();
+  const stamp = String(value || "").trim().slice(0, 10);
+  if (!stamp) return "";
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(stamp)) return "Enter the reading date as YYYY-MM-DD.";
+  if (stamp > day) return "Reading date cannot be in the future.";
+  return "";
+}
+
+function clampReadingDate(at, today) {
+  const day = today || todayStamp();
+  const stamp = String(at || "").trim().slice(0, 10);
+  if (readingDateError(stamp, day)) return day;
+  return stamp || day;
 }
 
 function syncEarnedQuirks(player, earnedAt) {
@@ -2421,7 +2443,7 @@ function appendReading(player, key, value, at) {
   const log = player.readingLog[key];
   const last = log[log.length - 1];
   if (last && Number(last.value) === n) return false;
-  log.push({ value: n, at: at || new Date().toISOString().slice(0, 10) });
+  log.push({ value: n, at: clampReadingDate(at) });
   return true;
 }
 
@@ -4313,20 +4335,36 @@ function manualBestsFields(playerLike) {
     <p class="muted small">Leave a box blank to keep the recorded readings. A number becomes the career best only when it is better. The 10-yard override has to be faster.</p>${rows}`;
 }
 
-function readManualBests(existing) {
+function readManualBests(existing, readingDate) {
   const prev = (existing && existing.manualBests) || {};
   if (typeof document === "undefined" || !document.getElementById || !document.getElementById("pb-exitVelo")) return prev;
   const next = {};
-  const today = new Date().toISOString().slice(0, 10);
+  const today = clampReadingDate(readingDate);
   PB_DEFS.forEach((def) => {
     const el = document.getElementById(`pb-${def.key}`);
     if (!el || el.value === "") return;
     const n = metricNumber(el.value);
     if (n == null) return;
     const old = prev[def.key];
-    next[def.key] = old && Number(old.value) === n ? { value: n, at: old.at || today } : { value: n, at: today };
+    const kept = old && old.at && !readingDateError(old.at, today) ? String(old.at).slice(0, 10) : today;
+    next[def.key] = old && Number(old.value) === n ? { value: n, at: kept } : { value: n, at: today };
   });
   return next;
+}
+
+function chosenReadingDate() {
+  const today = todayStamp();
+  const el = $("f-readingDate");
+  if (!el) return { ok: true, date: today };
+  if (!el.value) el.value = today;
+  el.max = today;
+  const err = readingDateError(el.value, today);
+  if (err) {
+    el.setCustomValidity(err);
+    return { ok: false, message: err };
+  }
+  el.setCustomValidity("");
+  return { ok: true, date: el.value };
 }
 
 function recordSavedMetrics(player, metrics, history, today) {
@@ -4471,6 +4509,13 @@ function openModal(player) {
   updatePhotoPreview();
   const seed = isEdit ? player : { type: "hitter", age: 16, ageGroup: "16U", metrics: defaultMetrics("hitter", "16U", 16) };
   renderQuirkFields(isEdit ? (player.coachQuirks || []) : []);
+  const dateEl = $("f-readingDate");
+  if (dateEl) {
+    const today = todayStamp();
+    dateEl.max = today;
+    dateEl.value = today;
+    dateEl.setCustomValidity("");
+  }
   renderMetricFields(seed);
   updateLivePreview();
   $("playerModal").hidden = false;
@@ -4825,20 +4870,33 @@ function bindApp() {
   $("f-photo").addEventListener("change", (e) => handlePhotoFile(e.target.files && e.target.files[0]));
   $("clearPhotoBtn").addEventListener("click", () => { pendingPhotoData = ""; $("f-photo").value = ""; updatePhotoPreview(); });
 
+  const readingDateEl = $("f-readingDate");
+  if (readingDateEl) readingDateEl.addEventListener("input", () => {
+    readingDateEl.setCustomValidity("");
+    chosenReadingDate();
+  });
+
   $("playerForm").addEventListener("submit", (e) => {
     e.preventDefault();
     const like = formPlayerLike();
     like.coachQuirks = checkedCoachQuirks();
     if (!like.name.trim()) { alert("Please enter a player name."); return; }
+    const chosen = chosenReadingDate();
+    if (!chosen.ok) {
+      const el = $("f-readingDate");
+      if (el) el.reportValidity();
+      alert(chosen.message);
+      return;
+    }
     const existing = players.find((p) => p.id === like.id);
     let saved = existing;
-    const today = new Date().toISOString().slice(0, 10);
+    const today = chosen.date;
     if (existing) {
       const before = careerBestMap(existing);
       const history = structuredClone(existing.history || {});
       recordSavedMetrics(existing, like.metrics, history, today);
       like.earnedQuirks = structuredClone(existing.earnedQuirks || []);
-      const manualBests = readManualBests(existing);
+      const manualBests = readManualBests(existing, today);
       Object.assign(existing, like, { history, manualBests });
       markNewPersonalBests(existing, before);
       saved = existing;
@@ -4849,7 +4907,7 @@ function bindApp() {
       like.currentSeason = seasonLabel(nowDate());
       like.cardCollection = [];
       like.readingLog = {};
-      like.manualBests = readManualBests(null);
+      like.manualBests = readManualBests(null, today);
       like.pbFresh = {};
       recordSavedMetrics(like, like.metrics, like.history, today);
       markNewPersonalBests(like, {});

@@ -162,7 +162,12 @@
       <p id="quirkEarnPreview" class="muted small"></p>
 
       <h3 class="form-section">Metrics — drag or type. Overall updates live.</h3>
-      <p class="muted small">Hitting grades use the age group above and the published Blast windows in <code>BLAST_BENCHMARKS</code>. Exit velocity, the 10-yard dash, the crow-hop throw, the seated 2 kg chest pass, and dominant-hand grip use Antonelli's age-by-age tables (the age in years, not the age group, and not Blast). Grip is one reading: Dominant hand · Jamar-style dynamometer · best of 2–3. Pitcher fastball velocity stays on the coach scale. Leave a field blank to keep that grade off the card. Batted-ball distance is display only: it is not graded and it is not part of the overall. A new player starts at the middle of each graded band. On Save, every reading is appended to the career log. This season's sparkline still keeps the last six. Personal-best overrides below count only when they beat that log.</p>
+      <p class="muted small">Hitting grades use the age group above and the published Blast windows in <code>BLAST_BENCHMARKS</code>. Exit velocity, the 10-yard dash, the crow-hop throw, the seated 2 kg chest pass, and dominant-hand grip use Antonelli's age-by-age tables (the age in years, not the age group, and not Blast). Grip is one reading: Dominant hand · Jamar-style dynamometer · best of 2–3. Pitcher fastball velocity stays on the coach scale. Leave a field blank to keep that grade off the card. Batted-ball distance is display only: it is not graded and it is not part of the overall. A new player starts at the middle of each graded band. On Save, every reading is appended to the career log on the reading date below. This season's sparkline still keeps the last six. Personal-best overrides below count only when they beat that log.</p>
+      <div class="field" style="max-width:240px;margin-bottom:12px">
+        <label for="f-readingDate">Reading date</label>
+        <input id="f-readingDate" type="date" required>
+        <p class="muted small">Defaults to today. A future date is not saved.</p>
+      </div>
       <div id="metricFields"></div>
 
       <div class="live-preview" id="livePreview"></div>

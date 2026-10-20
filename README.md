@@ -403,7 +403,8 @@ The card back prints a compact gold block, one line per record (`Top Exit Velo 9
 How a best is chosen:
 
 - **This season** is the sparkline history plus the current metric. That history stays capped at the last six readings and resets to the current number when a season rolls over.
-- **Career** also reads an untrimmed `readingLog` (`{ key: [{ value, at }] }`). Every save appends the new number with a `YYYY-MM-DD` date. The log is not cleared on rollover. Retired cards are scanned too: their history, their metrics, and any log archived with them. A retired value that has no reading date uses that card's `archivedAt`. An unknown date prints `--`.
+- **Career** also reads an untrimmed `readingLog` (`{ key: [{ value, at }] }`). Every save appends the new number with a `YYYY-MM-DD` date. The reading date on the form defaults to today. A future date is rejected and is not written into the log. The log is not cleared on rollover. Retired cards are scanned too: their history, their metrics, and any log archived with them. A retired value that has no reading date uses that card's `archivedAt`. An unknown date prints `--`.
+- Sample logs stop on 2026-10-18. This season opened 2026-09-01, so the check-ins that make up this season's best sit between 2026-09-01 and that day. Older career bests stay in the previous season.
 - A coach **manual override** (`manualBests`) replaces the career best only when it is better. A slower 10-yard time does not count. An empty override clears that key.
 - The first time an older save has no `readingLog`, the app seeds one from the current history and from every retired card. Dates that were never stored stay blank.
 
