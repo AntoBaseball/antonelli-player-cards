@@ -42,7 +42,7 @@ Pages only serves what is on `main`. If the app landed through a pull request, m
 
 ## What's built
 
-- **Roster view** — all players as baseball cards, with search and filters by player type (hitter / pitcher / two-way), team, plus sorting by overall, name, or age.
+- **Roster view** — all players as baseball cards, with search and filters by player type (hitter / pitcher / two-way), team, plus sorting by overall, name, or age. A tier legend under the roster title shows Bronze, Silver, Gold, and Diamond. Diamond's swatch and any Diamond pill are sapphire blue. The other three keep their current colors.
 - **5 sample players** (see note below), covering Power Hitter, Contact/Leadoff, Ace, Closer, and Two-Way archetypes. Tiers follow the grades: with the sample Blast numbers, the roster spans Bronze, Silver, and Gold.
 - **Profile detail view** — **View Profile** on a roster card opens a dark player screen: large card, huge name, position diamond, quick facts, and tabs for Attributes, Metrics & History, Player Perks, Strengths & Growth, and Collection. Clicking the card itself flips it. See [Player profile](#player-profile) and [Seasons](#seasons).
 - **Player Perks** — up to three perks on the card front. Training perks unlock from milestones and stay once earned. A new perk opens a sealed pack once. Show perks are coach-awarded. See [Player Perks](#player-perks).
@@ -53,7 +53,7 @@ Pages only serves what is on `main`. If the app landed through a pull request, m
   - **Player name in bold italic uppercase**, with the archetype above it and a gold position bar under it (`OF / 1B - L/L` = position + bats/throws). Team, age, age group, and class are on the **card back**, not the front.
   - **No small star or team-code mark** on the card front. The big A-star still fills the photo area when a player has no photo.
   - **Sub-grade strip** across the bottom. Hitters and two-way players show five grades, in order: **POW, CON, SPD, THW, STR**. Pitchers show **VEL, BRK, CNTL, STM**. A missing athletic grade prints as a dash.
-  - **Tier design (all in the black & gold family)** so crossing 70/80/90 is obvious: Bronze <70 = muted bronze-gold, darker; Silver 70–79 = silver-grey with a gold frame; Gold 80–89 = rich, bright gold; Diamond 90+ = black card with bright gold glow/trim and the **only cyan accent in the app — the diamond badge** — so Diamond still pops like the reference card.
+  - **Tier design** so crossing 70/80/90 is obvious: Bronze <70 = muted bronze-gold, darker; Silver 70–79 = silver-grey with a gold frame; Gold 80–89 = rich, bright gold. Those three stay in the black-and-gold family. Diamond 90+ is a sapphire card: deep blue through icy electric blue, with a blue-and-white foil and sparkle. The name and the A-star keep their gold outlines, and a thin gold ring stays on the frame, so a Diamond card still reads as Antonelli.
 - **Photo upload + logo placeholder** — in Add/Edit, upload a player photo (JPG/PNG). It is read in the browser, downscaled to max 800px, stored as a data URL with the player in `localStorage`, and shown full-bleed on the card and profile. **Clear photo / use logo** removes it. With no photo, the card and profile show the Antonelli A-star (`assets/antonelli-a-star.png`) centered in the photo area, at its natural aspect ratio, over the tier gradient. All 5 sample players have `photo: ""`, so they show the logo.
 - **Card back** — click or tap the roster card, the big profile card, or a retired card to flip it. Enter or Space does the same when the card has focus. The back lists team, age and age group, class, height, weight, hometown, bats/throws, positions, season, the sub-grade breakdown, and the key raw numbers (bat speed, exit velocity with its Antonelli band, 10-yard dash with its Antonelli band, crow-hop throw with its band, seated chest pass with its band, dominant-hand grip with its band, and pitcher tools when those apply). **View Profile** on the roster card back, and the same button under the roster blurb, opens the profile. Collection thumbnails stay buttons that open the retired card; they do not flip. Showdown and celebrations stay on the front. `prefers-reduced-motion` swaps the face instantly, with no 3D turn. See [Card back](#card-back).
 - **Edit / Add player** — "Edit Metrics / Profile" on a profile, or "+ Add Player" in the header. Metrics use synced sliders + number inputs; the overall, sub-grades, and tier update **live** in the form preview before you save. Saving a changed metric appends it to that metric's history, so the previous value, delta arrow, and sparkline show progress.
@@ -62,7 +62,7 @@ Pages only serves what is on `main`. If the app landed through a pull request, m
 
 ## Brand: black & gold
 
-Antonelli Baseball's main colors are **black and gold** (`#d4af37` / `#c9a227`, pale gold `#f7ecc8`). The whole UI follows it: black header/hero, gold buttons and accents, cream page background, bold italic athletic headings, and gold-outlined dark lettering inspired by the logos. UI chrome keeps that black/gold identity in every tier; only the card backgrounds/badges vary by tier (above).
+Antonelli Baseball's main colors are **black and gold** (`#d4af37` / `#c9a227`, pale gold `#f7ecc8`). The whole UI follows it: black header/hero, gold buttons and accents, cream page background, bold italic athletic headings, and gold-outlined dark lettering inspired by the logos. UI chrome keeps that black/gold identity. Bronze, Silver, and Gold cards stay in that family. Diamond is the exception: the card face is sapphire to icy blue, while the name, logo, and frame ring stay gold.
 
 ### Logo assets (`assets/`)
 
@@ -378,11 +378,34 @@ Blast publishes the windows. It does not publish these scoring choices:
 
 Clicking a roster card flips it. It does not open the profile. **View Profile** sits on the card back and again under the roster blurb, so the profile is still one click away. The big card on the profile flips the same way, and so does the big card on a retired season. Enter or Space flips the card that has keyboard focus. Clicking again returns to the front.
 
-The back is a black and gold face: team, age and age group, class, height, weight, hometown, bats/throws, positions, season, every sub-grade, and the raw bat speed, exit velocity with its Antonelli band label, 10-yard dash with its Antonelli band label, crow-hop throw (short line such as 84 mph · Good · crow-hop), seated chest pass (short line such as 24.0 ft · Good · 2 kg seated chest), dominant-hand grip (short line such as 118 lbs · Good · dom hand), and pitcher readings when the player has them. The metrics area scrolls if it needs to, and View Profile stays below every row.
+The back is a black and gold face: team, age and age group, class, height, weight, hometown, bats/throws, positions, season, every sub-grade, and the raw bat speed, exit velocity with its Antonelli band label, 10-yard dash with its Antonelli band label, crow-hop throw (short line such as 84 mph · Good · crow-hop), seated chest pass (short line such as 24.0 ft · Good · 2 kg seated chest), dominant-hand grip (short line such as 118 lbs · Good · dom hand), and pitcher readings when the player has them. Hitters and two-way players also get a gold **Personal Bests** block (see below). A Diamond card back uses the same sapphire gradient as the front, with the gold name outline kept. The metrics area scrolls if it needs to, and View Profile stays below every row.
 
 Collection thumbnails are still buttons. A click opens that retired card. The thumbnail itself does not flip. Showdown and the celebration overlays stay on the front so the clash and the count-up are not interrupted.
 
 `prefers-reduced-motion` does not spin the card. The front and back swap immediately.
+
+## Personal bests
+
+Hitters and two-way players show five career records. Pitchers do not.
+
+| Record | Unit | Best is |
+|---|---|---|
+| Top Exit Velo | mph | higher |
+| Top Bat Speed | mph | higher |
+| Top Throw | mph | higher (crow-hop) |
+| Fastest 10-Yd | seconds | lower |
+| Longest Hit | feet | higher |
+
+Batted-ball distance is a new optional hitter field. It is display only. It is not graded, and it is not part of POW or the overall.
+
+The card back prints a compact gold block, one line per record (`Top Exit Velo 95 mph`), or `--` when nothing is on file. The profile shows a Personal Bests panel above the tabs: this season, the career best, and the date that career best was set when the date is known. A coach override that supplied the number is marked `coach`. A save that sets a new career best tags that row `NEW PB` until the profile is closed. That badge is not part of the celebration queue.
+
+How a best is chosen:
+
+- **This season** is the sparkline history plus the current metric. That history stays capped at the last six readings and resets to the current number when a season rolls over.
+- **Career** also reads an untrimmed `readingLog` (`{ key: [{ value, at }] }`). Every save appends the new number with a `YYYY-MM-DD` date. The log is not cleared on rollover. Retired cards are scanned too: their history, their metrics, and any log archived with them. A retired value that has no reading date uses that card's `archivedAt`. An unknown date prints `--`.
+- A coach **manual override** (`manualBests`) replaces the career best only when it is better. A slower 10-yard time does not count. An empty override clears that key.
+- The first time an older save has no `readingLog`, the app seeds one from the current history and from every retired card. Dates that were never stored stay blank.
 
 ## Player Perks
 
@@ -439,7 +462,7 @@ Intangibles: Fighter, Rally Monkey, Homebody, Road Warrior, Day Player, Night Pl
 
 ### Motion
 
-Every card carries a foil sheen and a diagonal glare that sweeps across it every few seconds. The loop is staggered per player, so a roster does not flash in unison. Bronze is a faint gold wash. Silver is brighter. Gold adds a richer gold glitter. Diamond adds a rainbow holographic sheen and a cyan sparkle on the overall badge. Small star glints twinkle on the frame, with more of them on higher tiers. The name, overall, and sub-grades sit above the shine so they stay readable.
+Every card carries a foil sheen and a diagonal glare that sweeps across it every few seconds. The loop is staggered per player, so a roster does not flash in unison. Bronze is a faint gold wash. Silver is brighter. Gold adds a richer gold glitter. Diamond uses a blue-and-white holographic sheen and white/ice sparkles, not a rainbow. Small star glints twinkle on the frame, with more of them on higher tiers. The name, overall, and sub-grades sit above the shine so they stay readable.
 
 On a desktop with a fine pointer, moving the cursor tilts the card and slides the glare with it. On a phone, a tap runs one quick shine. If the browser allows device orientation, tilting the phone moves the glare. A denied or missing gyroscope leaves the ambient loop running. Retired collection cards use the same foil, quieter and slower. Sheen, glare, and sparkles run only while the card is near the viewport. `prefers-reduced-motion` keeps a still foil wash and turns the sweep, sparkle, tilt, and gyroscope off.
 
@@ -451,7 +474,7 @@ The card remembers the last overall and tier the player has already been shown (
 
 - The first time a player is seen — samples, a new card, or an older save with no `gradeSeen` — the app stores the current overall and tier and stays quiet.
 - **Overall up** plays when the overall number rises and the tier does not. The card bounces, the sheen speeds up, the badge counts from the old number to the new one, a +N line pops, and a few gold bits fly. About 2 seconds, then **Collect**.
-- **Tier up** plays only when the tier rises: Silver at 70, Gold at 80, Diamond at 90. The screen goes black, a spotlight hits the card, the card shakes and then shakes harder, a flash and particle burst hit, and the card comes back in the new tier color with the tier name and the new overall. About 4 seconds. **Skip** jumps to that payoff. **Collect** is what marks it seen.
+- **Tier up** plays only when the tier rises: Silver at 70, Gold at 80, Diamond at 90. The screen goes black, a spotlight hits the card, the card shakes and then shakes harder, a flash and particle burst hit, and the card comes back in the new tier color with the tier name and the new overall. Silver and Gold burst gold. Diamond bursts blue and white, and the spotlight is ice blue. About 4 seconds. **Skip** jumps to that payoff. **Collect** is what marks it seen. A season reveal that climbs into Diamond uses that same blue spotlight.
 - A drop in overall or tier updates `gradeSeen` immediately and does not celebrate.
 - Collect writes the new overall and tier into `gradeSeen`. Reload before Collect plays the same celebration again. After Collect, that value does not play again.
 - **Preview overall-up** and **Preview tier-up** on the profile replay the motion for a coach. They do not change `gradeSeen`.
@@ -462,7 +485,7 @@ One save can earn a tier, an overall jump, and new perks. The order is tier-up, 
 
 The screen that opens from a card is laid out like a baseball-game player page, in Antonelli black and gold. It does not use MLB or The Show logos.
 
-The header puts the animated card on the left, the last name large beside it, a rotated position badge, team, archetype, and a facts grid: overall, tier, bats, throws, secondary position, height, weight, age and age group, team, class/year, and hometown. The big card flips to the same back as the roster card. Overall includes a small chip when the grade moved since the previous saved check-in. That chip is the overall now minus the overall computed from the prior history point on each metric. It is labeled “since last assessment.”
+The header puts the animated card on the left, the last name large beside it, a rotated position badge, team, archetype, and a facts grid: overall, tier, bats, throws, secondary position, height, weight, age and age group, team, class/year, and hometown. Diamond is labeled in icy blue there, and again in Showdown's tier row. The big card flips to the same back as the roster card. Hitters and two-way players show a Personal Bests panel under the header, before the tabs, with this season, the career best, and the date. Overall includes a small chip when the grade moved since the previous saved check-in. That chip is the overall now minus the overall computed from the prior history point on each metric. It is labeled “since last assessment.”
 
 Optional fields added to the player and the add/edit form: `secondaryPosition`, `height`, `weight`, `hometown`. Blank fields show —. Older saves in `localStorage` keep working; missing fields stay blank. The card and roster still print `OF / 1B` when a secondary position is set.
 
@@ -488,10 +511,10 @@ On load, each player is compared with today's season. The first time an older sa
 
 Rollover does four things:
 
-1. The current card is copied into `cardCollection`. The copy stores the final overall, tier, sub-grades, raw metrics, the grade and band for each metric, the metric history, training perks (id and name), coach-awarded perks, strengths, improvements, archetype, photo, and the season and age group (`2025-26 - 16U`). That copy is never graded again, even if the Blast windows change later.
+1. The current card is copied into `cardCollection`. The copy stores the final overall, tier, sub-grades, raw metrics, the grade and band for each metric, the metric history, the career `readingLog`, any coach `manualBests`, training perks (id and name), coach-awarded perks, strengths, improvements, archetype, photo, and the season and age group (`2025-26 - 16U`). That copy is never graded again, even if the Blast windows change later.
 2. Age increases by the number of seasons that elapsed. One press of the button is one year. If the app was closed for two Septembers, age jumps by two and only the card they actually had is archived — missing seasons are not invented.
 3. Age group follows the Blast map (10U through Pro) unless a coach pinned a different group. A group is pinned when the saved age group does not match the age. Changing age in the form keeps a pinned group put; a group that already matches age moves with the birthday. College and Pro still archive every year. An unpinned 22-year-old College player becomes Pro at 23. Pro stays Pro.
-4. The new card keeps the same name, photo, positions, and the metric numbers. Those numbers are the new season's baseline: live history restarts at that single value so improvement perks measure this season, and the retired card keeps the old history. The numbers are then graded on the new age group's windows. Pitcher ranges are not age-banded, so a pitcher overall usually holds while a hitter's overall can drop when the windows get harder. A drop does not play a downgrade celebration.
+4. The new card keeps the same name, photo, positions, and the metric numbers. Those numbers are the new season's baseline: live history restarts at that single value so improvement perks measure this season, and the retired card keeps the old history. `readingLog` stays on the player, so career personal bests carry across the rollover even after the sparkline resets. The numbers are then graded on the new age group's windows. Pitcher ranges are not age-banded, so a pitcher overall usually holds while a hitter's overall can drop when the windows get harder. A drop does not play a downgrade celebration.
 
 Training perks are season-scoped. They are stored on the retired card and cleared on the new card. A milestone that is still true on the carried baseline (for example Gold Standard, if the new grade is still gold) can be earned again. A perk that needs a gain waits for new check-ins after the baseline. Coach-awarded Show perks stay on the player. The retired card also remembers which ones were on the card that season.
 

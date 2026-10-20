@@ -300,6 +300,12 @@ const METRICS = {
     entryMin: 25, entryMax: 120,
     help: "Ball speed off the bat. Higher is better. Graded on Antonelli's age-by-age table, not a Blast window and not the 10U/12U groups.",
   },
+  /* Display only. Not graded, and not part of POW or the overall. */
+  battedDistance: {
+    label: "Batted Ball Distance", unit: " ft", step: 1, displayOnly: true, mode: "higher",
+    entryMin: 40, entryMax: 500,
+    help: "Furthest ball off the bat, in feet. Display only. Not graded and not part of the overall. The personal best is the longest one on record.",
+  },
 };
 
 /* Strength tests that feed STR. STR is the unweighted average of the tests
@@ -311,6 +317,16 @@ const DEFAULT_STRENGTH_NOTE = "Seated 2 kg chest pass (wall, 90 degrees)";
 const CHEST_PASS_BACK = "2 kg seated chest";
 const GRIP_BACK = "dom hand";
 const CROW_HOP_BACK = "crow-hop";
+
+/* Personal bests. Max unless mode is "min" (the 10-yard dash).
+   The card prints the career best. The profile also prints this season. */
+const PB_DEFS = [
+  { key: "exitVelo", label: "Top Exit Velo", unit: "mph", mode: "max" },
+  { key: "batSpeed", label: "Top Bat Speed", unit: "mph", mode: "max" },
+  { key: "throwVelo", label: "Top Throw", unit: "mph", mode: "max" },
+  { key: "tenYard", label: "Fastest 10-Yd", unit: "s", mode: "min" },
+  { key: "battedDistance", label: "Longest Hit", unit: "ft", mode: "max" },
+];
 const STRENGTH_TESTS = [
   {
     id: "medBall",
@@ -387,10 +403,10 @@ const SAMPLE_PLAYERS = [
     strengthNote: DEFAULT_STRENGTH_NOTE,
     metrics: {
       batSpeed: 69, peakHandSpeed: 22, attackAngle: 12, verticalBatAngle: -28, timeToContact: 0.155, powerKw: 3.9, rotationalAcceleration: 16, onPlaneEfficiency: 76, earlyConnection: 92, connectionAtImpact: 88,
-      tenYard: 1.84, throwVelo: 84, medBall: 24, gripDominant: 118, gripOther: 108, exitVelo: 92,
+      tenYard: 1.84, throwVelo: 84, medBall: 24, gripDominant: 118, gripOther: 108, exitVelo: 92, battedDistance: 340,
     },
     history: {
-      batSpeed: metricHistory(69, [63, 65, 67]), peakHandSpeed: metricHistory(22, [20, 20.5, 21]),
+      batSpeed: metricHistory(69, [63, 65, 72]), peakHandSpeed: metricHistory(22, [20, 20.5, 21]),
       attackAngle: metricHistory(12, [11, 11.5, 12]), verticalBatAngle: metricHistory(-28, [-26, -27, -27]),
       timeToContact: metricHistory(0.155, [0.160, 0.158, 0.156]), powerKw: metricHistory(3.9, [3.2, 3.5, 3.7]),
       rotationalAcceleration: metricHistory(16, [13, 14, 15]), onPlaneEfficiency: metricHistory(76, [73, 74, 75]),
@@ -398,6 +414,14 @@ const SAMPLE_PLAYERS = [
       tenYard: metricHistory(1.84, [1.95, 1.91, 1.87]), throwVelo: metricHistory(84, [78, 80, 82]),
       medBall: metricHistory(24, [20.5, 21.5, 22.5]), gripDominant: metricHistory(118, [104, 108, 114]), gripOther: metricHistory(108, [96, 100, 104]),
       exitVelo: metricHistory(92, [84, 87, 89]),
+      battedDistance: metricHistory(340, [310, 325, 338]),
+    },
+    readingLog: {
+      exitVelo: [{ value: 95, at: "2026-04-12" }, { value: 84, at: "2026-10-04" }, { value: 87, at: "2026-12-06" }, { value: 89, at: "2027-02-14" }, { value: 92, at: "2027-04-19" }],
+      batSpeed: [{ value: 63, at: "2026-10-04" }, { value: 65, at: "2026-12-06" }, { value: 72, at: "2027-02-14" }, { value: 69, at: "2027-04-19" }],
+      throwVelo: [{ value: 87, at: "2026-03-18" }, { value: 78, at: "2026-10-04" }, { value: 80, at: "2026-12-06" }, { value: 82, at: "2027-02-14" }, { value: 84, at: "2027-04-19" }],
+      tenYard: [{ value: 1.79, at: "2026-05-09" }, { value: 1.95, at: "2026-10-04" }, { value: 1.91, at: "2026-12-06" }, { value: 1.87, at: "2027-02-14" }, { value: 1.84, at: "2027-04-19" }],
+      battedDistance: [{ value: 352, at: "2026-04-28" }, { value: 310, at: "2026-10-04" }, { value: 325, at: "2026-12-06" }, { value: 338, at: "2027-02-14" }, { value: 340, at: "2027-04-19" }],
     },
   },
   {
@@ -409,10 +433,10 @@ const SAMPLE_PLAYERS = [
     strengthNote: DEFAULT_STRENGTH_NOTE,
     metrics: {
       batSpeed: 58, peakHandSpeed: 19, attackAngle: 8, verticalBatAngle: -22, timeToContact: 0.17, powerKw: 2.4, rotationalAcceleration: 11, onPlaneEfficiency: 72, earlyConnection: 90, connectionAtImpact: 89,
-      tenYard: 1.68, throwVelo: 74, medBall: 17, gripDominant: 84, gripOther: 78, exitVelo: 75,
+      tenYard: 1.68, throwVelo: 74, medBall: 17, gripDominant: 84, gripOther: 78, exitVelo: 75, battedDistance: 265,
     },
     history: {
-      batSpeed: metricHistory(58, [56, 57, 57.5]), peakHandSpeed: metricHistory(19, [18, 18.5, 18.5]),
+      batSpeed: metricHistory(58, [56, 57, 60]), peakHandSpeed: metricHistory(19, [18, 18.5, 18.5]),
       attackAngle: metricHistory(8, [5, 6, 7]), verticalBatAngle: metricHistory(-22, [-20, -21, -22]),
       timeToContact: metricHistory(0.17, [0.19, 0.182, 0.176]), powerKw: metricHistory(2.4, [2.25, 2.3, 2.35]),
       rotationalAcceleration: metricHistory(11, [10, 10.5, 10.5]), onPlaneEfficiency: metricHistory(72, [66, 68, 70]),
@@ -420,6 +444,14 @@ const SAMPLE_PLAYERS = [
       tenYard: metricHistory(1.68, [1.82, 1.76, 1.72]), throwVelo: metricHistory(74, [68, 70, 72]),
       medBall: metricHistory(17, [14.5, 15.5, 16]), gripDominant: metricHistory(84, [72, 76, 80]), gripOther: metricHistory(78, [68, 72, 75]),
       exitVelo: metricHistory(75, [70, 72, 73]),
+      battedDistance: metricHistory(265, [240, 252, 260]),
+    },
+    readingLog: {
+      exitVelo: [{ value: 78, at: "2025-11-02" }, { value: 70, at: "2026-10-11" }, { value: 72, at: "2026-12-13" }, { value: 73, at: "2027-02-21" }, { value: 75, at: "2027-04-18" }],
+      batSpeed: [{ value: 56, at: "2026-10-11" }, { value: 57, at: "2026-12-13" }, { value: 60, at: "2027-02-21" }, { value: 58, at: "2027-04-18" }],
+      throwVelo: [{ value: 76, at: "2026-01-16" }, { value: 68, at: "2026-10-11" }, { value: 70, at: "2026-12-13" }, { value: 72, at: "2027-02-21" }, { value: 74, at: "2027-04-18" }],
+      tenYard: [{ value: 1.65, at: "2026-02-08" }, { value: 1.82, at: "2026-10-11" }, { value: 1.76, at: "2026-12-13" }, { value: 1.72, at: "2027-02-21" }, { value: 1.68, at: "2027-04-18" }],
+      battedDistance: [{ value: 280, at: "2025-10-20" }, { value: 240, at: "2026-10-11" }, { value: 252, at: "2026-12-13" }, { value: 260, at: "2027-02-21" }, { value: 265, at: "2027-04-18" }],
     },
   },
   {
@@ -457,11 +489,11 @@ const SAMPLE_PLAYERS = [
     strengthNote: DEFAULT_STRENGTH_NOTE,
     metrics: {
       batSpeed: 51, peakHandSpeed: 17, attackAngle: 6, verticalBatAngle: -25, timeToContact: 0.19, powerKw: 1.8, rotationalAcceleration: 8.5, onPlaneEfficiency: 64, earlyConnection: 78, connectionAtImpact: 84,
-      tenYard: 2.08, throwVelo: 70, medBall: 15.5, gripDominant: 76, gripOther: 70, exitVelo: 69,
+      tenYard: 2.08, throwVelo: 70, medBall: 15.5, gripDominant: 76, gripOther: 70, exitVelo: 69, battedDistance: 220,
       fastballVelo: 76, spinRate: 1950, strikePct: 58, whiffPct: 22, pitchCapacity: 62,
     },
     history: {
-      batSpeed: metricHistory(51, [48, 49, 50]), peakHandSpeed: metricHistory(17, [16, 16.5, 16.5]),
+      batSpeed: metricHistory(51, [48, 49, 53]), peakHandSpeed: metricHistory(17, [16, 16.5, 16.5]),
       attackAngle: metricHistory(6, [4, 5, 5]), verticalBatAngle: metricHistory(-25, [-22, -23, -24]),
       timeToContact: metricHistory(0.19, [0.205, 0.200, 0.195]), powerKw: metricHistory(1.8, [1.55, 1.65, 1.7]),
       rotationalAcceleration: metricHistory(8.5, [7.5, 8, 8.2]), onPlaneEfficiency: metricHistory(64, [60, 61, 63]),
@@ -469,9 +501,17 @@ const SAMPLE_PLAYERS = [
       tenYard: metricHistory(2.08, [2.20, 2.16, 2.12]), throwVelo: metricHistory(70, [64, 66, 68]),
       medBall: metricHistory(15.5, [13, 14, 14.5]), gripDominant: metricHistory(76, [64, 68, 72]), gripOther: metricHistory(70, [60, 64, 67]),
       exitVelo: metricHistory(69, [64, 66, 67]),
+      battedDistance: metricHistory(220, [190, 205, 214]),
       fastballVelo: metricHistory(76, [73, 74, 75]), spinRate: metricHistory(1950, [1850, 1880, 1920]),
       strikePct: metricHistory(58, [54, 55, 57]), whiffPct: metricHistory(22, [18, 19, 21]),
       pitchCapacity: metricHistory(62, [52, 56, 59]),
+    },
+    readingLog: {
+      exitVelo: [{ value: 71, at: "2025-06-14" }, { value: 64, at: "2026-10-18" }, { value: 66, at: "2026-12-20" }, { value: 67, at: "2027-02-28" }, { value: 69, at: "2027-04-16" }],
+      batSpeed: [{ value: 48, at: "2026-10-18" }, { value: 49, at: "2026-12-20" }, { value: 53, at: "2027-02-28" }, { value: 51, at: "2027-04-16" }],
+      throwVelo: [{ value: 73, at: "2025-07-02" }, { value: 64, at: "2026-10-18" }, { value: 66, at: "2026-12-20" }, { value: 68, at: "2027-02-28" }, { value: 70, at: "2027-04-16" }],
+      tenYard: [{ value: 2.02, at: "2025-08-09" }, { value: 2.20, at: "2026-10-18" }, { value: 2.16, at: "2026-12-20" }, { value: 2.12, at: "2027-02-28" }, { value: 2.08, at: "2027-04-16" }],
+      battedDistance: [{ value: 245, at: "2025-05-22" }, { value: 190, at: "2026-10-18" }, { value: 205, at: "2026-12-20" }, { value: 214, at: "2027-02-28" }, { value: 220, at: "2027-04-16" }],
     },
   },
 ];
@@ -924,7 +964,7 @@ function ageTableScore(key, value, age) {
 
 function normalizeMetric(key, value, ageGroup, ageYears) {
   const m = METRICS[key];
-  if (!m || metricNumber(value) == null) return null;
+  if (!m || metricNumber(value) == null || m.displayOnly) return null;
   const tableScore = ageTableScore(key, value, ageYears);
   if (tableScore) return tableScore.grade;
   if (m.blast) return gradeBlastMetric(key, value, ageGroup).grade;
@@ -1114,6 +1154,13 @@ function tierFor(overall) {
 const TIER_RANK = { bronze: 0, silver: 1, gold: 2, diamond: 3 };
 const TIER_LABEL = { bronze: "BRONZE", silver: "SILVER", gold: "GOLD", diamond: "DIAMOND" };
 
+function tierWord(keyOrLabel) {
+  const key = TIER_LABEL[keyOrLabel] ? keyOrLabel : Object.keys(TIER_LABEL).find((k) => TIER_LABEL[k] === keyOrLabel);
+  const label = (key && TIER_LABEL[key]) || String(keyOrLabel || "");
+  if (key !== "diamond") return esc(label);
+  return `<span class="tier-word tier-diamond">${esc(label)}</span>`;
+}
+
 function gradeSnapshot(player) {
   const overall = gradesFor(player).overall;
   const tier = tierFor(overall).key;
@@ -1164,6 +1211,7 @@ function ensureSeasonFields(player) {
     player.ageGroupPinned = AGE_GROUP_ORDER.includes(player.ageGroup) && player.ageGroup !== mapped;
     changed = true;
   }
+  if (seedReadingLog(player)) changed = true;
   return changed;
 }
 
@@ -1254,6 +1302,8 @@ function archiveCurrentCard(player, archivedAt) {
     weight: player.weight || "",
     hometown: player.hometown || "",
     strengthNote: player.strengthNote || "",
+    readingLog: structuredClone(player.readingLog || {}),
+    manualBests: structuredClone(player.manualBests || {}),
     bats: player.bats || "",
     throws: player.throws || "",
     type: player.type,
@@ -1278,6 +1328,7 @@ function applyRollover(player, years) {
   });
   player.history = baseline;
   player.earnedQuirks = [];
+  player.pbFresh = {};
   player.seasonReveal = {
     seasonLabel: preview.toSeason,
     retiredSeason: preview.fromSeason,
@@ -1722,7 +1773,11 @@ const SAMPLE_CAREER = {
           86,
           87,
           87
-        ]
+        ],
+        "exitVelo": [88, 95],
+        "throwVelo": [80, 87],
+        "tenYard": [1.88, 1.79],
+        "battedDistance": [330, 352]
       },
       "perksEarned": [
         {
@@ -2070,7 +2125,11 @@ const SAMPLE_CAREER = {
           52,
           56,
           59
-        ]
+        ],
+        "exitVelo": [66, 71],
+        "throwVelo": [68, 73],
+        "tenYard": [2.10, 2.02],
+        "battedDistance": [210, 245]
       },
       "perksEarned": [
         {
@@ -2147,10 +2206,14 @@ function athleticKeys() {
   return keys;
 }
 
+function displayKeys() {
+  return ["battedDistance"];
+}
+
 function metricKeysFor(type) {
   if (type === "pitcher") return PITCHER_KEYS.slice();
-  if (type === "two-way") return [...BLAST_KEYS, ...athleticKeys(), ...PITCHER_KEYS];
-  return [...BLAST_KEYS, ...athleticKeys()];
+  if (type === "two-way") return [...BLAST_KEYS, ...athleticKeys(), ...displayKeys(), ...PITCHER_KEYS];
+  return [...BLAST_KEYS, ...athleticKeys(), ...displayKeys()];
 }
 
 function defaultBlastMetrics(ageGroup) {
@@ -2244,6 +2307,7 @@ function benchmarkCaption(key, ageGroup, age) {
   if (key === "throwVelo") return throwVeloCaption(age);
   if (key === "gripDominant") return gripCaption(age);
   const m = METRICS[key];
+  if (m.displayOnly) return `Display only, ${m.entryMin}–${m.entryMax}${m.unit}. Not graded and not part of the overall.`;
   const coach = coachSpecFor(key);
   if (m.coach && coach && coach.bands) {
     const b = coach.bands[ageGroup] || coach.bands["16U"];
@@ -2259,6 +2323,153 @@ function benchmarkCaption(key, ageGroup, age) {
   if (spec.mode === "ra") bits.push("12.5 and Elite near 20 are Antonelli");
   if (b.note) bits.push(b.note);
   return bits.join(" · ");
+}
+
+/* Career bests come from every recorded reading: the untrimmed readingLog,
+   this season's history, and each retired card's history, metrics, and log.
+   The sparkline history stays capped at six and resets on rollover, so it is
+   only the season best. readingLog is not cleared on rollover. A coach
+   override in manualBests counts only when it is better than that log.
+   A lower 10-yard time is the best. Batted-ball distance is display-only. */
+function pbBetter(mode, next, prev) {
+  const n = metricNumber(next);
+  const p = metricNumber(prev);
+  if (n == null) return false;
+  if (p == null) return true;
+  return mode === "min" ? n < p : n > p;
+}
+
+function pickBest(mode, rows) {
+  let best = null;
+  (rows || []).forEach((row) => {
+    const n = metricNumber(row && (typeof row === "object" ? row.value : row));
+    if (n == null) return;
+    const at = row && typeof row === "object" ? (row.at || "") : "";
+    if (!best || pbBetter(mode, n, best.value)) best = { value: n, at };
+    else if (n === best.value && !best.at && at) best.at = at;
+  });
+  return best;
+}
+
+function pushPb(rows, value, at) {
+  const n = metricNumber(value);
+  if (n == null) return;
+  rows.push({ value: n, at: at || "" });
+}
+
+function seasonPbRows(player, key) {
+  const rows = [];
+  const hist = player && player.history && player.history[key];
+  if (Array.isArray(hist)) hist.forEach((value) => pushPb(rows, value, ""));
+  pushPb(rows, player && player.metrics && player.metrics[key], "");
+  return rows;
+}
+
+function careerPbRows(player, key) {
+  const rows = seasonPbRows(player, key);
+  const log = player && player.readingLog && player.readingLog[key];
+  if (Array.isArray(log)) log.forEach((row) => pushPb(rows, row && row.value, row && row.at));
+  (player && player.cardCollection || []).forEach((card) => {
+    const at = card && card.archivedAt ? String(card.archivedAt).slice(0, 10) : "";
+    const hist = card && card.history && card.history[key];
+    if (Array.isArray(hist)) hist.forEach((value) => pushPb(rows, value, at));
+    pushPb(rows, card && card.metrics && card.metrics[key], at);
+    const archived = card && card.readingLog && card.readingLog[key];
+    if (Array.isArray(archived)) archived.forEach((row) => pushPb(rows, row && row.value, (row && row.at) || at));
+  });
+  return rows;
+}
+
+function personalBests(player) {
+  return PB_DEFS.map((def) => {
+    const season = pickBest(def.mode, seasonPbRows(player, def.key));
+    let career = pickBest(def.mode, careerPbRows(player, def.key));
+    const manual = player && player.manualBests && player.manualBests[def.key];
+    let manualUsed = false;
+    if (manual && pbBetter(def.mode, manual.value, career && career.value)) {
+      career = { value: Number(manual.value), at: manual.at || "" };
+      manualUsed = true;
+    }
+    return {
+      ...def,
+      season,
+      career,
+      manualUsed,
+      fresh: !!(player && player.pbFresh && player.pbFresh[def.key]),
+    };
+  });
+}
+
+function formatPbValue(def, value) {
+  if (value == null || Number.isNaN(Number(value))) return "--";
+  const n = Number(value);
+  if (def.key === "tenYard") return n.toFixed(2);
+  if (Number.isInteger(n)) return String(n);
+  return String(Math.round(n * 10) / 10);
+}
+
+function pbLine(def, best) {
+  if (!best) return "--";
+  return `${formatPbValue(def, best.value)} ${def.unit}`;
+}
+
+function appendReading(player, key, value, at) {
+  const n = metricNumber(value);
+  if (!player || n == null) return false;
+  if (!player.readingLog || typeof player.readingLog !== "object") player.readingLog = {};
+  if (!Array.isArray(player.readingLog[key])) player.readingLog[key] = [];
+  const log = player.readingLog[key];
+  const last = log[log.length - 1];
+  if (last && Number(last.value) === n) return false;
+  log.push({ value: n, at: at || new Date().toISOString().slice(0, 10) });
+  return true;
+}
+
+function seedReadingLog(player) {
+  if (!player || (player.readingLog && typeof player.readingLog === "object")) return false;
+  const log = {};
+  const add = (key, value, at) => {
+    const n = metricNumber(value);
+    if (n == null) return;
+    if (!log[key]) log[key] = [];
+    const last = log[key][log[key].length - 1];
+    if (last && last.value === n && (last.at || "") === (at || "")) return;
+    log[key].push({ value: n, at: at || "" });
+  };
+  (player.cardCollection || []).forEach((card) => {
+    const at = card && card.archivedAt ? String(card.archivedAt).slice(0, 10) : "";
+    const keys = new Set([
+      ...Object.keys((card && card.history) || {}),
+      ...Object.keys((card && card.metrics) || {}),
+    ]);
+    keys.forEach((key) => {
+      const hist = card.history && card.history[key];
+      if (Array.isArray(hist)) hist.forEach((value) => add(key, value, at));
+      add(key, card.metrics && card.metrics[key], at);
+    });
+  });
+  Object.entries(player.history || {}).forEach(([key, hist]) => {
+    if (Array.isArray(hist)) hist.forEach((value) => add(key, value, ""));
+  });
+  Object.entries(player.metrics || {}).forEach(([key, value]) => add(key, value, ""));
+  player.readingLog = log;
+  return true;
+}
+
+function careerBestMap(player) {
+  const map = {};
+  personalBests(player).forEach((row) => { map[row.key] = row.career ? row.career.value : null; });
+  return map;
+}
+
+function markNewPersonalBests(player, before) {
+  player.pbFresh = {};
+  personalBests(player).forEach((row) => {
+    const prev = before ? before[row.key] : null;
+    const next = row.career ? row.career.value : null;
+    if (next == null) return;
+    if (prev == null || pbBetter(row.mode, next, prev)) player.pbFresh[row.key] = true;
+  });
 }
 
 function formatMetric(key, value) {
@@ -2448,7 +2659,7 @@ function metricBand(key, value, ageYears, grade) {
 
 function bandHTML(key, value, ageGroup, ageYears) {
   const meta = METRICS[key];
-  if (!meta || (!meta.blast && !meta.coach)) return "—";
+  if (!meta || meta.displayOnly || (!meta.blast && !meta.coach)) return "—";
   const tableScored = ageTableScore(key, value, ageYears);
   if (tableScored) {
     if (!tableScored.band) return "—";
@@ -2568,6 +2779,31 @@ function throwBackText(player) {
   return protocolBackText("throwVelo", player.metrics && player.metrics.throwVelo, CROW_HOP_BACK, player);
 }
 
+function personalBestsHTML(player) {
+  if (!player || player.type === "pitcher") return "";
+  const rows = personalBests(player).map((row) => {
+    const value = row.career ? `${formatPbValue(row, row.career.value)} ${row.unit}` : "--";
+    const badge = row.fresh ? `<em class="pb-new">NEW PB</em>` : "";
+    return `<div class="pb-row"><span>${esc(row.label)}</span><b>${esc(value)}${badge}</b></div>`;
+  }).join("");
+  return `<section class="pb-block"><h4>Personal Bests</h4><div class="pb-grid">${rows}</div></section>`;
+}
+
+function personalBestsPanel(player) {
+  if (!player || player.type === "pitcher") return "";
+  const rows = personalBests(player).map((row) => {
+    const season = row.season ? `${formatPbValue(row, row.season.value)} ${row.unit}` : "--";
+    const career = row.career ? `${formatPbValue(row, row.career.value)} ${row.unit}` : "--";
+    const when = row.career && row.career.at ? row.career.at.slice(0, 10) : "--";
+    const badge = row.fresh ? ` <em class="pb-new">NEW PB</em>` : "";
+    const note = row.manualUsed ? ` <span class="muted">coach</span>` : "";
+    return `<tr><td>${esc(row.label)}</td><td>${esc(season)}</td><td><strong>${esc(career)}</strong>${badge}${note}</td><td>${esc(when)}</td></tr>`;
+  }).join("");
+  return `<div class="panel pb-panel" id="personalBestsPanel"><h3>Personal Bests</h3>
+    <p class="muted small">Career best is the best reading on record: this season, every retired season, and a coach override when that number is better. This season uses only the current card. The 10-yard best is the lower time. Batted-ball distance is shown here and is not part of the grade.</p>
+    <div class="table-scroll"><table class="pb-table"><thead><tr><th>Record</th><th>This season</th><th>Career</th><th>Set</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+}
+
 function cardBackHTML(player, face, subs, opts) {
   const group = face && face.ageGroup ? face.ageGroup : activeAgeGroup(player);
   const ageShown = face && face.age != null ? face.age : player.age;
@@ -2583,6 +2819,7 @@ function cardBackHTML(player, face, subs, opts) {
     rawBackLine("Chest pass", medBallBackText(player)),
     rawBackLine("Grip", gripBackText(player)),
   ].join("") : "";
+  const bests = personalBestsHTML(player);
   const pitching = player.type !== "hitter" ? [
     rawBackLine("Fastball", metricNumber(metrics.fastballVelo) == null ? "—" : `${formatMetric("fastballVelo", metrics.fastballVelo)} mph`),
     rawBackLine("Spin", metricNumber(metrics.spinRate) == null ? "—" : `${formatMetric("spinRate", metrics.spinRate)} rpm`),
@@ -2611,6 +2848,7 @@ function cardBackHTML(player, face, subs, opts) {
     </div>
     <div class="back-grades">${gradeLine}</div>
     <div class="back-raws">${hitting}${pitching}</div>
+    ${bests}
     </div>
     ${profileBtn}
   </div>`;
@@ -2732,7 +2970,7 @@ function renderRoster() {
       <div class="roster-info">
         <h3>${esc(p.name)}</h3>
         <div class="meta">${esc(positionLine(p))} • ${esc(p.team)} • Age ${esc(p.age)} • ${esc(activeAgeGroup(p))} • ${esc(p.classYear)}<br>Bats ${esc(p.bats)} / Throws ${esc(p.throws)} • Overall ${overall}</div>
-        <div class="pills"><span class="pill red">${esc(p.archetype)}</span><span class="pill">${typeLabel(p.type)}</span><span class="pill">${tierFor(overall).label}</span></div>
+        <div class="pills"><span class="pill red">${esc(p.archetype)}</span><span class="pill">${typeLabel(p.type)}</span><span class="pill${tierFor(overall).key === "diamond" ? " tier-diamond" : ""}">${tierFor(overall).label}</span></div>
         <p class="snippet"><strong>Does well:</strong> ${esc((p.strengths || [])[0] || "—")}</p>
         <p class="snippet"><strong>Work on:</strong> ${esc((p.improvements || [])[0] || "—")}</p>
         <button class="btn btn-red roster-profile" type="button" data-open="${esc(p.id)}">View Profile</button>
@@ -2902,7 +3140,7 @@ function metricsTable(player) {
   }).join("");
   const note = player.type === "pitcher"
     ? "Pitcher grades are 20–99 against the coach benchmarks in METRICS. Those ranges are not published Blast numbers."
-    : `Blast rows use the published window for <strong>${esc(ageGroup)}</strong>. Exit velocity, the 10-yard dash, the crow-hop throw, the seated 2 kg chest pass, and dominant-hand grip use Antonelli's age-by-age tables (the player's age in years, not this age group). Grip is the dominant hand only: Dominant hand · Jamar-style dynamometer · best of 2–3. A saved other-hand number is ignored. STR averages the chest pass with that grip. Pitcher fastball velocity stays on the coach scale. A saved 60-yard time is not used.`;
+    : `Blast rows use the published window for <strong>${esc(ageGroup)}</strong>. Exit velocity, the 10-yard dash, the crow-hop throw, the seated 2 kg chest pass, and dominant-hand grip use Antonelli's age-by-age tables (the player's age in years, not this age group). Grip is the dominant hand only: Dominant hand · Jamar-style dynamometer · best of 2–3. A saved other-hand number is ignored. STR averages the chest pass with that grip. Pitcher fastball velocity stays on the coach scale. A saved 60-yard time is not used. Batted-ball distance is display only: it is not graded and it is not part of POW or the overall. Personal bests on the card back use the career log, not just this season's sparkline.`;
   return `<div class="table-scroll"><table><thead><tr><th>Metric</th><th>Current</th><th>Previous</th><th>Change</th><th>History</th><th>Band</th><th>Grade</th></tr></thead><tbody>${rows}</tbody></table></div>
   <p class="muted small">${note}</p>`;
 }
@@ -3230,7 +3468,7 @@ function showCelebration() {
   clearCelebTimers();
   const root = $("celebrate");
   root.hidden = false;
-  root.className = "celebrate " + (item.kind === "tier-up" ? "is-tier" : "is-overall");
+  root.className = "celebrate " + (item.kind === "tier-up" ? "is-tier" : "is-overall") + (item.toTier === "diamond" ? " is-diamond" : "");
   if (motionReduced()) root.classList.add("is-reduced");
   $("celebratePlayer").textContent = player.name;
   $("celebrateReason").textContent = item.reason || "";
@@ -3639,7 +3877,7 @@ function openProfile(id, opts) {
         </div>
         <div class="show-facts">
           <div class="show-fact show-fact-overall"><b>${overall}</b>${deltaChip(delta.delta)}<span>Overall${delta.delta == null ? "" : " · since last assessment"}</span></div>
-          ${fact("Tier", esc(tier.label))}
+          ${fact("Tier", tierWord(tier.key))}
           ${fact("Bats", esc(p.bats || "—"))}
           ${fact("Throws", esc(p.throws || "—"))}
           ${fact("Secondary position", showOrDash(p.secondaryPosition))}
@@ -3662,6 +3900,7 @@ function openProfile(id, opts) {
       </div>
       <div class="show-side">${sidePanels(p)}</div>
     </div>
+    ${personalBestsPanel(p)}
     <div class="show-tabs" role="tablist">
       <button class="show-tab is-on" type="button" role="tab" aria-selected="true" data-tab="attributes">Attributes</button>
       <button class="show-tab" type="button" role="tab" aria-selected="false" data-tab="metrics">Metrics &amp; History</button>
@@ -3680,7 +3919,7 @@ function openProfile(id, opts) {
       <div class="panel">
         <h3>What type of ${p.type === "pitcher" ? "pitcher" : "player"} is he?</h3>
         <p style="line-height:1.65">${esc(ARCHETYPE_INFO[p.archetype] || "A developing player whose archetype will sharpen as metrics and game performance grow.")}</p>
-        <p class="small" style="line-height:1.6">Overall <strong>${overall} (${tier.label})</strong>. ${built}</p>
+        <p class="small" style="line-height:1.6">Overall <strong>${overall} (${tierWord(tier.key)})</strong>. ${built}</p>
         <div class="pills">${subs.map((s) => `<span class="pill">${s.key} ${s.grade ?? "—"} — ${esc(s.label)}</span>`).join("")}</div>
       </div>
       <div class="two-col">
@@ -3766,7 +4005,7 @@ function openRetired(id, index) {
         </div>
         <div class="show-facts">
           ${fact("Final overall", String(card.overall))}
-          ${fact("Tier", esc(tierLabel))}
+          ${fact("Tier", tierWord(card.tier))}
           ${fact("Bats", esc(card.bats || "—"))}
           ${fact("Throws", esc(card.throws || "—"))}
           ${fact("Secondary position", showOrDash(card.secondaryPosition))}
@@ -3837,8 +4076,8 @@ function askRollover(playerId) {
   const pinNote = preview.pinned ? ` Age group stays ${preview.toGroup} because it is pinned.` : "";
   const dropNote = preview.toOverall < preview.fromOverall ? " A lower overall is the new age-group window, not a step back. No downgrade animation plays." : "";
   const upNote = TIER_RANK[preview.toTier] > TIER_RANK[preview.fromTier] ? ` The new card reaches ${TIER_LABEL[preview.toTier]}. The reveal spotlights that tier.` : "";
-  $("seasonConfirmCopy").innerHTML = `<p>Retire <strong>${esc(preview.fromSeason)} · ${esc(preview.fromGroup)} · ${preview.fromOverall} ${esc(TIER_LABEL[preview.fromTier])}</strong>.</p>
-    <p>New card <strong>${esc(preview.toSeason)} · ${esc(preview.toGroup)} · projected ${preview.toOverall} ${esc(TIER_LABEL[preview.toTier])}</strong>. Age ${preview.fromAge} → ${preview.toAge}.${esc(pinNote)}</p>
+  $("seasonConfirmCopy").innerHTML = `<p>Retire <strong>${esc(preview.fromSeason)} · ${esc(preview.fromGroup)} · ${preview.fromOverall} ${tierWord(preview.fromTier)}</strong>.</p>
+    <p>New card <strong>${esc(preview.toSeason)} · ${esc(preview.toGroup)} · projected ${preview.toOverall} ${tierWord(preview.toTier)}</strong>. Age ${preview.fromAge} → ${preview.toAge}.${esc(pinNote)}</p>
     <p>Metrics carry over and get graded for the new season. Training perks from this season are saved on the retired card, then cleared so they can be earned again. Coach-awarded perks stay on the player. The retired card is never re-graded.</p>
     <p>${esc(dropNote)}${esc(upNote)}</p>`;
   $("seasonConfirm").hidden = false;
@@ -3889,6 +4128,7 @@ function showSeasonReveal() {
   const tierUp = TIER_RANK[info.tier] > TIER_RANK[info.retiredTier];
   const dropped = info.overall < info.retiredOverall;
   box.classList.toggle("is-tier", tierUp);
+  box.classList.toggle("is-diamond", tierUp && info.tier === "diamond");
   box.classList.toggle("is-reduced", motionReduced());
   $("seasonRevealPlayer").textContent = player.name;
   $("seasonRevealTier").textContent = tierUp ? (TIER_LABEL[info.tier] || "") : "New Season, New Chase";
@@ -3930,6 +4170,11 @@ function collectSeasonReveal() {
 }
 
 function closeProfile() {
+  const player = players.find((p) => p.id === selectedId);
+  if (player && player.pbFresh && Object.keys(player.pbFresh).length) {
+    player.pbFresh = {};
+    savePlayers();
+  }
   selectedId = null;
   $("profileView").hidden = true;
   $("rosterView").hidden = false;
@@ -3978,7 +4223,7 @@ function fillArchetypes(type, selected) {
 
 function sliderBounds(key) {
   const m = METRICS[key];
-  if (m.blast || m.coach) return { min: m.entryMin, max: m.entryMax };
+  if (m.blast || m.coach || m.entryMin != null) return { min: m.entryMin, max: m.entryMax };
   const sliderMin = m.invert ? m.low - 0.4 : Math.floor(m.low - (m.high - m.low) * 0.15);
   const sliderMax = m.invert ? m.high + 0.4 : Math.ceil(m.high + (m.high - m.low) * 0.08);
   return { min: sliderMin, max: sliderMax };
@@ -3996,7 +4241,7 @@ function renderMetricFields(playerLike) {
     const m = METRICS[k];
     const stored = playerLike.metrics ? playerLike.metrics[k] : null;
     const has = metricNumber(stored) != null;
-    const sliderVal = has ? stored : defaults[k];
+    const sliderVal = has ? stored : (defaults[k] != null ? defaults[k] : (m.entryMin != null ? m.entryMin : ""));
     const bounds = sliderBounds(k);
     const grade = has ? normalizeMetric(k, stored, ageGroup, playerLike.age) : null;
     const bandInfo = has ? metricBand(k, stored, playerLike.age, grade) : null;
@@ -4013,7 +4258,7 @@ function renderMetricFields(playerLike) {
         ${band}
       </div>
     </div>`;
-  }).join("");
+  }).join("") + manualBestsFields(playerLike);
   document.querySelectorAll("[data-metric]").forEach((input) => {
     input.addEventListener("input", () => {
       const k = input.dataset.metric;
@@ -4031,6 +4276,70 @@ function renderMetricFields(playerLike) {
       }
       updateLivePreview();
     });
+  });
+}
+
+function draftManualBests(playerLike) {
+  const source = (playerLike && playerLike.manualBests) || {};
+  const out = {};
+  PB_DEFS.forEach((def) => {
+    const el = typeof document !== "undefined" && document.getElementById ? document.getElementById(`pb-${def.key}`) : null;
+    if (el) {
+      const n = el.value === "" ? null : metricNumber(el.value);
+      if (n != null) out[def.key] = { value: n, at: (source[def.key] && source[def.key].at) || "" };
+      return;
+    }
+    if (source[def.key] && metricNumber(source[def.key].value) != null) out[def.key] = source[def.key];
+  });
+  return out;
+}
+
+function manualBestsFields(playerLike) {
+  if (!playerLike || playerLike.type === "pitcher") return "";
+  const manual = draftManualBests(playerLike);
+  const rows = PB_DEFS.map((def) => {
+    const cur = manual[def.key];
+    const step = METRICS[def.key] ? METRICS[def.key].step : 1;
+    const shown = cur && cur.value != null ? cur.value : "";
+    return `<div class="metric-row">
+      <label for="pb-${def.key}">${esc(def.label)} <small>Optional coach override. It counts only when it beats the recorded log${def.mode === "min" ? " — a lower time" : ""}.</small></label>
+      <div class="metric-inputs">
+        <input type="number" id="pb-${def.key}" data-pb="${def.key}" step="${step}" value="${shown === "" ? "" : esc(shown)}" placeholder="blank">
+        <span class="muted small">${esc(def.unit)}</span>
+      </div>
+    </div>`;
+  }).join("");
+  return `<h4 class="form-section">Personal best overrides</h4>
+    <p class="muted small">Leave a box blank to keep the recorded readings. A number becomes the career best only when it is better. The 10-yard override has to be faster.</p>${rows}`;
+}
+
+function readManualBests(existing) {
+  const prev = (existing && existing.manualBests) || {};
+  if (typeof document === "undefined" || !document.getElementById || !document.getElementById("pb-exitVelo")) return prev;
+  const next = {};
+  const today = new Date().toISOString().slice(0, 10);
+  PB_DEFS.forEach((def) => {
+    const el = document.getElementById(`pb-${def.key}`);
+    if (!el || el.value === "") return;
+    const n = metricNumber(el.value);
+    if (n == null) return;
+    const old = prev[def.key];
+    next[def.key] = old && Number(old.value) === n ? { value: n, at: old.at || today } : { value: n, at: today };
+  });
+  return next;
+}
+
+function recordSavedMetrics(player, metrics, history, today) {
+  Object.entries(metrics || {}).forEach(([k, v]) => {
+    if (metricNumber(v) == null) return;
+    const n = Number(v);
+    appendReading(player, k, n, today);
+    if (!history[k]) {
+      const prior = player.metrics && metricNumber(player.metrics[k]);
+      history[k] = prior == null ? [] : [prior];
+    }
+    if (!history[k].length || history[k][history[k].length - 1] !== n) history[k].push(n);
+    history[k] = history[k].slice(-6);
   });
 }
 
@@ -4131,7 +4440,7 @@ function updateLivePreview() {
   const { subs, overall } = gradesFor(like);
   const tier = tierFor(overall);
   const groupNote = like.type === "pitcher" ? "" : ` · ${esc(activeAgeGroup(like))}`;
-  $("livePreview").innerHTML = `<div>Live Overall${groupNote}<br><b>${overall}</b> <span class="tier-badge">${tier.label}</span></div><div class="pills" style="margin:0">${subs.map((s) => `<span class="pill">${s.key} ${s.grade ?? "—"}</span>`).join("")}</div>`;
+  $("livePreview").innerHTML = `<div>Live Overall${groupNote}<br><b>${overall}</b> <span class="tier-badge${tier.key === "diamond" ? " tier-diamond" : ""}">${esc(tier.label)}</span></div><div class="pills" style="margin:0">${subs.map((s) => `<span class="pill">${s.key} ${s.grade ?? "—"}</span>`).join("")}</div>`;
   renderEarnPreview();
 }
 
@@ -4383,11 +4692,14 @@ function renderShowdownResults() {
   const body = sections.map(([key, title]) => {
     const list = result.rows.filter((row) => row.section === key);
     if (!list.length) return "";
-    const rows = list.map((row) => `<div class="sd-row ${row.exhibit ? "is-exhibit" : ""} ${row.winner === "a" ? "lead-a" : row.winner === "b" ? "lead-b" : ""}">
-        <div class="sd-side a ${row.winner === "a" ? "is-lead" : ""}"><b>${esc(row.aText)}</b>${row.aRaw ? `<small>${esc(row.aRaw)}</small>` : ""}${sdChip(row, "a")}</div>
+    const rows = list.map((row) => {
+      const cell = (text) => row.id === "tier" ? `<b>${tierWord(text)}</b>` : `<b>${esc(text)}</b>`;
+      return `<div class="sd-row ${row.exhibit ? "is-exhibit" : ""} ${row.winner === "a" ? "lead-a" : row.winner === "b" ? "lead-b" : ""}">
+        <div class="sd-side a ${row.winner === "a" ? "is-lead" : ""}">${cell(row.aText)}${row.aRaw ? `<small>${esc(row.aRaw)}</small>` : ""}${sdChip(row, "a")}</div>
         <div class="sd-mid"><span>${esc(row.label)}</span><strong>${esc(sdCenter(row))}</strong></div>
-        <div class="sd-side b ${row.winner === "b" ? "is-lead" : ""}">${sdChip(row, "b")}${row.bRaw ? `<small>${esc(row.bRaw)}</small>` : ""}<b>${esc(row.bText)}</b></div>
-      </div>`).join("");
+        <div class="sd-side b ${row.winner === "b" ? "is-lead" : ""}">${sdChip(row, "b")}${row.bRaw ? `<small>${esc(row.bRaw)}</small>` : ""}${cell(row.bText)}</div>
+      </div>`;
+    }).join("");
     const extra = key === "exhibit" ? `<p class="sd-note">Training perks earned this season. The count is not part of the tally.</p>
       <div class="sd-perk-lists"><div><h4>${esc(result.aName.split(" ")[0])}</h4><p>${esc((list[0].aNames || []).join(", ") || "None yet")}</p></div><div><h4>${esc(result.bName.split(" ")[0])}</h4><p>${esc((list[0].bNames || []).join(", ") || "None yet")}</p></div></div>` : "";
     return `<section class="sd-section"><h3>${title}</h3>${rows}${extra}</section>`;
@@ -4520,16 +4832,15 @@ function bindApp() {
     if (!like.name.trim()) { alert("Please enter a player name."); return; }
     const existing = players.find((p) => p.id === like.id);
     let saved = existing;
+    const today = new Date().toISOString().slice(0, 10);
     if (existing) {
+      const before = careerBestMap(existing);
       const history = structuredClone(existing.history || {});
-      Object.entries(like.metrics).forEach(([k, v]) => {
-        if (v == null || Number.isNaN(v)) return;
-        if (!history[k]) history[k] = [existing.metrics[k]];
-        if (history[k][history[k].length - 1] !== v) history[k].push(v);
-        history[k] = history[k].slice(-6);
-      });
+      recordSavedMetrics(existing, like.metrics, history, today);
       like.earnedQuirks = structuredClone(existing.earnedQuirks || []);
-      Object.assign(existing, like, { history });
+      const manualBests = readManualBests(existing);
+      Object.assign(existing, like, { history, manualBests });
+      markNewPersonalBests(existing, before);
       saved = existing;
     } else {
       like.id = "player-" + Date.now().toString(36);
@@ -4537,7 +4848,11 @@ function bindApp() {
       like.earnedQuirks = [];
       like.currentSeason = seasonLabel(nowDate());
       like.cardCollection = [];
-      Object.entries(like.metrics).forEach(([k, v]) => { like.history[k] = [v]; });
+      like.readingLog = {};
+      like.manualBests = readManualBests(null);
+      like.pbFresh = {};
+      recordSavedMetrics(like, like.metrics, like.history, today);
+      markNewPersonalBests(like, {});
       players.push(like);
       saved = like;
     }
