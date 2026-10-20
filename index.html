@@ -76,7 +76,13 @@
     <div class="section-head">
       <div>
         <h2>Roster <span id="rosterCount" class="count"></span></h2>
-        <p class="muted">Click any player or card to open the full profile.</p>
+        <p class="muted">Click a card to flip it. View Profile opens the full page.</p>
+        <div class="tier-legend" aria-label="Tier colors">
+          <span><i class="tier-swatch bronze" aria-hidden="true"></i>Bronze</span>
+          <span><i class="tier-swatch silver" aria-hidden="true"></i>Silver</span>
+          <span><i class="tier-swatch gold" aria-hidden="true"></i>Gold</span>
+          <span><i class="tier-swatch diamond" aria-hidden="true"></i>Diamond</span>
+        </div>
       </div>
       <button class="btn btn-red" id="showdownBtn" type="button">SHOWDOWN</button>
     </div>
@@ -156,7 +162,12 @@
       <p id="quirkEarnPreview" class="muted small"></p>
 
       <h3 class="form-section">Metrics — drag or type. Overall updates live.</h3>
-      <p class="muted small">Hitting grades use the age group above and the published Blast windows in <code>BLAST_BENCHMARKS</code>. Changing the age group recalculates the card without changing the raw numbers. On Save, changed metrics are appended to history.</p>
+      <p class="muted small">Hitting grades use the age group above and the published Blast windows in <code>BLAST_BENCHMARKS</code>. Exit velocity, the 10-yard dash, the crow-hop throw, the seated 2 kg chest pass, and dominant-hand grip use Antonelli's age-by-age tables (the age in years, not the age group, and not Blast). Grip is one reading: Dominant hand · Jamar-style dynamometer · best of 2–3. Pitcher fastball velocity stays on the coach scale. Leave a field blank to keep that grade off the card. Batted-ball distance is display only: it is not graded and it is not part of the overall. A new player starts at the middle of each graded band. On Save, every reading is appended to the career log on the reading date below. This season's sparkline still keeps the last six. Personal-best overrides below count only when they beat that log.</p>
+      <div class="field" style="max-width:240px;margin-bottom:12px">
+        <label for="f-readingDate">Reading date</label>
+        <input id="f-readingDate" type="date" required>
+        <p class="muted small">Defaults to today. A future date is not saved.</p>
+      </div>
       <div id="metricFields"></div>
 
       <div class="live-preview" id="livePreview"></div>
