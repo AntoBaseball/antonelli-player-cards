@@ -333,7 +333,7 @@ th{font-size:11px;letter-spacing:.7px;text-transform:uppercase;color:var(--muted
 .back-raws{display:grid;gap:0}
 .back-fact,.back-raw{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;font-size:10px;line-height:1.25;border-bottom:1px solid rgba(212,175,55,.22);padding:1px 0}
 .back-fact span,.back-raw span{color:#b7aa8a;font-weight:700;flex:none}
-.back-fact b,.back-raw b{text-align:right;font-weight:800;color:#fff;min-width:0}
+.back-fact b,.back-raw b{text-align:right;font-weight:800;color:#fff;min-width:0;overflow-wrap:anywhere}
 .subgrades.is-legacy{flex-wrap:wrap}
 .subgrades.is-legacy .subgrade{flex:1 1 34px}
 .back-grades{display:flex;flex-wrap:wrap;gap:3px;margin:4px 0}
