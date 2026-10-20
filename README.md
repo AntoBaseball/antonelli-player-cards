@@ -55,7 +55,7 @@ Pages only serves what is on `main`. If the app landed through a pull request, m
   - **Sub-grade strip** across the bottom. Hitters and two-way players show five grades, in order: **POW, CON, SPD, THW, STR**. Pitchers show **VEL, BRK, CNTL, STM**. A missing athletic grade prints as a dash.
   - **Tier design (all in the black & gold family)** so crossing 70/80/90 is obvious: Bronze <70 = muted bronze-gold, darker; Silver 70–79 = silver-grey with a gold frame; Gold 80–89 = rich, bright gold; Diamond 90+ = black card with bright gold glow/trim and the **only cyan accent in the app — the diamond badge** — so Diamond still pops like the reference card.
 - **Photo upload + logo placeholder** — in Add/Edit, upload a player photo (JPG/PNG). It is read in the browser, downscaled to max 800px, stored as a data URL with the player in `localStorage`, and shown full-bleed on the card and profile. **Clear photo / use logo** removes it. With no photo, the card and profile show the Antonelli A-star (`assets/antonelli-a-star.png`) centered in the photo area, at its natural aspect ratio, over the tier gradient. All 5 sample players have `photo: ""`, so they show the logo.
-- **Card back** — click or tap the roster card, the big profile card, or a retired card to flip it. Enter or Space does the same when the card has focus. The back lists team, age and age group, class, height, weight, hometown, bats/throws, positions, season, the sub-grade breakdown, and the key raw numbers (bat speed, 10-yard dash, throw velocity, med ball with its note, grip, and pitcher tools when those apply). **View Profile** on the roster card back, and the same button under the roster blurb, opens the profile. Collection thumbnails stay buttons that open the retired card; they do not flip. Showdown and celebrations stay on the front. `prefers-reduced-motion` swaps the face instantly, with no 3D turn. See [Card back](#card-back).
+- **Card back** — click or tap the roster card, the big profile card, or a retired card to flip it. Enter or Space does the same when the card has focus. The back lists team, age and age group, class, height, weight, hometown, bats/throws, positions, season, the sub-grade breakdown, and the key raw numbers (bat speed, exit velocity with its Antonelli band, 10-yard dash with its Antonelli band, throw velocity, med ball with its note, grip, and pitcher tools when those apply). **View Profile** on the roster card back, and the same button under the roster blurb, opens the profile. Collection thumbnails stay buttons that open the retired card; they do not flip. Showdown and celebrations stay on the front. `prefers-reduced-motion` swaps the face instantly, with no 3D turn. See [Card back](#card-back).
 - **Edit / Add player** — "Edit Metrics / Profile" on a profile, or "+ Add Player" in the header. Metrics use synced sliders + number inputs; the overall, sub-grades, and tier update **live** in the form preview before you save. Saving a changed metric appends it to that metric's history, so the previous value, delta arrow, and sparkline show progress.
 - **Persistence** — all changes save to browser `localStorage` (key: `antonelli-player-cards-v2`), so a refresh keeps your edits. Cards saved under the older key `antonelli-player-cards-v1` are migrated once: hitter exit-velocity / contact / speed / fielding / arm fields are replaced with Blast metrics, bat speed is kept when it was between 25 and 95 mph, other hitting numbers start at the middle of that age group's published window, and pitcher metrics are kept. A one-time banner explains the reset. **Reset Sample Data** (header) restores the original 5 sample players.
 - **Responsive** — works on mobile; cards and profile stack cleanly on small screens.
@@ -93,50 +93,39 @@ The formula lives in `app.js`. Hitters use `BLAST_BENCHMARKS` and `gradeBlastMet
 
 ### Hitter weights
 
-Bat speed is the largest piece of the hitter overall, and it stays **40%** whenever a bat-speed grade exists. SPD, THW, and STR are modest, and each one is left out when that test has no number. They are not zeros. The other Blast buckets then share what is left, in the same 22:18:14:6 ratio they had before.
+Bat speed is the largest piece of the hitter overall, and it stays **40%** whenever a bat-speed grade exists. SPD, THW, STR, and exit velocity are left out when that test has no number. They are not zeros. Exit velocity, when it is present, takes **12%**, and that 12% comes out of the non-bat-speed Blast buckets in their old 22:18:14:6 ratio. SPD, THW, and STR stay at 6% / 5% / 5%.
 
-| Piece | What it uses | Weight when every optional is blank | Weight when SPD, THW, and STR all have a grade |
-|---|---|---|---|
-| Bat speed | Bat speed grade | **40%** | **40%** |
-| `PWR` | Power 60% + peak hand speed 40% | 22% | 16.1% |
-| `PLANE` | On-plane 50% + attack angle 30% + vertical bat angle 20% | 18% | 13.2% |
-| `QUICK` | Time to contact 55% + rotational acceleration 45% | 14% | 10.3% |
-| `CONN` | Early connection 50% + connection at impact 50% | 6% | 4.4% |
-| `SPD` | 10-yard dash | left out | 6% |
-| `THW` | Throwing velocity | left out | 5% |
-| `STR` | Average of strength tests that have a number | left out | 5% |
+| Piece | What it uses | Every optional blank | SPD, THW, and STR filled, no exit velo | All four filled |
+|---|---|---|---|---|
+| Bat speed | Bat speed grade | **40%** | **40%** | **40%** |
+| `PWR` | Power 60% + peak hand speed 40% | 22% | 16.1% | 11.7% |
+| `PLANE` | On-plane 50% + attack angle 30% + vertical bat angle 20% | 18% | 13.2% | 9.6% |
+| `QUICK` | Time to contact 55% + rotational acceleration 45% | 14% | 10.3% | 7.5% |
+| `CONN` | Early connection 50% + connection at impact 50% | 6% | 4.4% | 3.2% |
+| `SPD` | 10-yard dash, Antonelli age table | left out | 6% | 6% |
+| `THW` | Throwing velocity | left out | 5% | 5% |
+| `STR` | Average of strength tests that have a number | left out | 5% | 5% |
+| Exit velo | Antonelli age-by-age table | left out | left out | 12% |
 
-With no 10-yard, throw, or strength numbers, and every Blast bucket present, the overall matches the older 40 / 22 / 18 / 14 / 6 formula. A saved `sixtyYard` is ignored. It is not turned into a 10-yard time, so SPD stays blank.
+With no 10-yard, throw, strength, or exit-velocity numbers, and every Blast bucket present, the overall matches the older 40 / 22 / 18 / 14 / 6 formula. A saved `sixtyYard` is ignored. It is not turned into a 10-yard time, so SPD stays blank. A saved legacy `exitVelocity` is the old pre-Blast field. It is not copied onto `exitVelo`.
 
 The **front of the card** does not print BAT / PWR / PLANE / QUICK / CONN. It prints five face grades:
 
 | Face | Built from | Notes |
 |---|---|---|
-| `POW` | Bat speed 50% + Blast power 30% + rotational acceleration 20% | Display only. The overall still uses the bat-speed grade at 40%, not this composite. |
+| `POW` | Bat speed 40% + exit velo 30% + Blast power 18% + rotational acceleration 12% | Display only. The overall still uses the bat-speed grade at 40%, plus the exit-velo grade at 12% when that number exists. If exit velo is blank, the other three POW pieces are reweighted and exit velo stays out of the overall. |
 | `CON` | Time to contact 28% + attack angle 18% + vertical bat angle 12% + on-plane 22% + early connection 10% + connection at impact 10% | Missing pieces are dropped and the rest are reweighted. |
-| `SPD` | 10-yard dash, lower is better | Age bands below. Antonelli, not Blast. |
+| `SPD` | 10-yard dash, lower is better | Antonelli's age-by-age table below. Not Blast, and not the 10U/12U groups. |
 | `THW` | Throwing velocity, higher is better | Hitter bands, not the pitcher fastball scale. |
 | `STR` | Average of graded `STRENGTH_TESTS` | Med ball and grip today. Blank tests are skipped. |
 
 Pitchers are unchanged: `VEL` 30% · `BRK` (spin 45% + whiff 55%) 25% · `CNTL` 30% · `STM` 15%. Two-way overall is the average of the hitter overall and the pitcher overall. A two-way front shows the five hitter grades. Pitching tools are on the back, the profile, and in Showdown.
 
-To retune Blast grades, edit `BLAST_BENCHMARKS` and `gradeBlastMetric` / `gradeHigher` / `gradeLower` / `gradeIdeal` / `gradeOnPlane`. To retune 10-yard, throw, med ball, or grip, edit the `bands` on those metrics. The cuts that turn a window into 20–99 are the same Antonelli curve as a Blast higher/lower metric.
+To retune Blast grades, edit `BLAST_BENCHMARKS` and `gradeBlastMetric` / `gradeHigher` / `gradeLower` / `gradeIdeal` / `gradeOnPlane`. To retune the 10-yard dash, edit `TEN_YARD_TABLE`. To retune throw, med ball, or grip, edit the `bands` on those metrics. The cuts that turn a window into 20–99 are the same Antonelli curve as a Blast higher/lower metric.
 
-### 10-yard, throw, med ball, and grip
+### Throw, med ball, and grip
 
-These windows are **Antonelli coach-tuneable**. They are not Blast numbers. `lo` starts Average (50). The midpoint starts Good (65). `hi` starts Great (80).
-
-**10-yard dash (seconds), lower is better.** Fast end is `lo`.
-
-| Group | Window |
-|---|---|
-| 10U | 2.05–2.45 |
-| 12U | 1.95–2.35 |
-| 14U | 1.85–2.25 |
-| 16U | 1.75–2.15 |
-| 18U | 1.65–2.05 |
-| College | 1.55–1.95 |
-| Pro | 1.45–1.85 |
+These windows are **Antonelli coach-tuneable**. They are not Blast numbers. `lo` starts Average (50). The midpoint starts Good (65). `hi` starts Great (80). The 10-yard dash is not in this list. It uses the age-in-years table in [10-yard dash](#10-yard-dash).
 
 **Throwing velocity (mph), higher is better.** Position-player throws, not the pitcher fastball range.
 
@@ -176,6 +165,68 @@ These windows are **Antonelli coach-tuneable**. They are not Blast numbers. `lo`
 
 `STR` is the unweighted average of the strength tests that have a grade. With only a med ball, STR is that grade. With only grip, STR is the grip grade. With both, STR is the average. With neither, STR is a dash and it is left out of the overall.
 
+### Exit velocity
+
+Exit velocity is **Antonelli's table**, not Blast, and not the 10U / 12U age groups. The row is the player's age in whole years (`Math.floor`). **Ages under 8 use the 8 row. Ages over 18, including college and pro, use the 18 row.** The stored key is `exitVelo`. The old field `exitVelocity` still means "this save used the pre-Blast formula" and is never copied onto `exitVelo`.
+
+Higher is better. Inside each band the grade is a straight line from the low mph to the high mph:
+
+| Band | Grade |
+|---|---|
+| Below Avg | under 50. One Average-band width below the Average line is 20. Slower than that stays at 20. The grade does not round up to 50. |
+| Average | 50–64 |
+| Above Avg | 65–74 |
+| Good | 75–84 |
+| Great | 85 at the Great threshold, 99 five mph above it, then capped at 99 |
+
+| Age | Below Avg | Average | Above Avg | Good | Great | 99 at |
+|---|---|---|---|---|---|---|
+| 8 | <40 | 40–46 | 47–51 | 52–56 | 57+ | 62 |
+| 9 | <45 | 45–50 | 51–55 | 56–60 | 61+ | 66 |
+| 10 | <49 | 49–54 | 55–59 | 60–64 | 65+ | 70 |
+| 11 | <53 | 53–58 | 59–63 | 64–68 | 69+ | 74 |
+| 12 | <57 | 57–62 | 63–67 | 68–72 | 73+ | 78 |
+| 13 | <62 | 62–67 | 68–72 | 73–77 | 78+ | 83 |
+| 14 | <67 | 67–72 | 73–78 | 79–83 | 84+ | 89 |
+| 15 | <72 | 72–77 | 78–82 | 83–87 | 88+ | 93 |
+| 16 | <76 | 76–81 | 82–86 | 87–91 | 92+ | 97 |
+| 17 | <79 | 79–84 | 85–89 | 90–94 | 95+ | 100 |
+| 18 | <82 | 82–87 | 88–92 | 93–97 | 98+ | 103 |
+
+The card back, the profile bar, the metrics table, the add/edit form, and Showdown all print that band label (Below Avg, Average, Above Avg, Good, Great) next to the mph. A blank field leaves POW without that piece and leaves the 12% out of the overall.
+
+### 10-yard dash
+
+The 10-yard dash is **Antonelli's table**, not Blast, and not the 10U / 12U age groups. The row is the player's age in whole years (`Math.floor`). **Ages under 8 use the 8 row. Ages over 18, including college and pro, use the 18 row.** The stored key is `tenYard`. A saved `sixtyYard` is ignored and is never copied onto `tenYard`.
+
+Lower is better. Inside each band the grade is a straight line from the slow time to the fast time:
+
+| Band | Grade |
+|---|---|
+| Below Avg | under 50. One Average-band width slower than the Average line is 20. Slower than that stays at 20. The grade does not round up to 50. |
+| Average | 50–64 |
+| Above Avg | 65–74 |
+| Good | 75–84 |
+| Great | 85 just faster than the Great threshold, 99 about 0.10 s faster than that threshold, then capped at 99 |
+
+| Age | Below Avg | Average | Above Avg | Good | Great | 99 at |
+|---|---|---|---|---|---|---|
+| 8 | >2.55 | 2.35–2.55 | 2.20–2.34 | 2.05–2.19 | <2.05 | 1.95 |
+| 9 | >2.45 | 2.25–2.45 | 2.12–2.24 | 1.98–2.11 | <1.98 | 1.88 |
+| 10 | >2.35 | 2.15–2.35 | 2.03–2.14 | 1.90–2.02 | <1.90 | 1.80 |
+| 11 | >2.28 | 2.08–2.28 | 1.97–2.07 | 1.85–1.96 | <1.85 | 1.75 |
+| 12 | >2.20 | 2.02–2.20 | 1.91–2.01 | 1.80–1.90 | <1.80 | 1.70 |
+| 13 | >2.12 | 1.95–2.12 | 1.85–1.94 | 1.75–1.84 | <1.75 | 1.65 |
+| 14 | >2.05 | 1.89–2.05 | 1.80–1.88 | 1.70–1.79 | <1.70 | 1.60 |
+| 15 | >1.99 | 1.84–1.99 | 1.75–1.83 | 1.66–1.74 | <1.66 | 1.56 |
+| 16 | >1.94 | 1.80–1.94 | 1.72–1.79 | 1.63–1.71 | <1.63 | 1.53 |
+| 17 | >1.90 | 1.77–1.90 | 1.69–1.76 | 1.60–1.68 | <1.60 | 1.50 |
+| 18 | >1.87 | 1.74–1.87 | 1.66–1.73 | 1.58–1.65 | <1.58 | 1.48 |
+
+The card back, the profile bar, the metrics table, the add/edit form, and Showdown all print that band label (Below Avg, Average, Above Avg, Good, Great) next to the time. A blank field leaves SPD as a dash and leaves the 6% out of the overall.
+
+The sample times stay where they were. Against this table they still read like the players they are: Mason (17) at 1.84 s is Average, a power hitter whose next step is first-step quickness. Eli (15) at 1.68 s is Good, a leadoff runner just short of Great. Dylan (14) at 2.08 s is just Below Avg, a developing two-way player 0.03 s the wrong side of the Average line.
+
 ### Adding a strength test
 
 `STRENGTH_TESTS` in `app.js` is the list. Adding a test means adding **one object**:
@@ -186,7 +237,7 @@ These windows are **Antonelli coach-tuneable**. They are not Blast numbers. `lo`
 
 The add/edit form, the metrics table, history, the card back, and the STR average pick that entry up. No other list has to be edited for a normal test. Grip is the special case already in the list: it sets `hands: ["gripDominant", "gripOther"]` because one grade reads two fields. A new single-number test should not set `hands`.
 
-A brand-new player form starts each athletic field at the middle of the age-group band so the sliders are not empty. Clearing a field and saving leaves that grade off the card. Migrating an old save does not invent a 10-yard time, a throw, or a strength number, and it does not copy `sixtyYard` into `tenYard`.
+A brand-new player form starts the 10-yard dash and exit velocity at the middle of the Average band for that age, and the other athletic fields at the middle of the age-group band, so the sliders are not empty. Clearing a field and saving leaves that grade off the card. Migrating an old save does not invent a 10-yard time, a throw, or a strength number, and it does not copy `sixtyYard` into `tenYard`.
 
 ### Where the Blast numbers come from
 
@@ -290,14 +341,14 @@ Blast publishes the windows. It does not publish these scoring choices:
 - Ideal-range curve: 96 on the target, about 70 on either published edge, then down toward 20 outside the window. Attack angle and vertical bat angle peak at the **center** because Blast does not name a single target. Early connection and connection at impact peak at Blast's **90°**.
 - Putting the Youth column on both 10U and 12U for attack angle, vertical bat angle, time to contact, peak hand speed, and power. The mph / degrees / seconds / kW are the Youth column. Calling them "10U" and "12U" separately is ours. Bat speed is the exception: 30–45 and 40–52 are published by age.
 - Hitter sub-grade groups and the 40 / 22 / 18 / 14 / 6 Blast weights, plus the modest 6% / 5% / 5% for SPD / THW / STR when those tests exist.
-- The face composites POW and CON, and the coach-tuneable 10-yard, throwing-velocity, med-ball, and grip bands.
+- The face composites POW and CON, the coach-tuneable throwing-velocity, med-ball, and grip bands, and the 10-yard and exit-velocity age tables (including the 12% exit-velo share and the Below Avg floor).
 - Pitcher velocity, spin, strike %, whiff %, and pitch-capacity ranges. Those stayed in `METRICS` and were never Blast numbers.
 
 ## Card back
 
 Clicking a roster card flips it. It does not open the profile. **View Profile** sits on the card back and again under the roster blurb, so the profile is still one click away. The big card on the profile flips the same way, and so does the big card on a retired season. Enter or Space flips the card that has keyboard focus. Clicking again returns to the front.
 
-The back is a black and gold face: team, age and age group, class, height, weight, hometown, bats/throws, positions, season, every sub-grade, and the raw bat speed, 10-yard, throw velocity, med-ball distance with the coach note, grip (better hand called out), and pitcher readings when the player has them.
+The back is a black and gold face: team, age and age group, class, height, weight, hometown, bats/throws, positions, season, every sub-grade, and the raw bat speed, exit velocity with its Antonelli band label, 10-yard dash with its Antonelli band label, throw velocity, med-ball distance with the coach note, grip (better hand called out), and pitcher readings when the player has them.
 
 Collection thumbnails are still buttons. A click opens that retired card. The thumbnail itself does not flip. Showdown and the celebration overlays stay on the front so the clash and the count-up are not interrupted.
 
@@ -389,7 +440,7 @@ Tabs, left to right:
 
 | Tab | What it holds |
 |---|---|
-| Attributes | Tall bars. Hitters get POW, CON, SPD, THW, STR, then 10-yard, throw, med ball, and grip, then the Blast metric grades. Pitchers get VEL, BRK, CNTL, STM plus fastball, spin, strike %, whiff %, and capacity. Two-way players get both groups, labeled. A retired card keeps the tool keys it was saved with. |
+| Attributes | Tall bars. Hitters get POW, CON, SPD, THW, STR, then exit velocity with its Antonelli band label, then the 10-yard dash with its Antonelli band label, then throw, med ball, and grip, then the Blast metric grades. Pitchers get VEL, BRK, CNTL, STM plus fastball, spin, strike %, whiff %, and capacity. Two-way players get both groups, labeled. A retired card keeps the tool keys it was saved with. |
 | Metrics & History | The existing table: current, previous, change, sparkline, band, grade. |
 | Player Perks | Earned and coach-awarded perks, Open again, and click-to-replay. |
 | Strengths & Growth | Archetype note, how the grade is built, strengths, and areas to improve. |
@@ -424,9 +475,9 @@ Showdown puts two **current-season** cards against each other. Retired collectio
 
 The intro slams a huge **SHOWDOWN** title, then the cards rush in from off-screen and collide in the center. A flash, sparks, and a short shake mark the hit. The cards settle side by side with the Antonelli star **VS** badge between them and square up once more before the results. It lasts about two and a half seconds. **Skip** jumps to the results. `prefers-reduced-motion` skips the battle and opens the results immediately. Buttons and headings use the word SHOWDOWN in capitals.
 
-Each shared category shows both grades, the raw reading when there is one, and the gap. The center says `A +5` or `B +3`. The leader’s chip is `+N` and the trailer’s chip is `-N`. A tie says `EVEN`. Overall and tier are always shared. Tool grades (POW, CON, SPD, THW, STR, VEL, BRK, CNTL, STM) and metric grades are shared only when both cards have that category. A dash, including a blank SPD, THW, or STR, is not a loss. A hitter against a pitcher still compares overall and tier. A two-way player brings both sets; the opponent is scored only on the rows they also have. Chase lines for Speed and Throw add the raw gap (seconds quicker, or mph). Strength chase stays on the grade, because STR can mix med ball and grip.
+Each shared category shows both grades, the raw reading when there is one, and the gap. The center says `A +5` or `B +3`. The leader’s chip is `+N` and the trailer’s chip is `-N`. A tie says `EVEN`. Overall and tier are always shared. Tool grades (POW, CON, SPD, THW, STR, VEL, BRK, CNTL, STM) and metric grades are shared only when both cards have that category. A dash, including a blank SPD, THW, STR, or exit velocity, is not a loss. A hitter against a pitcher still compares overall and tier. A two-way player brings both sets; the opponent is scored only on the rows they also have. Chase lines for Speed, Throw, and Exit Velocity add the raw gap (seconds quicker, or mph). The exit-velocity row and the 10-yard row also print the Antonelli band label and the age row. Strength chase stays on the grade, because STR can mix med ball and grip.
 
-Grades are versus each player’s own age group. Raw mph, degrees, and seconds are the absolute readings, shown beside the grade so a harder window is visible.
+Grades are versus each player’s own age group, except exit velocity and the 10-yard dash, which use Antonelli’s age-in-years table. Raw mph, degrees, and seconds are the absolute readings, shown beside the grade so a harder window is visible.
 
 The banner follows the overall: the higher overall leads, and the same overall is **Dead Even Showdown**. Under that, the tally counts shared categories only (`Mason takes 6 of 9 categories`). Ties count in the 9 and for neither player.
 

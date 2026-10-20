@@ -16,12 +16,16 @@
       Bat speed is always 40% of that overall when a bat-speed grade exists.
       The other Blast buckets (PWR 22, PLANE 18, QUICK 14, CONN 6) share whatever
       is left after the optional athletic grades that actually have a number:
-        SPD  6%  10-yard dash (tenYard). A saved sixtyYard is ignored.
+        SPD  6%  10-yard dash (tenYard), Antonelli's age-by-age table, lower is better.
+               A saved sixtyYard is ignored.
         THW  5%  throwing velocity (throwVelo), age-banded, not the pitcher scale.
         STR  5%  average of the STRENGTH_TESTS that have a number (med ball, grip).
-      Missing SPD, THW, or STR is left out. It is not a zero.
+        EV  12%  exit velocity (exitVelo), Antonelli's age-by-age table, not Blast.
+      The 12% comes out of the non-bat-speed Blast buckets in their old ratio.
+      Missing SPD, THW, STR, or exit velocity is left out. It is not a zero.
       The card FRONT does not print those buckets. It prints five face grades:
-        POW = bat speed 50% + power 30% + rotational acceleration 20%
+        POW = bat speed 40% + exit velo 30% + Blast power 18% + rotational acceleration 12%
+              (if exit velo is blank, the other three are reweighted)
         CON = time to contact 28% + attack angle 18% + vertical bat angle 12%
               + on-plane 22% + early connection 10% + connection at impact 10%
         SPD, THW, STR as above. No data prints as a dash and stays off the overall.
@@ -259,21 +263,12 @@ const METRICS = {
   strikePct: { label: "Strike % (Command)", unit: "%", low: 45, high: 76, step: 1, help: "Pitches in / around the strike zone" },
   whiffPct: { label: "Offspeed Whiff %", unit: "%", low: 10, high: 46, step: 1, help: "Swings-and-misses on breaking / offspeed" },
   pitchCapacity: { label: "Pitch Capacity (Stamina)", unit: " pitches", low: 40, high: 110, step: 1, help: "Pitches before velocity / command drops" },
-  /* Athletic hitter metrics. Bands are Antonelli coach-tuneable, not Blast.
-     A saved sixtyYard is never read and is never copied onto tenYard. */
+  /* Athletic hitter metrics. Throw, med ball, and grip use age-group bands.
+     10-yard uses TEN_YARD_TABLE (age in years). A saved sixtyYard is never copied onto tenYard. */
   tenYard: {
-    label: "10-Yard Dash", unit: " s", step: 0.01, coach: true, mode: "lower",
+    label: "10-Yard Dash", unit: " s", step: 0.01, coach: true, mode: "lower", antonelliAge: true,
     entryMin: 1.2, entryMax: 3.2,
-    help: "10-yard dash in seconds. Lower is better. This is not a 60-yard time.",
-    bands: {
-      "10U": { lo: 2.05, hi: 2.45 },
-      "12U": { lo: 1.95, hi: 2.35 },
-      "14U": { lo: 1.85, hi: 2.25 },
-      "16U": { lo: 1.75, hi: 2.15 },
-      "18U": { lo: 1.65, hi: 2.05 },
-      "College": { lo: 1.55, hi: 1.95 },
-      "Pro": { lo: 1.45, hi: 1.85 },
-    },
+    help: "10-yard dash in seconds. Lower is better. This is not a 60-yard time. Graded on Antonelli's age-by-age table, not a Blast window and not the 10U/12U groups.",
   },
   throwVelo: {
     label: "Throwing Velocity", unit: " mph", step: 0.5, coach: true, mode: "higher",
@@ -303,6 +298,14 @@ const METRICS = {
     label: "Grip Strength (other hand)", unit: " lbs", step: 1, coach: true, mode: "higher",
     entryMin: 15, entryMax: 220, bandsFrom: "grip",
     help: "Dynamometer, non-throwing hand. Used when it is the only grip entered, or when it beats the throwing hand.",
+  },
+  /* Exit velocity uses EXIT_VELO_TABLE (age in years), not these age-group bands
+     and not Blast. The stored key is exitVelo. The old pre-Blast field
+     exitVelocity is still a legacy marker and is never copied onto exitVelo. */
+  exitVelo: {
+    label: "Exit Velocity", unit: " mph", step: 0.5, coach: true, mode: "higher", antonelliAge: true,
+    entryMin: 25, entryMax: 120,
+    help: "Ball speed off the bat. Higher is better. Graded on Antonelli's age-by-age table, not a Blast window and not the 10U/12U groups.",
   },
 };
 
@@ -407,7 +410,7 @@ const SAMPLE_PLAYERS = [
     strengthNote: DEFAULT_STRENGTH_NOTE,
     metrics: {
       batSpeed: 69, peakHandSpeed: 22, attackAngle: 12, verticalBatAngle: -28, timeToContact: 0.155, powerKw: 3.9, rotationalAcceleration: 16, onPlaneEfficiency: 76, earlyConnection: 92, connectionAtImpact: 88,
-      tenYard: 1.84, throwVelo: 84, medBall: 38, gripDominant: 132, gripOther: 121,
+      tenYard: 1.84, throwVelo: 84, medBall: 38, gripDominant: 132, gripOther: 121, exitVelo: 92,
     },
     history: {
       batSpeed: metricHistory(69, [63, 65, 67]), peakHandSpeed: metricHistory(22, [20, 20.5, 21]),
@@ -417,6 +420,7 @@ const SAMPLE_PLAYERS = [
       earlyConnection: metricHistory(92, [90, 91, 91]), connectionAtImpact: metricHistory(88, [86, 87, 87]),
       tenYard: metricHistory(1.84, [1.95, 1.91, 1.87]), throwVelo: metricHistory(84, [78, 80, 82]),
       medBall: metricHistory(38, [32, 34, 36]), gripDominant: metricHistory(132, [118, 122, 128]), gripOther: metricHistory(121, [110, 114, 118]),
+      exitVelo: metricHistory(92, [84, 87, 89]),
     },
   },
   {
@@ -428,7 +432,7 @@ const SAMPLE_PLAYERS = [
     strengthNote: DEFAULT_STRENGTH_NOTE,
     metrics: {
       batSpeed: 58, peakHandSpeed: 19, attackAngle: 8, verticalBatAngle: -22, timeToContact: 0.17, powerKw: 2.4, rotationalAcceleration: 11, onPlaneEfficiency: 72, earlyConnection: 90, connectionAtImpact: 89,
-      tenYard: 1.68, throwVelo: 74, medBall: 27, gripDominant: 96, gripOther: 88,
+      tenYard: 1.68, throwVelo: 74, medBall: 27, gripDominant: 96, gripOther: 88, exitVelo: 75,
     },
     history: {
       batSpeed: metricHistory(58, [56, 57, 57.5]), peakHandSpeed: metricHistory(19, [18, 18.5, 18.5]),
@@ -438,6 +442,7 @@ const SAMPLE_PLAYERS = [
       earlyConnection: metricHistory(90, [86, 88, 89]), connectionAtImpact: metricHistory(89, [85, 86, 88]),
       tenYard: metricHistory(1.68, [1.82, 1.76, 1.72]), throwVelo: metricHistory(74, [68, 70, 72]),
       medBall: metricHistory(27, [22, 24, 25]), gripDominant: metricHistory(96, [84, 88, 92]), gripOther: metricHistory(88, [78, 82, 85]),
+      exitVelo: metricHistory(75, [70, 72, 73]),
     },
   },
   {
@@ -475,7 +480,7 @@ const SAMPLE_PLAYERS = [
     strengthNote: DEFAULT_STRENGTH_NOTE,
     metrics: {
       batSpeed: 51, peakHandSpeed: 17, attackAngle: 6, verticalBatAngle: -25, timeToContact: 0.19, powerKw: 1.8, rotationalAcceleration: 8.5, onPlaneEfficiency: 64, earlyConnection: 78, connectionAtImpact: 84,
-      tenYard: 2.08, throwVelo: 70, medBall: 24, gripDominant: 72, gripOther: 66,
+      tenYard: 2.08, throwVelo: 70, medBall: 24, gripDominant: 72, gripOther: 66, exitVelo: 69,
       fastballVelo: 76, spinRate: 1950, strikePct: 58, whiffPct: 22, pitchCapacity: 62,
     },
     history: {
@@ -486,6 +491,7 @@ const SAMPLE_PLAYERS = [
       earlyConnection: metricHistory(78, [74, 75, 77]), connectionAtImpact: metricHistory(84, [80, 81, 82]),
       tenYard: metricHistory(2.08, [2.20, 2.16, 2.12]), throwVelo: metricHistory(70, [64, 66, 68]),
       medBall: metricHistory(24, [20, 21, 23]), gripDominant: metricHistory(72, [62, 66, 69]), gripOther: metricHistory(66, [58, 61, 64]),
+      exitVelo: metricHistory(69, [64, 66, 67]),
       fastballVelo: metricHistory(76, [73, 74, 75]), spinRate: metricHistory(1950, [1850, 1880, 1920]),
       strikePct: metricHistory(58, [54, 55, 57]), whiffPct: metricHistory(22, [18, 19, 21]),
       pitchCapacity: metricHistory(62, [52, 56, 59]),
@@ -615,9 +621,206 @@ function gradeWindow(value, spec, ageGroup) {
   return clamp(Math.round(raw), 20, 99);
 }
 
-function normalizeMetric(key, value, ageGroup) {
+/* Antonelli exit-velocity table by the player's age in years.
+   Not Blast, and not the 10U/12U age groups.
+   Ages under 8 use the 8 row. Ages over 18 (college and pro) use the 18 row.
+   Each closed band is interpolated from its low mph to its high mph:
+     Average 50–64, Above Avg 65–74, Good 75–84.
+   Great starts at 85 and reaches 99 five mph above the Great threshold, then caps.
+   Below Avg is under 50. One Average-band width under the Average line is 20,
+   and anything slower stays at 20. A grade in Below Avg never rounds up to 50.
+   The stored metric is exitVelo. A legacy exitVelocity value is not this table. */
+const EXIT_VELO_GREAT_SPAN = 5;
+const EXIT_VELO_TABLE = {
+  8:  { average: [40, 46], above: [47, 51], good: [52, 56], great: 57 },
+  9:  { average: [45, 50], above: [51, 55], good: [56, 60], great: 61 },
+  10: { average: [49, 54], above: [55, 59], good: [60, 64], great: 65 },
+  11: { average: [53, 58], above: [59, 63], good: [64, 68], great: 69 },
+  12: { average: [57, 62], above: [63, 67], good: [68, 72], great: 73 },
+  13: { average: [62, 67], above: [68, 72], good: [73, 77], great: 78 },
+  14: { average: [67, 72], above: [73, 78], good: [79, 83], great: 84 },
+  15: { average: [72, 77], above: [78, 82], good: [83, 87], great: 88 },
+  16: { average: [76, 81], above: [82, 86], good: [87, 91], great: 92 },
+  17: { average: [79, 84], above: [85, 89], good: [90, 94], great: 95 },
+  18: { average: [82, 87], above: [88, 92], good: [93, 97], great: 98 },
+};
+
+function exitVeloTableAge(age) {
+  if (age == null || age === "") return null;
+  const n = Number(age);
+  if (!Number.isFinite(n)) return null;
+  const year = Math.floor(n);
+  if (year < 8) return 8;
+  if (year > 18) return 18;
+  return year;
+}
+
+function exitVeloCuts(age) {
+  const year = exitVeloTableAge(age);
+  if (year == null) return null;
+  const row = EXIT_VELO_TABLE[year];
+  const actual = Math.floor(Number(age));
+  return {
+    year,
+    actual,
+    usedFloor: actual < 8,
+    usedCeiling: actual > 18,
+    average: row.average,
+    above: row.above,
+    good: row.good,
+    great: row.great,
+    greatCap: row.great + EXIT_VELO_GREAT_SPAN,
+  };
+}
+
+function lerpRange(v, lo, hi, gLo, gHi) {
+  if (!(hi > lo)) return gLo;
+  return gLo + ((v - lo) / (hi - lo)) * (gHi - gLo);
+}
+
+function gradeExitVelo(value, age) {
+  const n = metricNumber(value);
+  const cuts = exitVeloCuts(age);
+  if (n == null || !cuts) return { grade: null, band: null, year: cuts ? cuts.year : null };
+  const bands = [
+    { key: "average", label: "Average", lo: cuts.average[0], hi: cuts.average[1], gLo: 50, gHi: 64 },
+    { key: "above", label: "Above Avg", lo: cuts.above[0], hi: cuts.above[1], gLo: 65, gHi: 74 },
+    { key: "good", label: "Good", lo: cuts.good[0], hi: cuts.good[1], gLo: 75, gHi: 84 },
+    { key: "great", label: "Great", lo: cuts.great, hi: cuts.greatCap, gLo: 85, gHi: 99 },
+  ];
+  const pack = (raw, band) => {
+    let grade = clamp(Math.round(raw), 20, 99);
+    if (band.key === "below") grade = Math.min(49, grade);
+    return { grade, band, year: cuts.year };
+  };
+  if (n < bands[0].lo) {
+    const span = bands[0].hi - bands[0].lo;
+    const raw = lerpRange(n, bands[0].lo - span, bands[0].lo, 20, 50);
+    return pack(raw, { key: "below", label: "Below Avg" });
+  }
+  for (let i = 0; i < bands.length; i++) {
+    const band = bands[i];
+    const next = bands[i + 1];
+    if (n <= band.hi || !next) {
+      const raw = n >= band.hi ? band.gHi : lerpRange(n, band.lo, band.hi, band.gLo, band.gHi);
+      return pack(raw, { key: band.key, label: band.label });
+    }
+    if (n < next.lo) {
+      return pack(lerpRange(n, band.hi, next.lo, band.gHi, next.gLo), { key: band.key, label: band.label });
+    }
+  }
+  return pack(99, { key: "great", label: "Great" });
+}
+
+function exitVeloCaption(age) {
+  const cuts = exitVeloCuts(age);
+  const rule = "Antonelli's exit-velocity table, by age in years, not Blast and not the age group. Under 8 uses age 8. Over 18 uses age 18.";
+  if (!cuts) return rule;
+  const clampNote = cuts.usedFloor ? " This age uses the 8 row." : cuts.usedCeiling ? " This age uses the 18 row." : "";
+  return `${rule}${clampNote} Age ${cuts.year}: Below Avg <${cuts.average[0]}, Average ${cuts.average[0]}–${cuts.average[1]}, Above Avg ${cuts.above[0]}–${cuts.above[1]}, Good ${cuts.good[0]}–${cuts.good[1]}, Great ${cuts.great}+ (99 at ${cuts.greatCap} mph).`;
+}
+
+/* Antonelli 10-yard table by the player's age in years. Lower is better.
+   Same age rule as exit velocity: under 8 uses 8, over 18 uses 18.
+   Bands run from the slow time to the fast time:
+     Average 50–64, Above Avg 65–74, Good 75–84.
+   Great starts at 85 just faster than the Great threshold and reaches 99
+   about 0.10 s faster than that threshold, then caps.
+   Below Avg is under 50. One Average-band width slower than the Average line
+   is 20, and anything slower stays at 20. A Below Avg grade never rounds to 50. */
+const TEN_YARD_GREAT_SPAN = 0.10;
+const TEN_YARD_TABLE = {
+  8:  { average: [2.35, 2.55], above: [2.20, 2.34], good: [2.05, 2.19], great: 2.05 },
+  9:  { average: [2.25, 2.45], above: [2.12, 2.24], good: [1.98, 2.11], great: 1.98 },
+  10: { average: [2.15, 2.35], above: [2.03, 2.14], good: [1.90, 2.02], great: 1.90 },
+  11: { average: [2.08, 2.28], above: [1.97, 2.07], good: [1.85, 1.96], great: 1.85 },
+  12: { average: [2.02, 2.20], above: [1.91, 2.01], good: [1.80, 1.90], great: 1.80 },
+  13: { average: [1.95, 2.12], above: [1.85, 1.94], good: [1.75, 1.84], great: 1.75 },
+  14: { average: [1.89, 2.05], above: [1.80, 1.88], good: [1.70, 1.79], great: 1.70 },
+  15: { average: [1.84, 1.99], above: [1.75, 1.83], good: [1.66, 1.74], great: 1.66 },
+  16: { average: [1.80, 1.94], above: [1.72, 1.79], good: [1.63, 1.71], great: 1.63 },
+  17: { average: [1.77, 1.90], above: [1.69, 1.76], good: [1.60, 1.68], great: 1.60 },
+  18: { average: [1.74, 1.87], above: [1.66, 1.73], good: [1.58, 1.65], great: 1.58 },
+};
+
+function tenYardCuts(age) {
+  const year = exitVeloTableAge(age);
+  if (year == null) return null;
+  const row = TEN_YARD_TABLE[year];
+  const actual = Math.floor(Number(age));
+  return {
+    year,
+    actual,
+    usedFloor: actual < 8,
+    usedCeiling: actual > 18,
+    average: row.average,
+    above: row.above,
+    good: row.good,
+    great: row.great,
+    greatCap: Math.round((row.great - TEN_YARD_GREAT_SPAN) * 100) / 100,
+  };
+}
+
+function lerpSpan(v, from, to, gFrom, gTo) {
+  if (from === to) return gFrom;
+  return gFrom + ((v - from) / (to - from)) * (gTo - gFrom);
+}
+
+function hundredths(n) {
+  return Math.round(Number(n) * 100);
+}
+
+function gradeTenYard(value, age) {
+  const rawN = metricNumber(value);
+  const cuts = tenYardCuts(age);
+  if (rawN == null || !cuts) return { grade: null, band: null, year: cuts ? cuts.year : null };
+  /* Compare in hundredths of a second so 2.55 and 1.60 stay on the table edge. */
+  const n = hundredths(rawN);
+  const bands = [
+    { key: "average", label: "Average", slow: hundredths(cuts.average[1]), fast: hundredths(cuts.average[0]), gSlow: 50, gFast: 64 },
+    { key: "above", label: "Above Avg", slow: hundredths(cuts.above[1]), fast: hundredths(cuts.above[0]), gSlow: 65, gFast: 74 },
+    { key: "good", label: "Good", slow: hundredths(cuts.good[1]), fast: hundredths(cuts.good[0]), gSlow: 75, gFast: 84 },
+    { key: "great", label: "Great", slow: hundredths(cuts.great), fast: hundredths(cuts.greatCap), gSlow: 85, gFast: 99 },
+  ];
+  const pack = (raw, band) => {
+    let grade = clamp(Math.round(raw), 20, 99);
+    if (band.key === "below") grade = Math.min(49, grade);
+    return { grade, band, year: cuts.year };
+  };
+  if (n > bands[0].slow) {
+    const span = bands[0].slow - bands[0].fast;
+    const raw = lerpSpan(n, bands[0].slow + span, bands[0].slow, 20, 50);
+    return pack(raw, { key: "below", label: "Below Avg" });
+  }
+  for (let i = 0; i < bands.length; i++) {
+    const band = bands[i];
+    const next = bands[i + 1];
+    const inBand = band.key === "great" ? n < band.slow : n >= band.fast;
+    if (inBand || !next) {
+      if (band.key === "great" && n <= band.fast) return pack(99, { key: "great", label: "Great" });
+      const raw = lerpSpan(n, band.slow, band.fast, band.gSlow, band.gFast);
+      return pack(raw, { key: band.key, label: band.label });
+    }
+    if (n > next.slow) {
+      return pack(lerpSpan(n, band.fast, next.slow, band.gFast, next.gSlow), { key: band.key, label: band.label });
+    }
+  }
+  return pack(99, { key: "great", label: "Great" });
+}
+
+function tenYardCaption(age) {
+  const cuts = tenYardCuts(age);
+  const rule = "Antonelli's 10-yard table, by age in years, lower is better, not Blast and not the age group. Under 8 uses age 8. Over 18 uses age 18.";
+  if (!cuts) return rule;
+  const clampNote = cuts.usedFloor ? " This age uses the 8 row." : cuts.usedCeiling ? " This age uses the 18 row." : "";
+  return `${rule}${clampNote} Age ${cuts.year}: Below Avg >${cuts.average[1]}, Average ${cuts.average[0]}–${cuts.average[1]}, Above Avg ${cuts.above[0]}–${cuts.above[1]}, Good ${cuts.good[0]}–${cuts.good[1]}, Great <${cuts.great} (99 at ${cuts.greatCap} s).`;
+}
+
+function normalizeMetric(key, value, ageGroup, ageYears) {
   const m = METRICS[key];
   if (!m || metricNumber(value) == null) return null;
+  if (key === "exitVelo") return gradeExitVelo(value, ageYears).grade;
+  if (key === "tenYard") return gradeTenYard(value, ageYears).grade;
   if (m.blast) return gradeBlastMetric(key, value, ageGroup).grade;
   const coach = coachSpecFor(key);
   if (m.coach && coach) return gradeWindow(value, coach, ageGroup);
@@ -684,9 +887,10 @@ function overallFromSubgrades(subs) {
    still reserves 40% for the bat-speed grade itself (see hitterWeightMap). */
 const FACE_PARTS = {
   POW: [
-    { key: "batSpeed", weight: 0.50 },
-    { key: "powerKw", weight: 0.30 },
-    { key: "rotationalAcceleration", weight: 0.20 },
+    { key: "batSpeed", weight: 0.40 },
+    { key: "exitVelo", weight: 0.30 },
+    { key: "powerKw", weight: 0.18 },
+    { key: "rotationalAcceleration", weight: 0.12 },
   ],
   CON: [
     { key: "timeToContact", weight: 0.28 },
@@ -706,6 +910,7 @@ const FACE_ORDER = [
 ];
 const BAT_OVERALL_WEIGHT = 0.40;
 const OPTIONAL_OVERALL = { SPD: 0.06, THW: 0.05, STR: 0.05 };
+const EXIT_OVERALL_WEIGHT = 0.12;
 const BLAST_POOL_WEIGHTS = { PWR: 0.22, PLANE: 0.18, QUICK: 0.14, CONN: 0.06 };
 
 function compositeGrade(player, parts) {
@@ -713,7 +918,9 @@ function compositeGrade(player, parts) {
   let total = 0;
   let sum = 0;
   parts.forEach((part) => {
-    const grade = normalizeMetric(part.key, player.metrics && player.metrics[part.key], ageGroup);
+    const grade = part.key === "exitVelo"
+      ? gradeExitVelo(player.metrics && player.metrics.exitVelo, player.age).grade
+      : normalizeMetric(part.key, player.metrics && player.metrics[part.key], ageGroup, player.age);
     if (grade == null) return;
     sum += grade * part.weight;
     total += part.weight;
@@ -723,7 +930,7 @@ function compositeGrade(player, parts) {
 
 function faceGradesFor(player) {
   const ageGroup = activeAgeGroup(player);
-  const spd = normalizeMetric("tenYard", player.metrics && player.metrics.tenYard, ageGroup);
+  const spd = normalizeMetric("tenYard", player.metrics && player.metrics.tenYard, ageGroup, player.age);
   const thw = normalizeMetric("throwVelo", player.metrics && player.metrics.throwVelo, ageGroup);
   const str = strengthGrade(player);
   const grades = { POW: compositeGrade(player, FACE_PARTS.POW), CON: compositeGrade(player, FACE_PARTS.CON), SPD: spd, THW: thw, STR: str };
@@ -732,36 +939,42 @@ function faceGradesFor(player) {
 
 /* Bat speed stays 40% of the hitter overall whenever that grade exists.
    SPD / THW / STR add their modest weights only when they have a grade.
-   PWR, PLANE, QUICK, and CONN share the leftover in their 22:18:14:6 ratio.
+   Exit velocity adds 12% only when it has a grade. That 12% is taken from
+   PWR, PLANE, QUICK, and CONN in their 22:18:14:6 ratio, not from bat speed.
+   With no exit velocity, those Blast buckets share the same leftover as before.
    With none of the optionals and every Blast bucket present, this matches
    overallFromSubgrades on the five Blast buckets. */
-function hitterWeightMap(blastSubs, faceSubs) {
+function hitterWeightMap(blastSubs, faceSubs, exitGrade) {
   const blast = Object.fromEntries(blastSubs.map((row) => [row.key, row.grade]));
   const face = Object.fromEntries(faceSubs.map((row) => [row.key, row.grade]));
-  const map = { BAT: 0, PWR: 0, PLANE: 0, QUICK: 0, CONN: 0, SPD: 0, THW: 0, STR: 0 };
+  const map = { BAT: 0, PWR: 0, PLANE: 0, QUICK: 0, CONN: 0, SPD: 0, THW: 0, STR: 0, EV: 0 };
   const optKeys = ["SPD", "THW", "STR"].filter((key) => face[key] != null);
   const optW = optKeys.reduce((sum, key) => sum + OPTIONAL_OVERALL[key], 0);
+  const exitW = exitGrade == null ? 0 : EXIT_OVERALL_WEIGHT;
   if (blast.BAT == null) {
     const present = Object.entries(BLAST_POOL_WEIGHTS).filter(([key]) => blast[key] != null);
-    const tw = present.reduce((sum, [, weight]) => sum + weight, 0) + optW;
+    const tw = present.reduce((sum, [, weight]) => sum + weight, 0) + optW + exitW;
     if (!tw) return map;
     present.forEach(([key, weight]) => { map[key] = weight / tw; });
     optKeys.forEach((key) => { map[key] = OPTIONAL_OVERALL[key] / tw; });
+    if (exitW) map.EV = exitW / tw;
     return map;
   }
   map.BAT = BAT_OVERALL_WEIGHT;
   const present = Object.entries(BLAST_POOL_WEIGHTS).filter(([key]) => blast[key] != null);
   const presentW = present.reduce((sum, [, weight]) => sum + weight, 0);
-  const pool = 1 - BAT_OVERALL_WEIGHT - optW;
-  if (presentW > 0) present.forEach(([key, weight]) => { map[key] = pool * (weight / presentW); });
+  const pool = 1 - BAT_OVERALL_WEIGHT - optW - exitW;
+  if (presentW > 0 && pool > 0) present.forEach(([key, weight]) => { map[key] = pool * (weight / presentW); });
   optKeys.forEach((key) => { map[key] = OPTIONAL_OVERALL[key]; });
+  if (exitW) map.EV = exitW;
   return map;
 }
 
-function hitterOverall(blastSubs, faceSubs) {
-  const weights = hitterWeightMap(blastSubs, faceSubs);
+function hitterOverall(blastSubs, faceSubs, exitGrade) {
+  const weights = hitterWeightMap(blastSubs, faceSubs, exitGrade);
   const grades = Object.fromEntries(blastSubs.map((row) => [row.key, row.grade]));
   faceSubs.forEach((row) => { grades[row.key] = row.grade; });
+  grades.EV = exitGrade;
   let sum = 0;
   let tw = 0;
   Object.entries(weights).forEach(([key, weight]) => {
@@ -778,7 +991,8 @@ function gradesFor(player) {
   }
   const blast = subGradesFor(player, "hitter");
   const face = faceGradesFor(player);
-  const hitting = hitterOverall(blast, face);
+  const exitGrade = gradeExitVelo(player.metrics && player.metrics.exitVelo, player.age).grade;
+  const hitting = hitterOverall(blast, face, exitGrade);
   if (player.type === "two-way") {
     const pitching = subGradesFor(player, "pitcher");
     const overall = clamp(Math.round((hitting + overallFromSubgrades(pitching)) / 2), 20, 99);
@@ -884,9 +1098,13 @@ function archiveCurrentCard(player, archivedAt) {
   const metricGrades = {};
   metricKeysFor(player.type).forEach((key) => {
     const value = player.metrics ? player.metrics[key] : null;
-    const grade = normalizeMetric(key, value, ageGroup);
+    let grade = normalizeMetric(key, value, ageGroup, player.age);
     let band = null;
-    if (METRICS[key] && METRICS[key].blast) {
+    if (key === "exitVelo" || key === "tenYard") {
+      const scored = key === "exitVelo" ? gradeExitVelo(value, player.age) : gradeTenYard(value, player.age);
+      grade = scored.grade;
+      band = scored.band ? { key: scored.band.key, label: scored.band.label } : null;
+    } else if (METRICS[key] && METRICS[key].blast) {
       const scored = gradeBlastMetric(key, value, ageGroup);
       band = scored.band ? { key: scored.band.key, label: scored.band.label } : null;
     } else {
@@ -1818,7 +2036,7 @@ function seedSampleEarns() {
 seedSampleEarns();
 
 function athleticKeys() {
-  const keys = ["tenYard", "throwVelo"];
+  const keys = ["tenYard", "throwVelo", "exitVelo"];
   STRENGTH_TESTS.forEach((test) => {
     if (test.hands) keys.push(...test.hands);
     else keys.push(test.id);
@@ -1851,10 +2069,36 @@ function defaultPitcherMetrics() {
   return { fastballVelo: 78, spinRate: 2000, strikePct: 58, whiffPct: 22, pitchCapacity: 60 };
 }
 
-function defaultAthleticMetrics(ageGroup) {
+function representativeAge(ageGroup) {
+  return { "10U": 10, "12U": 12, "14U": 14, "16U": 16, "18U": 18, College: 19, Pro: 23 }[ageGroup] || 16;
+}
+
+function defaultTenYard(age) {
+  const cuts = tenYardCuts(age);
+  if (!cuts) return null;
+  return Math.round(((cuts.average[0] + cuts.average[1]) / 2) * 100) / 100;
+}
+
+function defaultExitVelo(age) {
+  const cuts = exitVeloCuts(age);
+  if (!cuts) return null;
+  return Math.round(((cuts.average[0] + cuts.average[1]) / 2) * 2) / 2;
+}
+
+function defaultAthleticMetrics(ageGroup, age) {
   const group = AGE_GROUP_ORDER.includes(ageGroup) ? ageGroup : "16U";
   const out = {};
   athleticKeys().forEach((key) => {
+    if (key === "exitVelo") {
+      const seeded = defaultExitVelo(age != null && age !== "" ? age : representativeAge(group));
+      if (seeded != null) out[key] = seeded;
+      return;
+    }
+    if (key === "tenYard") {
+      const seeded = defaultTenYard(age != null && age !== "" ? age : representativeAge(group));
+      if (seeded != null) out[key] = seeded;
+      return;
+    }
     const spec = coachSpecFor(key);
     const window = spec && spec.bands && (spec.bands[group] || spec.bands["16U"]);
     if (!window) return;
@@ -1864,10 +2108,10 @@ function defaultAthleticMetrics(ageGroup) {
   return out;
 }
 
-function defaultMetrics(type, ageGroup) {
+function defaultMetrics(type, ageGroup, age) {
   const blast = defaultBlastMetrics(ageGroup || "16U");
   const pitch = defaultPitcherMetrics();
-  const athletic = defaultAthleticMetrics(ageGroup || "16U");
+  const athletic = defaultAthleticMetrics(ageGroup || "16U", age);
   const out = {};
   metricKeysFor(type).forEach((k) => {
     if (BLAST_KEYS.includes(k)) out[k] = blast[k];
@@ -1877,7 +2121,9 @@ function defaultMetrics(type, ageGroup) {
   return out;
 }
 
-function benchmarkCaption(key, ageGroup) {
+function benchmarkCaption(key, ageGroup, age) {
+  if (key === "exitVelo") return exitVeloCaption(age);
+  if (key === "tenYard") return tenYardCaption(age);
   const m = METRICS[key];
   const coach = coachSpecFor(key);
   if (m.coach && coach && coach.bands) {
@@ -1978,7 +2224,8 @@ function migratePlayer(p) {
     });
   }
   /* Optional athletic metrics stay absent when the old card did not have them.
-     sixtyYard is never copied onto tenYard. SPD stays blank instead. */
+     sixtyYard is never copied onto tenYard. SPD stays blank instead.
+     The old exitVelocity field is the pre-Blast marker. It is not copied onto exitVelo. */
   athleticKeys().forEach((k) => {
     if (k === "tenYard") {
       const dash = metricNumber(old.tenYard);
@@ -2033,6 +2280,7 @@ function savePlayers() {
 function metricImproved(key, before, after, ageGroup) {
   const m = METRICS[key];
   if (!m) return after > before;
+  if (m.mode === "lower") return after < before;
   if (m.blast || m.coach) {
     const spec = m.blast ? BLAST_BENCHMARKS[key] : coachSpecFor(key);
     const mode = spec && spec.mode;
@@ -2072,10 +2320,15 @@ function deltaHTML(key, history, ageGroup) {
   return `<span class="${good ? "delta-up" : "delta-down"}">${diff > 0 ? "▲ +" : "▼ "}${diff}</span>`;
 }
 
-function bandHTML(key, value, ageGroup) {
+function bandHTML(key, value, ageGroup, ageYears) {
   const meta = METRICS[key];
   if (!meta || (!meta.blast && !meta.coach)) return "—";
-  const grade = meta.blast ? gradeBlastMetric(key, value, ageGroup).grade : normalizeMetric(key, value, ageGroup);
+  if (key === "exitVelo" || key === "tenYard") {
+    const scored = key === "exitVelo" ? gradeExitVelo(value, ageYears) : gradeTenYard(value, ageYears);
+    if (!scored.band) return "—";
+    return `<span class="band-chip band-${scored.band.key}">${esc(scored.band.label)}</span>`;
+  }
+  const grade = meta.blast ? gradeBlastMetric(key, value, ageGroup).grade : normalizeMetric(key, value, ageGroup, ageYears);
   const band = bandForGrade(grade);
   if (!band) return "—";
   return `<span class="band-chip band-${band.key}">${esc(band.label)}</span>`;
@@ -2138,6 +2391,26 @@ function rawBackLine(label, text) {
   return `<div class="back-raw"><span>${esc(label)}</span><b>${text}</b></div>`;
 }
 
+function exitVeloBackText(player) {
+  const n = metricNumber(player.metrics && player.metrics.exitVelo);
+  if (n == null) return "—";
+  const scored = gradeExitVelo(n, player.age);
+  const label = scored.band ? scored.band.label : "";
+  const year = scored.year;
+  const row = year == null ? "" : `Antonelli age ${year}`;
+  return `${formatMetric("exitVelo", n)} mph${label ? " · " + label : ""}${row ? " · " + row : ""}`;
+}
+
+function tenYardBackText(player) {
+  const n = metricNumber(player.metrics && player.metrics.tenYard);
+  if (n == null) return "—";
+  const scored = gradeTenYard(n, player.age);
+  const label = scored.band ? scored.band.label : "";
+  const year = scored.year;
+  const row = year == null ? "" : `Antonelli age ${year}`;
+  return `${formatMetric("tenYard", n)} s${label ? " · " + label : ""}${row ? " · " + row : ""}`;
+}
+
 function gripBackText(player) {
   const metrics = player.metrics || {};
   const dominant = metricNumber(metrics.gripDominant);
@@ -2164,7 +2437,8 @@ function cardBackHTML(player, face, subs, opts) {
   const gradeLine = subs.map((row) => `<div class="back-grade"><b>${row.grade ?? "—"}</b><span>${esc(row.key)}</span><small>${esc(row.label || row.key)}</small></div>`).join("");
   const hitting = player.type !== "pitcher" ? [
     rawBackLine("Bat speed", metricNumber(metrics.batSpeed) == null ? "—" : `${formatMetric("batSpeed", metrics.batSpeed)} mph`),
-    rawBackLine("10-yard dash", metricNumber(metrics.tenYard) == null ? "—" : `${formatMetric("tenYard", metrics.tenYard)} s`),
+    rawBackLine("Exit velo", exitVeloBackText(player)),
+    rawBackLine("10-yard dash", tenYardBackText(player)),
     rawBackLine("Throw velo", metricNumber(metrics.throwVelo) == null ? "—" : `${formatMetric("throwVelo", metrics.throwVelo)} mph`),
     rawBackLine("Med ball", medText),
     rawBackLine("Grip", gripBackText(player)),
@@ -2475,20 +2749,20 @@ function metricsTable(player) {
     const m = METRICS[k];
     const hist = (player.history && player.history[k]) || [player.metrics[k]];
     const prev = hist.length > 1 ? hist[hist.length - 2] : null;
-    const grade = normalizeMetric(k, player.metrics[k], ageGroup);
+    const grade = normalizeMetric(k, player.metrics[k], ageGroup, player.age);
     return `<tr>
       <td><strong>${m.label}</strong><br><span class="muted" style="font-size:12px">${esc(m.help)}</span></td>
       <td><strong>${formatMetric(k, player.metrics[k])}${esc(m.unit)}</strong></td>
       <td>${prev == null ? "—" : formatMetric(k, prev) + esc(m.unit)}</td>
       <td>${deltaHTML(k, hist, ageGroup)}</td>
       <td>${sparkline(hist, k, ageGroup)}</td>
-      <td>${bandHTML(k, player.metrics[k], ageGroup)}</td>
+      <td>${bandHTML(k, player.metrics[k], ageGroup, player.age)}</td>
       <td><span class="grade-chip">${grade ?? "—"}</span></td>
     </tr>`;
   }).join("");
   const note = player.type === "pitcher"
     ? "Pitcher grades are 20–99 against the coach benchmarks in METRICS. Those ranges are not published Blast numbers."
-    : `Blast rows use the published window for <strong>${esc(ageGroup)}</strong>. 10-yard, throwing velocity, med ball, and grip use Antonelli coach-tuneable bands in the same age group. STR grades the better grip hand (the throwing hand is dominant; a single entered hand still counts) and averages it with the med-ball grade. A saved 60-yard time is not used.`;
+    : `Blast rows use the published window for <strong>${esc(ageGroup)}</strong>. Throwing velocity, med ball, and grip use Antonelli coach-tuneable bands in the same age group. Exit velocity and the 10-yard dash use Antonelli's age-by-age tables (the player's age in years, not this age group). STR grades the better grip hand (the throwing hand is dominant; a single entered hand still counts) and averages it with the med-ball grade. A saved 60-yard time is not used.`;
   return `<div class="table-scroll"><table><thead><tr><th>Metric</th><th>Current</th><th>Previous</th><th>Change</th><th>History</th><th>Band</th><th>Grade</th></tr></thead><tbody>${rows}</tbody></table></div>
   <p class="muted small">${note}</p>`;
 }
@@ -2967,14 +3241,16 @@ function gradeTone(grade) {
   return "tone-low";
 }
 
-function attrBar(label, grade, title) {
-  const band = bandForGrade(grade);
+function attrBar(label, grade, title, bandOverride) {
+  const band = bandOverride || bandForGrade(grade);
   const h = grade == null ? 0 : Math.max(8, Math.round((Number(grade) / 99) * 100));
   const tip = `${title}${band ? " · " + band.label : ""}`;
+  const sub = bandOverride ? `<div class="attr-band">${esc(bandOverride.label)}</div>` : "";
   return `<div class="attr-col" title="${esc(tip)}" role="img" aria-label="${esc(tip)} ${grade ?? ""}">
     <div class="attr-num">${grade == null ? "—" : grade}</div>
     <div class="attr-track" aria-hidden="true"><i class="attr-fill ${gradeTone(grade)}" style="--h:${h}%"></i></div>
     <div class="attr-key">${esc(label)}</div>
+    ${sub}
   </div>`;
 }
 
@@ -2987,11 +3263,30 @@ function metricBars(player, pairs) {
   return pairs.map(([label, key]) => attrBar(label, normalizeMetric(key, player.metrics && player.metrics[key], age), METRICS[key].label)).join("");
 }
 
+function exitVeloBar(player) {
+  const scored = gradeExitVelo(player.metrics && player.metrics.exitVelo, player.age);
+  const year = scored.year;
+  const title = year == null
+    ? "Exit velocity, Antonelli's age table, not Blast"
+    : `Exit velocity, Antonelli age ${year}, not Blast`;
+  return attrBar("EV", scored.grade, title, scored.band);
+}
+
+function tenYardBar(player) {
+  const scored = gradeTenYard(player.metrics && player.metrics.tenYard, player.age);
+  const year = scored.year;
+  const title = year == null
+    ? "10-yard dash, Antonelli's age table, lower is better"
+    : `10-yard dash, Antonelli age ${year}, lower is better`;
+  return attrBar("10-YD", scored.grade, title, scored.band);
+}
+
 function athleticBars(player) {
   const age = activeAgeGroup(player);
-  const pairs = [["10-YD", "tenYard"], ["THROW", "throwVelo"], ["MED", "medBall"]];
+  const pairs = [["THROW", "throwVelo"], ["MED", "medBall"]];
   const grip = strengthResults(player).find((row) => row.id === "grip");
-  return pairs.map(([label, key]) => attrBar(label, normalizeMetric(key, player.metrics && player.metrics[key], age), METRICS[key].label)).join("")
+  return tenYardBar(player)
+    + pairs.map(([label, key]) => attrBar(label, normalizeMetric(key, player.metrics && player.metrics[key], age), METRICS[key].label)).join("")
     + attrBar("GRIP", grip ? grip.grade : null, "Grip strength, better hand");
 }
 
@@ -3000,6 +3295,7 @@ function attributePanel(player) {
   const groups = [];
   if (player.type !== "pitcher") {
     groups.push({ title: player.type === "two-way" ? "Hitting tools" : "Tools", bars: toolBars(g.hitterSubs || g.subs) });
+    groups.push({ title: "Exit velocity", bars: exitVeloBar(player) });
     groups.push({ title: "Speed, arm, strength", bars: athleticBars(player) });
     groups.push({ title: "Blast grades", bars: metricBars(player, HITTER_BAR_KEYS) });
   }
@@ -3179,8 +3475,8 @@ function openProfile(id, opts) {
   const built = p.type === "pitcher"
     ? "Pitcher overall uses velocity 30%, breaking stuff 25%, command 30%, and stamina 15%."
     : p.type === "two-way"
-      ? `Hitting half is graded at <strong>${esc(group)}</strong>. Bat speed stays 40% of that half. SPD, THW, and STR are modest and drop out when blank. Overall averages the hitter grade and the pitcher grade. The front shows POW, CON, SPD, THW, and STR.`
-      : `Graded at <strong>${esc(group)}</strong>. Bat speed is 40% of the hitter overall. SPD, THW, and STR are left out when those tests are blank. The front reads POW, CON, SPD, THW, STR.`;
+      ? `Hitting half is graded at <strong>${esc(group)}</strong>. Bat speed stays 40% of that half. Exit velocity is about 12% when it is filled in, from Antonelli's age table, and it also feeds POW. SPD is the 10-yard dash on Antonelli's age table. THW and STR are modest and drop out when blank. Overall averages the hitter grade and the pitcher grade. The front shows POW, CON, SPD, THW, and STR.`
+      : `Graded at <strong>${esc(group)}</strong>. Bat speed is 40% of the hitter overall. Exit velocity is about 12% when it is filled in, from Antonelli's age table, not Blast, and it also feeds POW. SPD is the 10-yard dash on that same age table. THW and STR are left out when those tests are blank. The front reads POW, CON, SPD, THW, STR.`;
   const fact = (label, value) => `<div class="show-fact"><b>${value}</b><span>${label}</span></div>`;
   $("rosterView").hidden = true;
   $("profileView").hidden = false;
@@ -3546,7 +3842,7 @@ function sliderBounds(key) {
 function renderMetricFields(playerLike) {
   const keys = metricKeysFor(playerLike.type);
   const ageGroup = activeAgeGroup(playerLike);
-  const defaults = defaultMetrics(playerLike.type, ageGroup);
+  const defaults = defaultMetrics(playerLike.type, ageGroup, playerLike.age);
   const note = playerLike.type === "pitcher" ? "" : `<div class="metric-row">
       <label for="f-strengthNote">Med ball note <small>Ball weight and throw type. The default is a 6 lb rotational / scoop throw. The med-ball bands assume that throw — edit STRENGTH_TESTS if the ball changes. STR averages this throw with grip strength.</small></label>
       <input id="f-strengthNote" type="text" value="${esc(playerLike.strengthNote != null ? playerLike.strengthNote : DEFAULT_STRENGTH_NOTE)}">
@@ -3557,13 +3853,17 @@ function renderMetricFields(playerLike) {
     const has = metricNumber(stored) != null;
     const sliderVal = has ? stored : defaults[k];
     const bounds = sliderBounds(k);
-    const grade = has ? normalizeMetric(k, stored, ageGroup) : null;
-    const bandInfo = has ? bandForGrade(grade) : null;
+    const grade = has ? normalizeMetric(k, stored, ageGroup, playerLike.age) : null;
+    const bandInfo = has
+      ? (k === "exitVelo" ? gradeExitVelo(stored, playerLike.age).band
+        : k === "tenYard" ? gradeTenYard(stored, playerLike.age).band
+        : bandForGrade(grade))
+      : null;
     const band = m.coach || m.blast
       ? `<span class="band-chip ${bandInfo ? "band-" + bandInfo.key : ""}" id="band-${k}">${bandInfo ? esc(bandInfo.label) : "—"}</span>`
       : "";
     return `<div class="metric-row">
-      <label for="m-${k}">${m.label} <small>${esc(m.help)} • ${esc(benchmarkCaption(k, ageGroup))}</small></label>
+      <label for="m-${k}">${m.label} <small id="cap-${k}">${esc(m.help)} • ${esc(benchmarkCaption(k, ageGroup, playerLike.age))}</small></label>
       <div class="metric-inputs">
         <input type="range" id="range-${k}" data-metric="${k}" min="${bounds.min}" max="${bounds.max}" step="${m.step}" value="${sliderVal}">
         <input type="number" id="m-${k}" data-metric="${k}" step="${m.step}" value="${has ? stored : ""}" placeholder="blank">
@@ -3579,17 +3879,42 @@ function renderMetricFields(playerLike) {
       const range = $(`range-${k}`), num = $(`m-${k}`);
       if (input.type === "range") num.value = input.value; else range.value = input.value;
       const group = $("f-ageGroup").value;
-      const grade = normalizeMetric(k, num.value, group);
+      const age = parseInt($("f-age").value, 10);
+      const grade = normalizeMetric(k, num.value, group, age);
       $(`grade-${k}`).textContent = grade ?? "—";
       const bandEl = $(`band-${k}`);
       if (bandEl && (METRICS[k].blast || METRICS[k].coach)) {
-        const band = bandForGrade(grade);
+        const band = k === "exitVelo" ? gradeExitVelo(num.value, age).band
+          : k === "tenYard" ? gradeTenYard(num.value, age).band
+          : bandForGrade(grade);
         bandEl.textContent = band ? band.label : "—";
         bandEl.className = band ? `band-chip band-${band.key}` : "band-chip";
       }
       updateLivePreview();
     });
   });
+}
+
+function refreshAntonelliReadout(key, gradeFn, captionFn) {
+  const num = $(`m-${key}`);
+  if (!num) return;
+  const age = parseInt($("f-age").value, 10);
+  const cap = $(`cap-${key}`);
+  if (cap) cap.textContent = `${METRICS[key].help} • ${captionFn(age)}`;
+  if (num.value === "") return;
+  const scored = gradeFn(num.value, age);
+  const gradeEl = $(`grade-${key}`);
+  if (gradeEl) gradeEl.textContent = scored.grade ?? "—";
+  const bandEl = $(`band-${key}`);
+  if (bandEl) {
+    bandEl.textContent = scored.band ? scored.band.label : "—";
+    bandEl.className = scored.band ? `band-chip band-${scored.band.key}` : "band-chip";
+  }
+}
+
+function refreshExitVeloReadout() {
+  refreshAntonelliReadout("exitVelo", gradeExitVelo, exitVeloCaption);
+  refreshAntonelliReadout("tenYard", gradeTenYard, tenYardCaption);
 }
 
 function checkedCoachQuirks() {
@@ -3693,7 +4018,7 @@ function openModal(player) {
   pendingPhotoData = isEdit ? (player.photo || "") : "";
   const photoInput = $("f-photo"); if (photoInput) photoInput.value = "";
   updatePhotoPreview();
-  const seed = isEdit ? player : { type: "hitter", age: 16, ageGroup: "16U", metrics: defaultMetrics("hitter", "16U") };
+  const seed = isEdit ? player : { type: "hitter", age: 16, ageGroup: "16U", metrics: defaultMetrics("hitter", "16U", 16) };
   renderQuirkFields(isEdit ? (player.coachQuirks || []) : []);
   renderMetricFields(seed);
   updateLivePreview();
@@ -3727,7 +4052,7 @@ function sdRawGap(key, trailer, leader) {
   const meta = METRICS[key];
   if (!meta) return "";
   const coach = coachSpecFor(key);
-  const mode = (BLAST_BENCHMARKS[key] && BLAST_BENCHMARKS[key].mode) || (coach && coach.mode) || (meta.invert ? "lower" : "higher");
+  const mode = (BLAST_BENCHMARKS[key] && BLAST_BENCHMARKS[key].mode) || (coach && coach.mode) || meta.mode || (meta.invert ? "lower" : "higher");
   if (mode === "ideal" || mode === "ope") return "";
   const have = (player) => player.metrics && player.metrics[key] != null && !Number.isNaN(Number(player.metrics[key]));
   if (!have(trailer) || !have(leader)) return "";
@@ -3785,9 +4110,19 @@ function buildShowdown(a, b) {
     const aOn = metricKeysFor(a.type).includes(key);
     const bOn = metricKeysFor(b.type).includes(key);
     if (!aOn && !bOn) return;
-    const aGrade = aOn ? normalizeMetric(key, a.metrics && a.metrics[key], activeAgeGroup(a)) : null;
-    const bGrade = bOn ? normalizeMetric(key, b.metrics && b.metrics[key], activeAgeGroup(b)) : null;
-    const raw = (player, on) => !on || !player.metrics ? "" : `${formatMetric(key, player.metrics[key])}${meta.unit} · ${activeAgeGroup(player)}`;
+    const aGrade = aOn ? normalizeMetric(key, a.metrics && a.metrics[key], activeAgeGroup(a), a.age) : null;
+    const bGrade = bOn ? normalizeMetric(key, b.metrics && b.metrics[key], activeAgeGroup(b), b.age) : null;
+    const raw = (player, on) => {
+      if (!on || !player.metrics || metricNumber(player.metrics[key]) == null) return "";
+      if (key === "exitVelo" || key === "tenYard") {
+        const scored = key === "exitVelo" ? gradeExitVelo(player.metrics[key], player.age) : gradeTenYard(player.metrics[key], player.age);
+        const band = scored.band ? scored.band.label : "";
+        const year = scored.year == null ? "" : `Antonelli age ${scored.year}`;
+        const unit = key === "exitVelo" ? " mph" : " s";
+        return [formatMetric(key, player.metrics[key]) + unit, band, year].filter(Boolean).join(" · ");
+      }
+      return `${formatMetric(key, player.metrics[key])}${meta.unit} · ${activeAgeGroup(player)}`;
+    };
     rows.push(sdRow({
       id: key, label: meta.label, section: PITCHER_KEYS.includes(key) ? "pitch" : "hit", metricKey: key,
       aGrade, bGrade,
@@ -3813,7 +4148,7 @@ function buildShowdown(a, b) {
   const overallWinner = overall && overall.winner !== "tie" ? overall.winner : "tie";
   const an = String(a.name || "A").split(" ")[0];
   const bn = String(b.name || "B").split(" ")[0];
-  const note = "Grades are vs each player's own age group. Raw numbers are the actual readings, side by side."
+  const note = "Grades are vs each player's own age group. Exit velocity and the 10-yard dash use Antonelli's age-in-years tables, not that age group and not Blast. Raw numbers are the actual readings, side by side."
     + (a.type !== b.type ? " Only categories on both cards are scored. A dash is not on that card, and it is not a loss." : "");
   return {
     ok: true,
@@ -4016,7 +4351,7 @@ function bindApp() {
     const group = $("f-ageGroup").value || "16U";
     const like = editingDefaults && editingDefaults.type === $("f-type").value
       ? editingDefaults
-      : { type: $("f-type").value, ageGroup: group, metrics: defaultMetrics($("f-type").value, group) };
+      : { type: $("f-type").value, age: parseInt($("f-age").value, 10) || 16, ageGroup: group, metrics: defaultMetrics($("f-type").value, group, parseInt($("f-age").value, 10) || 16) };
     renderMetricFields(like);
     updateLivePreview();
     updatePhotoPreview();
@@ -4030,6 +4365,7 @@ function bindApp() {
       renderMetricFields(formPlayerLike());
     }
     $("f-age").dataset.prevAge = String(age);
+    refreshExitVeloReadout();
     updateLivePreview();
   });
   $("f-ageGroup").addEventListener("change", () => {
