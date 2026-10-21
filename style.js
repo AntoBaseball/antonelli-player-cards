@@ -255,9 +255,9 @@ function styleWire(player) {
     "<button class=\"btn btn-ghost\" type=\"button\" data-game=\"zone\">Zone discipline</button></div>" +
     "<div data-game-host id=\"styleGame\"></div><h3>Game board</h3><div id=\"styleBoard\">" + styleGameBoard() + "</div></div>");
   const skin = document.getElementById("styleSkin");
-  if (skin) skin.addEventListener("change", () => { player.road.skin = skin.value; savePlayers(); if (typeof renderRoster === "function") renderRoster(); stylePlayCele(player); });
+  if (skin) skin.addEventListener("change", () => { player.road.skin = skin.value; savePlayers(); if (typeof renderRoster === "function") renderRoster(); });
   const cele = document.getElementById("styleCele");
-  if (cele) cele.addEventListener("change", () => { player.road.celebration = cele.value; savePlayers(); stylePlayCele(player); });
+  if (cele) cele.addEventListener("change", () => { player.road.celebration = cele.value; savePlayers(); });
   const phrase = document.getElementById("stylePhrase");
   if (phrase) phrase.addEventListener("change", () => { player.road.signature = phrase.value; savePlayers(); });
   stylePad(player);
@@ -325,25 +325,72 @@ function stylePad(player) {
 }
 
 function styleGlyph(player) {
-  const pick = STYLE_CELEBRATIONS.find((s) => s.id === ((player.road && player.road.celebration) || "fire")) || STYLE_CELEBRATIONS[0];
-  return pick.glyph + " ";
+  const id = player && player.road && player.road.celebration;
+  const pick = STYLE_CELEBRATIONS.find((s) => s.id === id);
+  return pick ? pick.glyph + " " : "";
+}
+
+const STYLE_CELE_KICK = {
+  fire: "Fire burst",
+  pump: "Fist pump",
+  confetti: "Confetti",
+  flip: "Bat flip",
+  crown: "Crown",
+  ice: "Ice",
+  eagle: "Eagle",
+  lights: "Stadium lights",
+};
+
+let styleCeleTimer = 0;
+
+function styleClearCele() {
+  if (styleCeleTimer) {
+    clearTimeout(styleCeleTimer);
+    styleCeleTimer = 0;
+  }
+  if (typeof document === "undefined") return;
+  document.querySelectorAll(".cele-overlay").forEach((node) => node.remove());
+}
+
+function styleFx(id) {
+  if (id === "flip") return "<div class=\"fx-bat\"><i></i><b></b></div>";
+  if (id === "crown") return "<div class=\"fx-crown\"><i></i><i></i><i></i></div>";
+  if (id === "ice") return "<div class=\"fx-ice\"><i></i><i></i><i></i></div>";
+  if (id === "eagle") return "<div class=\"fx-eagle\"><svg viewBox=\"0 0 64 36\"><path d=\"M32 20 C24 16 12 14 2 18 C14 12 22 14 32 6 C42 14 50 12 62 18 C50 14 40 16 32 20 Z\"/></svg></div>";
+  if (id === "lights") return "<div class=\"fx-lights\"><i></i><i></i><i></i></div>";
+  if (id === "confetti") return "<div class=\"fx-confetti\"><i></i><i></i><i></i><i></i><i></i><i></i></div>";
+  if (id === "pump") return "<div class=\"fx-pump\"><i></i><b></b></div>";
+  return "<div class=\"fx-fire\"><i></i><i></i><i></i><i></i><i></i></div>";
 }
 
 function styleOnView(player) {
   const viewer = typeof roadSignedIn === "function" ? roadSignedIn() : null;
-  if (!viewer || !player || viewer.id === player.id) return;
+  if (!viewer || !player || viewer.id === player.id) {
+    styleClearCele();
+    return;
+  }
   stylePlayCele(player);
 }
 
-function stylePlayCele(player) {
+function stylePlayCele(player, opts) {
   if (typeof document === "undefined" || !player) return;
-  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const pr = !!(opts && opts.pr);
+  const viewer = typeof roadSignedIn === "function" ? roadSignedIn() : null;
+  if (!pr && viewer && viewer.id === player.id) return;
+  styleClearCele();
   const pick = STYLE_CELEBRATIONS.find((s) => s.id === ((player.road && player.road.celebration) || "fire")) || STYLE_CELEBRATIONS[0];
   const el = document.createElement("div");
   el.className = "cele-overlay cele-" + pick.id;
-  el.innerHTML = "<b>" + pick.glyph + "</b><span>" + (player.road && player.road.signature ? player.road.signature : pick.name) + "</span><small>" + (player.name || "") + "</small>";
+  el.setAttribute("role", "status");
+  const safe = typeof esc === "function" ? esc : (value) => String(value || "");
+  const kicker = pr ? "Personal best" : (STYLE_CELE_KICK[pick.id] || pick.name);
+  el.innerHTML = "<div class=\"cele-fx\" aria-hidden=\"true\">" + styleFx(pick.id) + "</div><div class=\"cele-copy\"><span>" + safe(kicker) + "</span><b>" + safe(player.name || "") + "</b></div>";
   document.body.appendChild(el);
-  setTimeout(() => el.remove(), 1600);
+  const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  styleCeleTimer = setTimeout(() => {
+    el.remove();
+    styleCeleTimer = 0;
+  }, reduced ? 1600 : 2200);
 }
 
 function styleOpenPack(player) {
@@ -517,6 +564,8 @@ function styleBoot() {
 
 globalThis.styleGlyph = styleGlyph;
 globalThis.styleOnView = styleOnView;
+globalThis.stylePlayCele = stylePlayCele;
+globalThis.styleClearCele = styleClearCele;
 globalThis.styleCardClass = styleCardClass;
 globalThis.styleBackExtra = styleBackExtra;
 globalThis.styleWire = styleWire;
