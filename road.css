@@ -58,8 +58,12 @@
 .card-brand .brand-row em{font-style:normal}
 .back-perks{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
 .back-perks .perk-badge,.back-perks .q-badge{position:static;max-width:none;overflow:hidden}
-.card-meta-mini{display:block;margin-top:4px;font-size:9px;font-weight:800;letter-spacing:.3px;opacity:.9;text-shadow:0 1px 4px #000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.card-phrase{display:block;margin-top:3px;font-size:11px;font-style:italic;color:#f7ecc8;text-shadow:0 1px 5px #000}
+.card-facts{display:flex;flex-wrap:nowrap;justify-content:flex-end;align-items:center;gap:6px;min-width:0;margin-top:2px}
+.card-facts .pos-bar{flex:none;margin:0}
+.card-facts .card-meta-mini{flex:0 1 auto;min-width:0}
+.card-facts .card-phrase{flex:1 1 0;min-width:2.2em}
+.card-meta-mini{display:block;margin:0;font-size:9px;font-weight:800;letter-spacing:.3px;opacity:.9;text-shadow:0 1px 4px #000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-phrase{display:block;margin:0;font-size:11px;font-style:italic;color:#f7ecc8;text-shadow:0 1px 5px #000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right}
 .bb-card.is-hot{box-shadow:0 0 0 2px #f97316, 0 0 22px rgba(249,115,22,.75), inset 0 0 0 2px rgba(212,175,55,.7)}
 .bb-card.is-hot::after{box-shadow:inset 0 0 40px rgba(249,115,22,.25)}
 .bb-card.tier-legend{background:radial-gradient(90% 55% at 78% 8%, rgba(255,70,40,.45), transparent 46%), linear-gradient(165deg,#140204 0%,#4a060c 20%,#8e1016 46%,#e10600 68%,#ff2a18 82%,#3a060c 100%);border-color:#ff3b30;box-shadow:0 16px 36px rgba(40,0,0,.65), inset 0 0 0 2px rgba(255,214,120,.8), inset 0 0 0 7px rgba(28,0,4,.72), inset 0 -48px 60px rgba(10,0,0,.55)}
@@ -70,7 +74,8 @@
 .tier-legend .card-foil{opacity:.85;mix-blend-mode:soft-light;background:linear-gradient(118deg,rgba(40,0,0,.15) 8%,rgba(255,24,12,.55) 30%,#fff 47%,rgba(255,32,16,.6) 62%,rgba(90,0,8,.4) 84%)}
 .tier-legend .card-glare{width:34%;background:linear-gradient(90deg,transparent 0%,rgba(255,60,40,.2) 28%,#fff 50%,rgba(255,180,60,.35) 70%,transparent 88%)}
 .tier-legend .card-sparks i::before,.tier-legend .card-sparks i::after{background:#fff;box-shadow:0 0 8px #ff2a18}
-.tier-legend .overall-diamond{background:linear-gradient(145deg,#ff3b30,#c4121a 48%,#2a0408);box-shadow:0 0 22px rgba(255,30,20,.75), inset 0 0 0 2px rgba(255,255,255,.5)}
+.tier-legend .overall-diamond > div{background:linear-gradient(145deg,#ff3b30,#c4121a 48%,#2a0408)}
+.tier-legend .overall-diamond{box-shadow:0 0 22px rgba(255,30,20,.75)}
 .legend-fx{position:absolute;inset:0;z-index:5;pointer-events:none;overflow:hidden}
 .legend-fx i{position:absolute;bottom:-10%;width:22%;height:48%;border-radius:50% 50% 40% 40%;background:radial-gradient(ellipse at 50% 80%, rgba(255,220,120,.95), rgba(225,16,8,.85) 40%, transparent 72%);filter:blur(0.4px);animation:legend-flame 1.15s ease-in-out infinite;transform-origin:50% 100%}
 .legend-fx i:nth-child(1){left:6%}
