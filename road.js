@@ -710,7 +710,7 @@ function roadProfileHTML(player) {
       (links.perfectGame ? "<a href=\"" + roadEsc(links.perfectGame) + "\" target=\"_blank\" rel=\"noopener\">Perfect Game</a> " : "") +
       (links.pbr ? "<a href=\"" + roadEsc(links.pbr) + "\" target=\"_blank\" rel=\"noopener\">Prep Baseball</a>" : "") +
       (!links.perfectGame && !links.pbr ? "—" : "") + "</p>" +
-    "<h3>Trophy case</h3><ul>" + evos + "</ul>" +
+    "<h3 id=\"roadTrophies\">Trophy case</h3><ul>" + evos + "</ul>" +
     "<h3>Career timeline</h3><ul>" + timeline + "</ul></div>";
 }
 
@@ -761,15 +761,17 @@ function roadHomeHTML(player) {
   const can = roadCanEdit(player);
   const list = missions.map((m) => {
     const meta = roadMissionMeta(m.id);
-    const btn = can && !m.done ? "<button class=\"btn btn-ghost\" type=\"button\" data-mission=\"" + roadEsc(m.id) + "\">Done</button>" : (m.done ? "Done" : "");
-    return "<li class=\"" + (m.done ? "mission-done" : "") + "\"><span>" + roadEsc(meta.label) + "<br><small>" + roadEsc(meta.gear) + "</small></span>" + btn + "</li>";
+    const xp = meta.xp === "minigame" ? ROAD_XP.minigame : ROAD_XP.assignment;
+    const hit = "<span class=\"check-circle\" aria-hidden=\"true\"></span><span class=\"mission-copy\"><b>" + roadEsc(meta.label) + "</b><small>" + roadEsc(meta.gear) + "</small></span><span class=\"mission-xp\">+" + xp + " XP</span>";
+    if (can && !m.done) return "<li class=\"mission-row\"><button class=\"mission-hit\" type=\"button\" data-mission=\"" + roadEsc(m.id) + "\">" + hit + "</button></li>";
+    return "<li class=\"mission-row" + (m.done ? " is-done" : "") + "\"><div class=\"mission-hit\">" + hit + "</div></li>";
   }).join("");
   const coach = RoadCoach.compose(player)[0] || "";
   const next = roadNextUpgrade(player);
   const hot = roadIsHot(player) ? " · 🔥 HOT STREAK ACTIVATED" : "";
   const coachTools = roadSession().mode === "coach" ? "<div class=\"road-actions\"><label for=\"roadCoachPlan\">Assign today's four</label><select id=\"roadCoachPlan\" multiple size=\"4\">" + ROAD_MISSIONS.map((m) => "<option value=\"" + m.id + "\">" + roadEsc(m.label) + "</option>").join("") + "</select><button class=\"btn btn-ghost\" type=\"button\" id=\"roadAssign\">Assign</button></div>" : "";
   return "<div class=\"road-hero\">" +
-    "<p class=\"road-kicker\">ROAD TO 99 · ANTONELLI BASEBALL · SIGNED IN AS " + roadEsc(player.name) + "</p>" +
+    "<p class=\"road-kicker\">ROAD TO 99</p>" +
     "<h2 class=\"road-hello\">" + roadEsc(roadGreeting()) + ", " + roadEsc(roadFirstName(player)) + "</h2>" +
     "<p class=\"road-streak\">DAY " + (player.road.streaks.training || 0) + " STREAK 🔥" + hot + "</p>" +
     "<p class=\"road-quote\">" + roadEsc(roadQuote()) + "</p>" +
@@ -778,12 +780,12 @@ function roadHomeHTML(player) {
     "<div class=\"road-99\"><div class=\"road-xp-line\"><span>LEVEL " + lvl.level + "</span><span id=\"xpReadout\">" + lvl.into.toLocaleString() + " / " + lvl.span.toLocaleString() + " XP</span><span>" + lvl.remain.toLocaleString() + " XP TO LEVEL " + Math.min(99, lvl.level + 1) + "</span></div>" +
     "<div class=\"road-track\" id=\"xpTrack\"><span style=\"width:" + widthXp + "%\"></span></div></div>" +
     "<div class=\"road-grid\">" +
-    "<div class=\"road-card\"><h3>Today's mission " + done + "/4</h3><ul class=\"mission-list\">" + list + "</ul>" +
-    "<div class=\"road-actions\"><button class=\"btn btn-red\" type=\"button\" id=\"roadTrain\"" + (can ? "" : " disabled") + ">Log training session</button></div>" + coachTools + "</div>" +
-    "<div class=\"road-card\"><h3>Development coach</h3><p class=\"coach-line\">" + roadEsc(coach) + "</p>" +
+    "<div class=\"road-card road-missions\"><h3>Today's mission <b>" + done + "/4</b></h3><ul class=\"mission-list\">" + list + "</ul>" +
+    "<div class=\"road-actions\"><button class=\"btn btn-red\" type=\"button\" id=\"roadTrain\"" + (can ? "" : " disabled") + ">Log training</button></div>" + coachTools + "</div>" +
+    "<div class=\"road-card road-coach\"><h3>Development coach</h3><p class=\"coach-line\">" + roadEsc(coach) + "</p>" +
     roadNextMarkup(next) +
     "<p class=\"tier-need\">" + roadEsc(roadTierNeed(g.overall, player)) + "</p>" +
-    "<p>" + roadEsc(roadBenchmarkLine(player)) + "</p></div></div>" +
+    "<p class=\"road-bench\">" + roadEsc(roadBenchmarkLine(player)) + "</p></div></div>" +
     "<div class=\"road-card road-chart-card\"><h3>Where I started</h3>" + roadChangeList(player) +
     "<button class=\"btn btn-ghost\" type=\"button\" id=\"roadTilt\">Enable card tilt</button></div></div>";
 }
@@ -812,8 +814,20 @@ function roadPaint() {
     });
   }
   if (player) roadLastBar = { id: player.id, pct: nextPct };
+  if (typeof competePaint === "function") competePaint();
+  else {
+    const compete = document.getElementById("competeHome");
+    if (compete) compete.innerHTML = "<div class=\"road-card\"><p class=\"road-kicker\">COMPETE</p><h3>Head to head</h3><p class=\"coach-line\">Leaderboards and challenges open on this tab.</p></div>";
+  }
+  if (typeof styleTrainMount === "function") styleTrainMount();
   mount.querySelectorAll("[data-mission]").forEach((btn) => {
-    btn.addEventListener("click", () => roadCompleteMission(player, btn.dataset.mission));
+    btn.addEventListener("click", () => {
+      if (btn.classList.contains("is-checking")) return;
+      btn.classList.add("is-checking");
+      const reduced = typeof motionReduced === "function" && motionReduced();
+      const wait = reduced ? 0 : 420;
+      setTimeout(() => roadCompleteMission(player, btn.dataset.mission), wait);
+    });
   });
   const train = document.getElementById("roadTrain");
   if (train) train.addEventListener("click", () => roadTrain(player));
@@ -838,8 +852,60 @@ function roadPaint() {
   roadPaintChrome();
 }
 
+function roadInitials(player) {
+  const parts = String(player && player.name || "P").trim().split(/\s+/);
+  return ((parts[0] && parts[0][0]) || "P") + (parts[1] ? parts[1][0] : "");
+}
+
+function roadSyncTabs() {
+  const name = document.body ? (document.body.dataset.app || "home") : "home";
+  document.querySelectorAll(".app-tabs button").forEach((btn) => {
+    const on = btn.dataset.app === name;
+    btn.classList.toggle("is-on", on);
+    if (on) btn.setAttribute("aria-current", "page");
+    else btn.removeAttribute("aria-current");
+  });
+}
+
+function roadSetApp(name) {
+  if (typeof document === "undefined") return;
+  const tab = name || "home";
+  document.body.dataset.app = tab;
+  roadSyncTabs();
+  const sheet = document.getElementById("settingsSheet");
+  if (sheet) sheet.classList.remove("is-open");
+  const menu = document.getElementById("menuBtn");
+  if (menu) menu.setAttribute("aria-expanded", "false");
+  if (tab === "card" || tab === "trophies") {
+    const player = roadSignedIn();
+    if (player && typeof openProfile === "function") {
+      openProfile(player.id, tab === "trophies" ? { tab: "road", focus: "trophyCase" } : { tab: "attributes" });
+    }
+    return;
+  }
+  if (typeof closeProfile === "function") closeProfile();
+  window.scrollTo(0, 0);
+}
+
+function roadBanner() {
+  const banner = document.getElementById("sampleBanner");
+  if (!banner) return;
+  let gone = false;
+  try { gone = localStorage.getItem("antonelli-sample-dismissed") === "1"; } catch (e) { gone = false; }
+  banner.hidden = gone;
+  const btn = document.getElementById("sampleDismiss");
+  if (btn && !btn.dataset.wired) {
+    btn.dataset.wired = "1";
+    btn.addEventListener("click", () => {
+      banner.hidden = true;
+      try { localStorage.setItem("antonelli-sample-dismissed", "1"); } catch (e) { /* the line stays hidden for this view */ }
+    });
+  }
+}
+
 function roadPaintChrome() {
   const session = roadSession();
+  const player = roadSignedIn();
   const sel = document.getElementById("roadPlayer");
   if (sel) {
     const list = roadRoster();
@@ -852,12 +918,15 @@ function roadPaintChrome() {
   if (mute) mute.textContent = session.mute ? "Sound off" : "Sound on";
   const add = document.getElementById("addPlayerBtn");
   if (add) add.hidden = session.mode !== "coach";
+  const avatar = document.getElementById("menuBtn");
+  if (avatar) avatar.textContent = roadInitials(player).toUpperCase();
   const count = document.getElementById("roadBellCount");
   if (count && globalThis.DataLayer) {
     const n = DataLayer.unread(session.playerId).length;
     count.hidden = n === 0;
     count.textContent = String(n);
   }
+  roadSyncTabs();
 }
 
 function roadPlayEvolution(player, moment) {
@@ -1000,8 +1069,12 @@ function roadBoot() {
       const session = roadSession();
       session.playerId = sel.value;
       DataLayer.saveSession(session);
-      roadPaint();
-      if (typeof renderRoster === "function") renderRoster();
+      const tab = document.body.dataset.app || "home";
+      if (tab === "card" || tab === "trophies") roadSetApp(tab);
+      else {
+        roadPaint();
+        if (typeof renderRoster === "function") renderRoster();
+      }
     });
   }
   if (mode && !mode.dataset.wired) {
@@ -1031,6 +1104,22 @@ function roadBoot() {
       else roadOpenInbox();
     });
   }
+  const menu = document.getElementById("menuBtn");
+  if (menu && !menu.dataset.wired) {
+    menu.dataset.wired = "1";
+    menu.addEventListener("click", () => {
+      const sheet = document.getElementById("settingsSheet");
+      if (!sheet) return;
+      const open = sheet.classList.toggle("is-open");
+      menu.setAttribute("aria-expanded", open ? "true" : "false");
+    });
+  }
+  document.querySelectorAll(".app-tabs button").forEach((btn) => {
+    if (btn.dataset.wired) return;
+    btn.dataset.wired = "1";
+    btn.addEventListener("click", () => roadSetApp(btn.dataset.app));
+  });
+  roadBanner();
   roadPaint();
 }
 
@@ -1049,6 +1138,8 @@ globalThis.roadAward = roadAward;
 globalThis.roadAfterSave = roadAfterSave;
 globalThis.roadBoot = roadBoot;
 globalThis.roadPaint = roadPaint;
+globalThis.roadSetApp = roadSetApp;
+globalThis.roadSyncTabs = roadSyncTabs;
 globalThis.roadEnsure = roadEnsure;
 globalThis.roadRefreshStreaks = roadRefreshStreaks;
 globalThis.RoadCoach = RoadCoach;
