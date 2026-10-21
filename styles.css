@@ -106,7 +106,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid rgba(201,162,39,.45);b
 .card-brand b{display:block;font-size:11px;letter-spacing:1.6px;text-shadow:0 1px 6px rgba(0,0,0,.45)}
 .card-brand span{display:inline-block;margin-top:6px;background:rgba(6,18,42,.55);border:1px solid rgba(255,255,255,.45);padding:4px 7px;border-radius:999px;font-size:10px;font-weight:900;letter-spacing:1.2px}
 /* Diamond-shaped overall badge, top-right. The running rim is out of flow so it cannot shift the number. */
-.overall-diamond{position:absolute;top:12px;right:12px;z-index:8;width:73px;height:73px;color:#fff;
+.overall-diamond{position:absolute;top:12px;right:12px;z-index:8;width:73px;height:73px;color:#fff;background:none;border:0;box-shadow:none;
   filter:drop-shadow(0 6px 10px rgba(0,0,0,.35)) drop-shadow(0 0 var(--stat-bloom, 2px) var(--stat-glow, #f2d060));}
 .overall-diamond::after{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);
   background:conic-gradient(from var(--run, 0deg), transparent 0 68%, var(--stat-glow, #f2d060) 82%, #fff 90%, transparent 100%);}
@@ -433,8 +433,6 @@ th{font-size:11px;letter-spacing:.7px;text-transform:uppercase;color:var(--muted
 .card-shell.is-burst .card-glare,.bb-card.is-burst .card-glare{animation:glare-burst .7s ease-out both}
 @media (prefers-reduced-motion:no-preference){
   .subgrades,.overall-diamond{animation:stat-run 3.6s linear infinite}
-  .bb-card.card-live.tier-gold .overall-diamond{animation:stat-run 3.6s linear infinite,gold-glow 3.2s ease-in-out infinite}
-  .bb-card.card-live.tier-diamond .overall-diamond{animation:stat-run 3.6s linear infinite,diamond-glow 2.4s ease-in-out infinite}
   .bb-card.card-live .card-foil{animation:foil-drift var(--foil-time, 7s) ease-in-out infinite alternate;animation-delay:calc(var(--foil-delay, 0s) * -1)}
   .bb-card.card-live .card-glare{animation:glare-pass var(--glare-time, 6s) ease-in-out infinite;animation-delay:calc(var(--foil-delay, 0s) * -1)}
   .bb-card.card-live .card-sparks i,.bb-card.card-live .badge-spark{animation:spark-twinkle var(--sp-t, 2.2s) ease-in-out infinite;animation-delay:var(--sp-d, 0s)}
