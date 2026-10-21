@@ -101,7 +101,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid rgba(201,162,39,.45);b
 .bb-card.tier-diamond .card-name h2,.bb-card.tier-diamond .card-name h3{color:#fff;text-shadow:0 0 1px #000,0 1px 0 #d4af37,0 -1px 0 #d4af37,1px 0 0 #d4af37,-1px 0 0 #d4af37,0 2px 8px rgba(0,0,0,.55)}
 .card-visual{position:absolute;inset:0;z-index:2;display:flex;align-items:flex-start;justify-content:center}
 .card-photo{width:100%;height:100%;object-fit:cover;object-position:center 22%;display:block}
-.card-logo{width:40%;height:auto;margin-top:30%;margin-right:8%;object-fit:contain;display:block;filter:drop-shadow(0 10px 16px rgba(0,0,0,.4));pointer-events:none}
+.card-logo{width:40%;height:auto;margin-top:30%;margin-right:8%;object-fit:contain;display:block;filter:drop-shadow(0 2px 5px rgba(0,0,0,.55));pointer-events:none}
 .card-brand{position:absolute;top:14px;left:14px;z-index:7;line-height:1}
 .card-brand b{display:block;font-size:11px;letter-spacing:1.6px;text-shadow:0 1px 6px rgba(0,0,0,.45)}
 .card-brand span{display:inline-block;margin-top:6px;background:rgba(6,18,42,.55);border:1px solid rgba(255,255,255,.45);padding:4px 7px;border-radius:999px;font-size:10px;font-weight:900;letter-spacing:1.2px}
