@@ -3145,8 +3145,78 @@ function cardHTML(player, large, face, opts) {
   </div>`;
 }
 
+/* Size the center star to the open band under the perks and overall, above the role line.
+   The asset is 512×500 with a thin transparent margin; the ink, not the box, keeps
+   about 12px of clearance on a 600px-wide render, scaled with the card. */
+function fitCardStar(card) {
+  const logo = card.querySelector(".card-logo");
+  const role = card.querySelector(".archetype") || card.querySelector(".card-name");
+  if (!logo || !role) return;
+  const visual = card.querySelector(".card-visual");
+  if (!visual) return;
+  const cardBox = card.getBoundingClientRect();
+  const layoutW = card.offsetWidth;
+  if (cardBox.width < 40 || cardBox.height < 40 || layoutW < 40) return;
+  const scale = cardBox.width / layoutW || 1;
+  const local = (px) => px / scale;
+  const visualTop = visual.getBoundingClientRect().top;
+  let topLimit = visualTop;
+  card.querySelectorAll(".perk-badge, .overall-diamond, .lvl-chip, .card-brand").forEach((el) => {
+    const box = el.getBoundingClientRect();
+    if (box.width > 0 && box.height > 0) topLimit = Math.max(topLimit, box.bottom);
+  });
+  const roleTop = role.getBoundingClientRect().top;
+  if (!(roleTop > topLimit)) return;
+  const clearance = Math.max(6, cardBox.width * (12 / 600));
+  const avail = roleTop - topLimit - clearance * 2;
+  if (avail < 8) return;
+  const padT = 8 / 500, padB = 10 / 500, padX = 10 / 512;
+  const inkH = 1 - padT - padB;
+  const inkW = 1 - padX * 2;
+  const inkAspect = (512 * inkW) / (500 * inkH);
+  let inkHeight = avail;
+  let inkWidth = inkHeight * inkAspect;
+  const maxInkW = cardBox.width - clearance * 2;
+  if (inkWidth > maxInkW) {
+    inkWidth = maxInkW;
+    inkHeight = inkWidth / inkAspect;
+  }
+  const height = inkHeight / inkH;
+  const width = inkWidth / inkW;
+  const extra = Math.max(0, avail - inkHeight);
+  const marginTop = local(topLimit - visualTop + clearance + extra / 2) - local(height) * padT;
+  logo.style.width = local(width).toFixed(2) + "px";
+  logo.style.height = local(height).toFixed(2) + "px";
+  logo.style.marginTop = marginTop.toFixed(2) + "px";
+  logo.style.marginRight = "0px";
+}
+
+function watchCardStars() {
+  if (watchCardStars.on || typeof document === "undefined") return;
+  watchCardStars.on = true;
+  const seen = new WeakSet();
+  const hook = (card) => {
+    if (!card || seen.has(card)) return;
+    seen.add(card);
+    const run = () => fitCardStar(card);
+    run();
+    if (typeof ResizeObserver === "function") new ResizeObserver(run).observe(card);
+  };
+  const scan = (node) => {
+    if (!node || node.nodeType !== 1) return;
+    if (node.classList && node.classList.contains("bb-card")) hook(node);
+    if (node.querySelectorAll) node.querySelectorAll(".bb-card").forEach(hook);
+  };
+  if (document.body) scan(document.body);
+  if (document.body && typeof MutationObserver === "function") {
+    new MutationObserver((list) => list.forEach((rec) => rec.addedNodes.forEach(scan))).observe(document.body, { childList: true, subtree: true });
+  }
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => document.querySelectorAll(".bb-card").forEach(fitCardStar));
+}
+
 function wireCardFlips(root) {
   const scope = root && root.querySelectorAll ? root : document;
+  if (scope.querySelectorAll) scope.querySelectorAll(".bb-card").forEach(fitCardStar);
   scope.querySelectorAll("[data-flip]").forEach((shell) => {
     if (shell.dataset.flipWired) return;
     shell.dataset.flipWired = "1";
@@ -5274,6 +5344,7 @@ function bindApp() {
   });
   pendingCeleb.sort((a, b) => (a.kind === "tier-up" ? 0 : 1) - (b.kind === "tier-up" ? 0 : 1));
   if (earnedDirty) savePlayers();
+  watchCardStars();
   renderRoster();
   if (typeof roadBoot === "function") roadBoot();
   beginSeasonReveals(pendingSeason, () => {
