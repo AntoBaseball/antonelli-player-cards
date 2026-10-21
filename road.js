@@ -770,6 +770,7 @@ function roadWireProfile(player) {
   const preview = document.getElementById("roadEvoPreview");
   if (preview) preview.addEventListener("click", () => roadPreviewLegend(player));
   if (typeof competeWire === "function") competeWire(player);
+  if (typeof styleWire === "function") styleWire(player);
 }
 
 function roadHomeHTML(player) {
@@ -839,6 +840,7 @@ function roadPaint() {
   }
   if (player) roadLastBar = { id: player.id, pct: nextPct };
   if (typeof competePaint === "function") competePaint();
+  if (typeof styleDrawQrs === "function") styleDrawQrs(document);
   if (typeof styleTrainMount === "function") styleTrainMount();
   mount.querySelectorAll("[data-mission]").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -1143,6 +1145,7 @@ function roadBoot() {
   roadBanner();
   roadPaint();
   if (typeof competeBoot === "function") competeBoot();
+  if (typeof styleBoot === "function") styleBoot();
 }
 
 globalThis.ROAD_XP = ROAD_XP;
