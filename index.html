@@ -3,9 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Antonelli Baseball — Player Profiles & Baseball Cards</title>
-<meta name="description" content="Antonelli Baseball player profiles, metrics, and MLB The Show-style baseball cards that improve as players develop.">
+<title>ROAD TO 99 — Antonelli Baseball</title>
+<meta name="description" content="ROAD TO 99. Antonelli Baseball player development: train, test, and level up a baseball card. Overall is earned in testing. Level is earned by showing up.">
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="road.css">
 </head>
 <body>
 <header class="topbar">
@@ -13,18 +14,29 @@
     <svg class="header-star" viewBox="0 0 100 100" aria-hidden="true"><polygon points="50,3 62,37 98,37 69,58 80,96 50,73 20,96 31,58 2,37 38,37" fill="#ffffff" stroke="#0a0a0a" stroke-width="5" stroke-linejoin="round"/><polygon points="50,3 62,37 98,37 69,58 80,96 50,73 20,96 31,58 2,37 38,37" transform="translate(50 50) scale(0.8) translate(-50 -50)" fill="none" stroke="#d4af37" stroke-width="3" stroke-linejoin="round"/></svg>
     <img class="header-logo" src="assets/antonelli-block.png" alt="Antonelli Baseball">
     <div>
-      <div class="brand-name">PLAYER <span>PROFILES</span></div>
-      <div class="brand-sub">Baseball Cards • Metrics • Development</div>
+      <div class="brand-name"><span class="road-mark">ROAD TO <b>99</b></span></div>
+      <div class="brand-sub">Antonelli Baseball · Train · Test · Level Up</div>
     </div>
   </div>
   <nav class="top-actions">
+    <div class="road-switch">
+      <label for="roadPlayer">Signed in as</label>
+      <select id="roadPlayer" aria-label="Signed in as"></select>
+      <label for="roadMode">Mode</label>
+      <select id="roadMode" aria-label="Coach or player mode">
+        <option value="player">Player</option>
+        <option value="coach">Coach</option>
+      </select>
+      <button class="btn btn-ghost" id="roadMute" type="button">Sound off</button>
+      <button class="btn btn-ghost bell" id="roadBell" type="button">Inbox <span id="roadBellCount" class="bell-count" hidden>0</span></button>
+    </div>
     <button class="btn btn-ghost" id="resetBtn" type="button">Reset Sample Data</button>
     <button class="btn btn-red" id="addPlayerBtn" type="button">+ Add Player</button>
   </nav>
 </header>
 
 <div class="sample-banner" role="note">
-  <strong>SAMPLE DATA:</strong> All 5 players below are invented for this prototype. Names, teams within the sample, and metrics are fictional — no real players are used. Sample players have no photos, so their cards show the Antonelli logo. Hitter grades use Blast Motion ranges by age group. Mason and Dylan each include one fictional retired card so the collection has a prior season to open. Saved browsers do not receive those cards.
+  <strong>SAMPLE DATA:</strong> The roster is invented for this prototype, including extra players across 12U, 14U, 16U, and 17U so the facility can be browsed. Names and metrics are fictional. Sample players have no photos, so their cards show the Antonelli logo. Rivalries, challenges, and alerts stay on this browser until a real account backend is connected. Mason and Dylan each include one fictional retired card. Saved browsers do not receive new sample players until Reset Sample Data.
 </div>
 <div id="migrationBanner" class="sample-banner migration-banner" hidden>
   <strong>Hitting metrics moved to Blast.</strong> Saved hitter cards used the older exit-velocity formula. Bat speed was kept when it was between 25 and 95 mph. The other hitting numbers were set to the middle of the published Blast window for that age group — replace them with real Blast readings. Pitcher metrics were kept.
@@ -33,6 +45,7 @@
 <main class="container">
   <!-- ROSTER VIEW -->
   <section id="rosterView">
+    <div id="roadHome"></div>
     <div class="hero">
       <div>
         <img class="hero-logo" src="assets/antonelli-script.png" alt="Antonelli script logo">
@@ -82,6 +95,7 @@
           <span><i class="tier-swatch silver" aria-hidden="true"></i>Silver</span>
           <span><i class="tier-swatch gold" aria-hidden="true"></i>Gold</span>
           <span><i class="tier-swatch diamond" aria-hidden="true"></i>Diamond</span>
+          <span><i class="tier-swatch legend" aria-hidden="true"></i>Legend</span>
         </div>
       </div>
       <button class="btn btn-red" id="showdownBtn" type="button">SHOWDOWN</button>
@@ -286,6 +300,11 @@
   <div class="sd-results" id="showdownResults" hidden></div>
 </div>
 
+<div id="evoShow" class="evo-show" hidden role="dialog" aria-modal="true" aria-label="Card evolution"></div>
+<div id="inbox" class="inbox" hidden></div>
+
+<script src="store.js"></script>
+<script src="road.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
