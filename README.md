@@ -51,7 +51,7 @@ Broad jump, vertical, and flying 10 are optional display-only tests. They do not
 
 Skins, celebrations, signature phrases, and the drawn autograph are cosmetics. They never change overall. A training pack reveals one of those cosmetics plus a small XP grant under the daily mini-game cap.
 
-Share builds a PNG for a story (1080×1920), a post (1080×1350), an X card (1600×900), or TikTok (1080×1920) and uses the device share sheet when the browser allows it. Otherwise it downloads. The card back has the progress link. The matrix next to it is a client-side pattern of that same link, not a phone-scannable QR standard.
+Share builds a PNG for a story (1080×1920), a post (1080×1350), an X card (1600×900), or TikTok (1080×1920) and uses the device share sheet when the browser allows it. Otherwise it downloads. The card back draws a real QR with the vendored MIT generator in `vendor/qrcode.js` (Kazuhiko Arase, no CDN). It encodes the progress URL (`#player=`). A phone camera opens that link when the site is hosted. Autograph tiers are Standard, Gold, Holographic, and Animated, unlocked by level. A player's chosen celebration plays when someone else opens their profile, and the glyph stays on the card.
 
 Mini-games (pitch recognition, reaction, baseball IQ, count leverage, tunnel, zone discipline) grant a little XP, capped each day, and keep a short score list on this browser. Trash-talk lines stay one sentence and kid-appropriate. The combine note uses benchmark language only.
 

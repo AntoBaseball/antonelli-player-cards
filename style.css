@@ -12,7 +12,21 @@
 .bb-card.skin-thanksgiving{box-shadow:inset 0 0 0 3px #d97706}
 .bb-card.skin-worldseries{box-shadow:inset 0 0 0 3px #f2d060, 0 0 22px rgba(242,208,96,.55)}
 .card-auto{position:absolute;left:8%;bottom:22%;width:46%;height:auto;z-index:7;pointer-events:none;mix-blend-mode:screen;opacity:.9}
-.style-qr{width:84px;height:84px;background:#fff;border-radius:6px}
+.style-qr{width:148px;height:148px;background:#fff;border-radius:8px;image-rendering:pixelated;display:block}
+.card-auto.auto-gold{filter:drop-shadow(0 0 4px #f2d060) sepia(.4)}
+.card-auto.auto-holo{filter:hue-rotate(170deg) saturate(1.6) drop-shadow(0 0 6px #7dd3fc)}
+.card-auto.auto-animated{animation:sign-shimmer 2.2s linear infinite}
+@keyframes sign-shimmer{0%,100%{filter:drop-shadow(0 0 2px #fff)}50%{filter:drop-shadow(0 0 8px #f2d060) brightness(1.3)}}
+.cele-overlay{position:fixed;inset:0;z-index:150;display:grid;place-items:center;align-content:center;background:rgba(0,0,0,.55);color:#fff;pointer-events:none;text-align:center}
+.cele-overlay b{font-size:120px;line-height:1;filter:drop-shadow(0 10px 24px #000)}
+.cele-overlay span,.cele-overlay small{display:block}
+.cele-overlay span{font-family:Impact,"Arial Black",system-ui,sans-serif;font-style:italic;font-size:clamp(28px,6vw,48px);color:#f2d060}
+.cele-fire{background:radial-gradient(circle, rgba(225,29,72,.45), rgba(0,0,0,.72) 60%)}
+.cele-ice{background:radial-gradient(circle, rgba(125,211,252,.4), rgba(0,0,0,.72) 60%)}
+@media (prefers-reduced-motion:reduce){
+  .card-auto.auto-animated{animation:none}
+  .cele-overlay{display:none}
+}
 .pack-show{position:fixed;inset:0;z-index:145;display:grid;place-items:center;background:rgba(0,0,0,.82);color:#fff}
 .pack-show[hidden]{display:none}
 .pack-card{width:min(280px,80vw);aspect-ratio:5/7;border-radius:18px;background:linear-gradient(160deg,#041428,#7dd3fc);display:grid;place-items:center;font-family:Impact,"Arial Black",system-ui,sans-serif;font-style:italic;font-size:42px;cursor:pointer}

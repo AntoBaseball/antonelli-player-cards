@@ -28,6 +28,13 @@ var STYLE_CELEBRATIONS = [
   { id: "lights", name: "Stadium lights", xp: 6000, glyph: "💡" },
 ];
 
+var STYLE_AUTO = [
+  { id: "standard", name: "Standard", level: 1 },
+  { id: "gold", name: "Gold", level: 8 },
+  { id: "holo", name: "Holographic", level: 17 },
+  { id: "animated", name: "Animated", level: 25 },
+];
+
 var STYLE_PHRASES = [
   { text: "Evidence over excuses.", level: 1 },
   { text: "Stack the days.", level: 5 },
@@ -71,42 +78,29 @@ function styleBackExtra(player) {
 
 function styleDrawQrs(root) {
   const scope = root && root.querySelectorAll ? root : document;
+  if (typeof qrcode !== "function") return;
   scope.querySelectorAll("canvas.style-qr").forEach((canvas) => {
     const text = canvas.getAttribute("data-qr") || "";
+    if (!text) return;
+    const qr = qrcode(0, "M");
+    qr.addData(text);
+    qr.make();
+    const n = qr.getModuleCount();
+    const cell = 4;
+    const margin = cell * 4;
+    const size = n * cell + margin * 2;
+    canvas.width = size;
+    canvas.height = size;
     const ctx = canvas.getContext("2d");
-    const n = 29;
-    const cell = canvas.width / n;
     ctx.fillStyle = "#fff";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    const on = styleQrMask(text, n);
+    ctx.fillRect(0, 0, size, size);
     ctx.fillStyle = "#111";
-    for (let y = 0; y < n; y++) {
-      for (let x = 0; x < n; x++) if (on[y * n + x]) ctx.fillRect(x * cell, y * cell, cell, cell);
+    for (let r = 0; r < n; r++) {
+      for (let c = 0; c < n; c++) {
+        if (qr.isDark(r, c)) ctx.fillRect(margin + c * cell, margin + r * cell, cell, cell);
+      }
     }
   });
-}
-
-/* Finder squares plus a data hash. This is a visual code for the progress link.
-   Phone cameras open the printed URL from Share. The matrix carries the same address as a pattern, not a standards QR. */
-function styleQrMask(text, n) {
-  const on = new Array(n * n).fill(0);
-  const finder = (ox, oy) => {
-    for (let y = 0; y < 7; y++) for (let x = 0; x < 7; x++) {
-      const edge = x === 0 || y === 0 || x === 6 || y === 6 || (x >= 2 && x <= 4 && y >= 2 && y <= 4);
-      if (edge) on[(oy + y) * n + (ox + x)] = 1;
-    }
-  };
-  finder(0, 0); finder(n - 7, 0); finder(0, n - 7);
-  let h = 2166136261;
-  for (let i = 0; i < text.length; i++) h = Math.imul(h ^ text.charCodeAt(i), 16777619);
-  for (let y = 8; y < n - 1; y++) {
-    for (let x = 8; x < n - 1; x++) {
-      if (y > n - 9 && x < 8) continue;
-      h = Math.imul(h ^ (x * 31 + y), 16777619);
-      if ((h >>> 0) % 3 === 0) on[y * n + x] = 1;
-    }
-  }
-  return on;
 }
 
 function styleShareCanvas(player, w, h, headline) {
@@ -234,12 +228,14 @@ function styleWire(player) {
   const skins = STYLE_SKINS.map((s) => "<option value=\"" + s.id + "\"" + ((player.road.skin || "classic") === s.id ? " selected" : "") + (xp >= s.xp ? "" : " disabled") + ">" + s.name + (xp >= s.xp ? "" : " · " + s.xp + " XP") + "</option>").join("");
   const celes = STYLE_CELEBRATIONS.map((s) => "<option value=\"" + s.id + "\"" + ((player.road.celebration || "fire") === s.id ? " selected" : "") + (xp >= s.xp ? "" : " disabled") + ">" + s.glyph + " " + s.name + "</option>").join("");
   const phrases = STYLE_PHRASES.map((s) => "<option" + (level >= s.level ? "" : " disabled") + ">" + s.text + (level >= s.level ? "" : " · LVL " + s.level) + "</option>").join("");
+  const autos = STYLE_AUTO.map((s) => "<option value=\"" + s.id + "\"" + ((player.road.autographTier || "standard") === s.id ? " selected" : "") + (level >= s.level ? "" : " disabled") + ">" + s.name + (level >= s.level ? "" : " · LVL " + s.level) + "</option>").join("");
   const edit = can ? "" : " disabled";
   mount.insertAdjacentHTML("beforeend", "<div class=\"panel compete-board\" id=\"styleLab\"><h3>Card lab</h3><p>Cosmetics never move overall.</p>" +
     "<label>Skin <select id=\"styleSkin\"" + edit + ">" + skins + "</select></label> " +
     "<label>Celebration <select id=\"styleCele\"" + edit + ">" + celes + "</select></label> " +
     "<label>Phrase <select id=\"stylePhrase\"" + edit + ">" + phrases + "</select></label>" +
-    "<h3>Autograph</h3><canvas id=\"styleSign\" width=\"320\" height=\"90\" style=\"background:#fff;border-radius:8px;touch-action:none;width:100%;max-width:320px\"></canvas>" +
+    "<h3>Autograph</h3><label>Tier <select id=\"styleAuto\"" + edit + ">" + autos + "</select></label>" +
+    "<canvas id=\"styleSign\" width=\"320\" height=\"90\" style=\"background:#fff;border-radius:8px;touch-action:none;width:100%;max-width:320px\"></canvas>" +
     "<div class=\"road-actions\"><button class=\"btn btn-ghost\" type=\"button\" id=\"styleSignClear\"" + edit + ">Clear</button><button class=\"btn btn-red\" type=\"button\" id=\"styleSignSave\"" + edit + ">Save signature</button></div>" +
     "<h3>Share</h3><div class=\"road-actions\">" +
     "<button class=\"btn btn-ghost\" type=\"button\" data-share=\"1080x1920\">Story</button>" +
@@ -284,8 +280,14 @@ function styleWire(player) {
   const pack = document.getElementById("stylePack");
   if (pack) pack.addEventListener("click", () => styleOpenPack(player));
   mount.querySelectorAll("[data-game]").forEach((btn) => btn.addEventListener("click", () => styleStartGame(player, btn.dataset.game)));
-  const viewer = typeof roadSignedIn === "function" ? roadSignedIn() : null;
-  if (viewer && viewer.id !== player.id && player.road.celebration) stylePlayCele(player);
+  styleOnView(player);
+}
+
+function styleInk(tier) {
+  if (tier === "gold") return "#8a6508";
+  if (tier === "holo") return "#0369a1";
+  if (tier === "animated") return "#9f1239";
+  return "#111";
 }
 
 function stylePad(player) {
@@ -293,15 +295,17 @@ function stylePad(player) {
   if (!canvas || canvas.dataset.wired) return;
   canvas.dataset.wired = "1";
   const ctx = canvas.getContext("2d");
-  ctx.strokeStyle = "#111";
-  ctx.lineWidth = 2;
+  const ink = () => styleInk((document.getElementById("styleAuto") || {}).value || player.road.autographTier || "standard");
+  ctx.strokeStyle = ink();
+  ctx.lineWidth = 2.4;
+  ctx.lineCap = "round";
   let drawing = false;
   const pos = (e) => {
     const r = canvas.getBoundingClientRect();
     const src = e.touches ? e.touches[0] : e;
     return { x: (src.clientX - r.left) * (canvas.width / r.width), y: (src.clientY - r.top) * (canvas.height / r.height) };
   };
-  const down = (e) => { drawing = true; const p = pos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); e.preventDefault(); };
+  const down = (e) => { drawing = true; ctx.strokeStyle = ink(); const p = pos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); e.preventDefault(); };
   const move = (e) => { if (!drawing) return; const p = pos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); e.preventDefault(); };
   canvas.addEventListener("mousedown", down);
   canvas.addEventListener("mousemove", move);
@@ -312,21 +316,34 @@ function stylePad(player) {
   if (clear) clear.addEventListener("click", () => ctx.clearRect(0, 0, canvas.width, canvas.height));
   const save = document.getElementById("styleSignSave");
   if (save) save.addEventListener("click", () => {
+    const tierPick = document.getElementById("styleAuto");
+    player.road.autographTier = tierPick ? tierPick.value : "standard";
     player.road.autograph = canvas.toDataURL("image/png");
     savePlayers();
     if (typeof openProfile === "function") openProfile(player.id, { tab: "road" });
   });
 }
 
+function styleGlyph(player) {
+  const pick = STYLE_CELEBRATIONS.find((s) => s.id === ((player.road && player.road.celebration) || "fire")) || STYLE_CELEBRATIONS[0];
+  return pick.glyph + " ";
+}
+
+function styleOnView(player) {
+  const viewer = typeof roadSignedIn === "function" ? roadSignedIn() : null;
+  if (!viewer || !player || viewer.id === player.id) return;
+  stylePlayCele(player);
+}
+
 function stylePlayCele(player) {
-  if (typeof document === "undefined") return;
+  if (typeof document === "undefined" || !player) return;
   if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  const pick = STYLE_CELEBRATIONS.find((s) => s.id === (player.road.celebration || "fire")) || STYLE_CELEBRATIONS[0];
+  const pick = STYLE_CELEBRATIONS.find((s) => s.id === ((player.road && player.road.celebration) || "fire")) || STYLE_CELEBRATIONS[0];
   const el = document.createElement("div");
-  el.className = "cele-overlay";
-  el.textContent = pick.glyph;
+  el.className = "cele-overlay cele-" + pick.id;
+  el.innerHTML = "<b>" + pick.glyph + "</b><span>" + (player.road && player.road.signature ? player.road.signature : pick.name) + "</span><small>" + (player.name || "") + "</small>";
   document.body.appendChild(el);
-  setTimeout(() => el.remove(), 900);
+  setTimeout(() => el.remove(), 1600);
 }
 
 function styleOpenPack(player) {
@@ -472,6 +489,8 @@ function styleBoot() {
   }
 }
 
+globalThis.styleGlyph = styleGlyph;
+globalThis.styleOnView = styleOnView;
 globalThis.styleCardClass = styleCardClass;
 globalThis.styleBackExtra = styleBackExtra;
 globalThis.styleWire = styleWire;

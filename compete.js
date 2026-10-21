@@ -489,7 +489,7 @@ function competePaint() {
   }).join("");
   const options = competeRoster().filter((p) => p.id !== me.id).map((p) => "<option value=\"" + competeEsc(p.id) + "\">" + competeEsc(p.name) + "</option>").join("");
   const metrics = COMPETE_METRICS.map((m) => "<option value=\"" + m.key + "\">" + m.label + "</option>").join("");
-  const card = cotd && typeof cardHTML === "function" ? "<div class=\"mini-card\">" + cardHTML(cotd.player, true) + "</div>" : "";
+  const card = cotd && typeof cardHTML === "function" ? "<div class=\"mini-card\">" + cardHTML(cotd.player, false) + "</div>" : "";
   const crowns = competeCrowns("exitVelo", competeGroup(me));
   const king = crowns.king;
   const crownRows = crowns.board.map((row) => {

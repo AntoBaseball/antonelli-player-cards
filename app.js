@@ -3076,7 +3076,7 @@ function cardHTML(player, large, face, opts) {
   const lvl = !face && typeof roadLevel === "function" ? roadLevel(player) : null;
   const lvlChip = lvl ? `<div class="lvl-chip"><b>LVL ${lvl.level}</b><span>${lvl.into}/${lvl.span}</span></div>` : "";
   const teamBit = String(player.team || "ANT").replace(/^Antonelli\s*/i, "") || "ANT";
-  const celeb = liveRoad && player.road.celebration === "fire" ? "🔥 " : "";
+  const celeb = liveRoad && typeof styleGlyph === "function" ? styleGlyph(player) : (liveRoad && player.road.celebration === "fire" ? "🔥 " : "");
   const streakN = liveRoad && player.road.streaks ? player.road.streaks.training : 0;
   const phrase = liveRoad && player.road.signature ? `<span class="card-phrase">${celeb}${esc(player.road.signature)}</span>` : "";
   const meta = `<span class="card-meta-mini">${esc(player.age)} · ${esc(player.classYear || "—")} · ${esc(teamBit)}${streakN ? " · " + streakN + "🔥" : ""}</span>`;
@@ -3099,7 +3099,7 @@ function cardHTML(player, large, face, opts) {
         <span class="pos-bar">${esc(positionLine(player))} - ${esc(player.bats)}/${esc(player.throws)}</span>
         ${meta}
         ${phrase}
-        ${!face && player.road && player.road.autograph && String(player.road.autograph).indexOf("data:image") === 0 ? `<img class="card-auto" alt="Signature" src="${player.road.autograph}">` : ""}
+        ${!face && player.road && player.road.autograph && String(player.road.autograph).indexOf("data:image") === 0 ? `<img class="card-auto auto-${esc(player.road.autographTier || "standard")}" alt="Signature" src="${player.road.autograph}">` : ""}
       </div>
       <div class="subgrades${shownSubs.length > 5 ? " is-legacy" : ""}">${shownSubs.map((x) => `<div class="subgrade"><b>${x.grade ?? "—"}</b><span>${x.key}</span></div>`).join("")}</div>
     </div>
