@@ -2960,14 +2960,35 @@ function personalBestsPanel(player) {
     <div class="table-scroll"><table class="pb-table"><thead><tr><th>Record</th><th>This season</th><th>Career</th><th>Set</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
 }
 
-function backPerksHTML(player, face) {
-  const list = face && Array.isArray(face.quirks) ? face.quirks : (typeof displayQuirks === "function" ? displayQuirks(player) : []);
-  const rest = list.slice(2);
-  if (!rest.length) return "";
-  return `<section class="pb-block"><h4>More perks</h4><div class="back-perks">${rest.map((q) => `<span class="q-badge ${q.kind === "coach" ? "q-coach" : "q-earned"}">${q.icon || ""} ${esc(q.name)}</span>`).join("")}</div></section>`;
+function perkTierOf(player) {
+  if (!player || typeof gradesFor !== "function" || typeof tierFor !== "function") return "";
+  const graded = gradesFor(player);
+  const tier = tierFor(graded.overall, player);
+  return tier && tier.key ? tier.key : "";
 }
 
-function cardBackHTML(player, face, subs, opts) {
+function perkBadgeHTML(q, opts) {
+  if (!q) return "";
+  const o = opts || {};
+  const size = o.size === "front" ? "perk-front" : (o.size === "xl" ? "perk-xl" : "perk-lg");
+  const kind = (o.kind || q.kind) === "coach" ? "q-coach" : "q-earned";
+  const tier = o.tier ? " tier-" + o.tier : "";
+  const name = esc(q.name || "Perk");
+  const detail = esc(q.milestone || q.description || q.name || "Perk");
+  const icon = q.icon || "⭐";
+  const caption = o.caption === false ? "" : `<small>${name}</small>`;
+  return `<span class="perk-badge ${size} ${kind}${tier}" tabindex="0" data-perk="${name}" data-detail="${detail}" aria-label="${name}"><b class="perk-ico" aria-hidden="true">${icon}</b>${caption}</span>`;
+}
+
+function backPerksHTML(player, face, cap) {
+  const list = face && Array.isArray(face.quirks) ? face.quirks : (typeof displayQuirks === "function" ? displayQuirks(player) : []);
+  const rest = list.slice(cap == null ? 3 : cap);
+  if (!rest.length) return "";
+  const tier = face && face.tier ? face.tier : perkTierOf(player);
+  return `<section class="pb-block"><h4>More perks</h4><div class="back-perks">${rest.map((q) => perkBadgeHTML(q, { size: "lg", tier: tier })).join("")}</div></section>`;
+}
+
+function cardBackHTML(player, face, subs, opts, perkCap) {
   const group = face && face.ageGroup ? face.ageGroup : activeAgeGroup(player);
   const ageShown = face && face.age != null ? face.age : player.age;
   const classShown = face && face.classYear != null ? face.classYear : player.classYear;
@@ -3011,7 +3032,7 @@ function cardBackHTML(player, face, subs, opts) {
     </div>
     <div class="back-grades">${gradeLine}</div>
     <div class="back-raws">${hitting}${pitching}</div>
-    ${backPerksHTML(player, face)}
+    ${backPerksHTML(player, face, perkCap)}
     ${bests}
     ${typeof roadBackExtra === "function" ? roadBackExtra(player) : ""}
     </div>
@@ -3030,8 +3051,9 @@ function cardHTML(player, large, face, opts) {
     ? `<img class="card-photo" src="${esc(player.photo)}" alt="Photo of ${esc(player.name)}">`
     : logoPlaceholder();
   const quirkList = face && Array.isArray(face.quirks) ? face.quirks : displayQuirks(player);
-  const quirkShown = quirkList.slice(0, 2);
-  const quirkHTML = quirkShown.length ? `<div class="card-quirks">${quirkShown.map((q) => `<span class="q-badge ${q.kind === "coach" ? "q-coach" : "q-earned"}" title="${esc(q.name)}">${q.icon} ${esc(q.name)}</span>`).join("")}</div>` : "";
+  const perkCap = large ? 3 : 2;
+  const quirkShown = quirkList.slice(0, perkCap);
+  const quirkHTML = quirkShown.length ? `<div class="card-quirks">${quirkShown.map((q) => perkBadgeHTML(q, { size: "front", caption: false, tier: tier.key })).join("")}</div>` : "";
   const quiet = !!(face && face.quiet);
   const phase = foilPhase(player.id || player.name);
   const badgeSpark = (tier.key === "diamond" || tier.key === "legend") ? `<i class="badge-spark" aria-hidden="true"></i>` : "";
@@ -3072,7 +3094,7 @@ function cardHTML(player, large, face, opts) {
   return `<div class="card-shell tier-${tier.key}" data-flip tabindex="0" aria-label="Flip ${esc(player.name)}'s card" aria-pressed="false" style="--foil-delay:${phase.toFixed(2)}s">
     <div class="card-flipper">
       ${front}
-      ${cardBackHTML(player, face, backSubs, opts)}
+      ${cardBackHTML(player, face, backSubs, opts, perkCap)}
     </div>
   </div>`;
 }
@@ -3087,7 +3109,7 @@ function wireCardFlips(root) {
       shell.setAttribute("aria-pressed", on ? "true" : "false");
     };
     shell.addEventListener("click", (e) => {
-      if (e.target.closest("button, a, input, textarea, select, [data-open]")) return;
+      if (e.target.closest("button, a, input, textarea, select, [data-open], .perk-badge")) return;
       toggle();
     });
     shell.addEventListener("keydown", (e) => {
@@ -3095,6 +3117,41 @@ function wireCardFlips(root) {
       if (e.key !== "Enter" && e.key !== " ") return;
       e.preventDefault();
       toggle();
+    });
+  });
+  wirePerkTips(scope);
+}
+
+function wirePerkTips(root) {
+  const scope = root && root.querySelectorAll ? root : document;
+  scope.querySelectorAll(".perk-badge").forEach((badge) => {
+    if (badge.dataset.tipWired) return;
+    badge.dataset.tipWired = "1";
+    const open = (e) => {
+      if (e) { e.stopPropagation(); e.preventDefault(); }
+      const was = badge.classList.contains("is-open");
+      document.querySelectorAll(".perk-badge.is-open").forEach((node) => node.classList.remove("is-open"));
+      let pop = document.getElementById("perkPop");
+      if (!pop) {
+        pop = document.createElement("div");
+        pop.id = "perkPop";
+        pop.className = "perk-pop";
+        pop.setAttribute("role", "tooltip");
+        document.body.appendChild(pop);
+      }
+      if (was) { pop.hidden = true; return; }
+      badge.classList.add("is-open");
+      pop.innerHTML = "<b>" + (badge.getAttribute("data-perk") || "") + "</b><span>" + (badge.getAttribute("data-detail") || "") + "</span>";
+      pop.hidden = false;
+      const rect = badge.getBoundingClientRect();
+      const width = Math.min(220, window.innerWidth - 16);
+      pop.style.width = width + "px";
+      pop.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - width - 8)) + "px";
+      pop.style.top = Math.min(window.innerHeight - 78, rect.bottom + 8) + "px";
+    };
+    badge.addEventListener("click", open);
+    badge.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") open(e);
     });
   });
 }
@@ -3330,8 +3387,9 @@ function metricsTable(player) {
 function quirksPanel(player) {
   const earned = displayQuirks(player).filter((q) => q.kind === "earned");
   const coach = displayQuirks(player).filter((q) => q.kind === "coach");
+  const tier = perkTierOf(player);
   const row = (q) => `<button type="button" class="quirk-row" data-replay="${esc(q.id)}">
-      <span class="q-badge ${q.kind === "coach" ? "q-coach" : "q-earned"}">${q.icon}</span>
+      ${perkBadgeHTML(q, { size: "lg", caption: false, tier: tier })}
       <span><strong>${esc(q.name)}</strong> <span class="quirk-tag">${q.kind === "coach" ? "Coach Awarded" : "Earned"}</span> <span class="quirk-tag">${esc(q.category)}</span><br>
       <span class="muted small">${esc(q.description)}</span><br>
       <span class="small">${esc(q.milestone || "")}</span></span>
@@ -3412,7 +3470,7 @@ function revealButtonLabel() {
 }
 
 function fillRevealFace(quirk, player, item) {
-  $("quirkRevealFace").innerHTML = `<span class="q-badge q-earned q-lg">${quirk.icon || "⭐"}</span>
+  $("quirkRevealFace").innerHTML = `${perkBadgeHTML(quirk, { size: "xl", caption: false, tier: perkTierOf(player) })}
     <p class="quirk-face-cat">${esc(quirk.category || "Training")}</p>
     <h3>${esc(quirk.name)}</h3>
     <p>${esc(quirk.description || "")}</p>
@@ -3986,7 +4044,7 @@ function archiveMetricsTable(card) {
 }
 
 function archivePerks(card) {
-  const row = (q, kind) => `<div class="quirk-row quirk-static"><span class="q-badge ${kind === "Coach Awarded" ? "q-coach" : "q-earned"}">${q.icon || ""}</span><span><strong>${esc(q.name)}</strong> <span class="quirk-tag">${kind}</span><br><span class="small">${esc(q.milestone || q.description || "")}</span></span></div>`;
+  const row = (q, kind) => `<div class="quirk-row quirk-static">${perkBadgeHTML({ ...q, kind: kind === "Coach Awarded" ? "coach" : "earned" }, { size: "lg", caption: false })}<span><strong>${esc(q.name)}</strong> <span class="quirk-tag">${kind}</span><br><span class="small">${esc(q.milestone || q.description || "")}</span></span></div>`;
   const earned = (card.perksEarned || []).map((q) => row(q, "Earned")).join("") || `<p class="muted small">No training perks were earned that season.</p>`;
   const coach = (card.assignedPerks || []).map((q) => row(q, "Coach Awarded")).join("") || `<p class="muted small">No coach-awarded perks on this snapshot.</p>`;
   return `<p class="muted small">Snapshot of that season. Training perks start over on the new card. Coach-awarded perks stay on the current card too.</p><h4 class="quirk-sub">Earned that season</h4>${earned}<h4 class="quirk-sub">Coach Awarded</h4>${coach}`;
@@ -4591,8 +4649,9 @@ function renderQuirkFields(selected) {
   const picked = new Set(selected || []);
   const cats = [...new Set(SHOW_QUIRKS.map((q) => q.category))];
   box.innerHTML = cats.map((cat) => `<fieldset class="quirk-set"><legend>${esc(cat)}</legend>${
-    SHOW_QUIRKS.filter((q) => q.category === cat).map((q) => `<label class="quirk-check"><input type="checkbox" data-quirk value="${esc(q.id)}" ${picked.has(q.id) ? "checked" : ""}> <span>${q.icon} ${esc(q.name)}</span><small>${esc(q.criteria)}</small></label>`).join("")
+    SHOW_QUIRKS.filter((q) => q.category === cat).map((q) => `<label class="quirk-check"><input type="checkbox" data-quirk value="${esc(q.id)}" ${picked.has(q.id) ? "checked" : ""}> ${perkBadgeHTML(q, { size: "lg", caption: false, kind: "coach" })} <span>${esc(q.name)}</span><small>${esc(q.criteria)}</small></label>`).join("")
   }</fieldset>`).join("");
+  if (typeof wirePerkTips === "function") wirePerkTips(box);
 }
 
 function provisionalPlayer() {
@@ -4806,6 +4865,8 @@ function buildShowdown(a, b) {
     aText: String(aPerks.length), bText: String(bPerks.length),
     aNames: aPerks.map((rec) => TRAINING_BY_ID[rec.id].name),
     bNames: bPerks.map((rec) => TRAINING_BY_ID[rec.id].name),
+    aMarks: aPerks.map((rec) => TRAINING_BY_ID[rec.id]),
+    bMarks: bPerks.map((rec) => TRAINING_BY_ID[rec.id]),
   }));
   const scored = rows.filter((row) => row.counted);
   const aWins = scored.filter((row) => row.winner === "a").length;
@@ -4921,8 +4982,9 @@ function renderShowdownResults() {
         <div class="sd-side b ${row.winner === "b" ? "is-lead" : ""}">${sdChip(row, "b")}${row.bRaw ? `<small>${esc(row.bRaw)}</small>` : ""}${cell(row.bText)}</div>
       </div>`;
     }).join("");
+    const marks = (items) => (items && items.length) ? items.map((q) => perkBadgeHTML(q, { size: "lg" })).join("") : "<p>None yet</p>";
     const extra = key === "exhibit" ? `<p class="sd-note">Training perks earned this season. The count is not part of the tally.</p>
-      <div class="sd-perk-lists"><div><h4>${esc(result.aName.split(" ")[0])}</h4><p>${esc((list[0].aNames || []).join(", ") || "None yet")}</p></div><div><h4>${esc(result.bName.split(" ")[0])}</h4><p>${esc((list[0].bNames || []).join(", ") || "None yet")}</p></div></div>` : "";
+      <div class="sd-perk-lists"><div><h4>${esc(result.aName.split(" ")[0])}</h4><div class="back-perks">${marks(list[0].aMarks)}</div></div><div><h4>${esc(result.bName.split(" ")[0])}</h4><div class="back-perks">${marks(list[0].bMarks)}</div></div></div>` : "";
     return `<section class="sd-section"><h3>${title}</h3>${rows}${extra}</section>`;
   }).join("");
   const chaseList = (items, name) => items.length
@@ -4949,6 +5011,7 @@ function renderShowdownResults() {
       <button class="btn btn-ghost" type="button" id="sd-close">Close</button>
     </div>`;
   host.hidden = false;
+  if (typeof wirePerkTips === "function") wirePerkTips(host);
   $("sd-rematch").addEventListener("click", runShowdownFaceoff);
   $("sd-change").addEventListener("click", () => openShowdownPicker($("sd-a").value));
   $("sd-view-a").addEventListener("click", () => { const id = $("sd-a").value; closeShowdown(); openProfile(id); });
