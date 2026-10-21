@@ -14,7 +14,8 @@
 .cotd-copy h3{font-size:clamp(28px,4vw,42px);margin:0 0 6px}
 .crown-mark{position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:9;font-size:22px;filter:drop-shadow(0 2px 4px #000)}
 .award-pin,.award-row,.trophy-card{position:relative}
-.award-pin{position:absolute;top:108px;right:10px;z-index:8;background:#070707;border:1px solid #d4af37;border-radius:999px;padding:2px 6px;font-size:11px}
+.award-pin{position:absolute;top:118px;right:10px;z-index:8;background:#070707;border:1px solid #d4af37;border-radius:999px;padding:2px 6px;font-size:11px;max-width:42%}
+.bb-card.large .award-pin{top:136px}
 .award-tip{position:absolute;left:0;bottom:calc(100% + 8px);z-index:30;width:max-content;max-width:240px;padding:8px 10px;border-radius:10px;background:#070707;border:1px solid #d4af37;color:#fff;font-size:12px;line-height:1.35;font-weight:600;opacity:0;pointer-events:none}
 .award-pin:hover .award-tip,.award-pin:focus .award-tip,.award-pin:focus-within .award-tip,
 .award-row:hover .award-tip,.award-row:focus .award-tip,.award-row:focus-within .award-tip,
@@ -41,8 +42,28 @@
 .trophy-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .trophy-card{border:1px solid rgba(212,175,55,.35);border-radius:12px;padding:8px;background:rgba(0,0,0,.35)}
 .hidden-ach{opacity:.45}
+@media (min-width:601px){
+  .compete-stack{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}
+  .cotd-board,#challengeBoard{grid-column:1 / -1}
+  .cotd-board{order:1}
+  .quest-board{order:2}
+  .lb-board{order:3}
+  #challengeBoard{order:4}
+}
+@media (max-width:600px){
+  .compete-stack{display:flex;flex-direction:column;gap:12px}
+  #challengeBoard{order:1}
+  .lb-board{order:2}
+  .cotd-board{order:3}
+  .quest-board{order:4}
+  #h2hBoard .h2h{min-height:180px}
+  .trophy-grid,.cotd{grid-template-columns:1fr}
+  .cotd .mini-card{width:min(280px,100%);margin:0 auto}
+  body[data-app="trophies"] .show-panel[data-panel="road"] > .road-card,
+  body[data-app="trophies"] #styleLab{display:none}
+}
 @media (max-width:800px){
-  .compete-grid,.trophy-grid,.cotd{grid-template-columns:1fr}
+  .trophy-grid,.cotd{grid-template-columns:1fr}
   .cotd .mini-card{width:min(280px,100%);margin:0 auto}
 }
 @media (prefers-reduced-motion:reduce){

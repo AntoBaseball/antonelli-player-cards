@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="road.css">
 <link rel="stylesheet" href="compete.css">
 </head>
-<body>
+<body data-app="home">
 <header class="topbar">
   <div class="brand">
     <svg class="header-star" viewBox="0 0 100 100" aria-hidden="true"><polygon points="50,3 62,37 98,37 69,58 80,96 50,73 20,96 31,58 2,37 38,37" fill="#ffffff" stroke="#0a0a0a" stroke-width="5" stroke-linejoin="round"/><polygon points="50,3 62,37 98,37 69,58 80,96 50,73 20,96 31,58 2,37 38,37" transform="translate(50 50) scale(0.8) translate(-50 -50)" fill="none" stroke="#d4af37" stroke-width="3" stroke-linejoin="round"/></svg>
@@ -19,25 +19,32 @@
       <div class="brand-sub">Antonelli Baseball · Train · Test · Level Up</div>
     </div>
   </div>
-  <nav class="top-actions">
-    <div class="road-switch">
-      <label for="roadPlayer">Signed in as</label>
-      <select id="roadPlayer" aria-label="Signed in as"></select>
-      <label for="roadMode">Mode</label>
-      <select id="roadMode" aria-label="Coach or player mode">
-        <option value="player">Player</option>
-        <option value="coach">Coach</option>
-      </select>
+  <div class="bar-end">
+    <button class="icon-btn bell" id="roadBell" type="button" aria-label="Inbox">
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M12 2a6 6 0 0 0-6 6v3.1L4.2 14.2A1 1 0 0 0 5 16h14a1 1 0 0 0 .8-1.8L18 11.1V8a6 6 0 0 0-6-6zm0 20a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22z"/></svg>
+      <span id="roadBellCount" class="bell-count" hidden>0</span>
+    </button>
+    <button class="avatar-btn" id="menuBtn" type="button" aria-label="Settings" aria-expanded="false"></button>
+    <div class="settings-sheet" id="settingsSheet">
+      <label class="sheet-field">Signed in as
+        <select id="roadPlayer" aria-label="Signed in as"></select>
+      </label>
+      <label class="sheet-field">Mode
+        <select id="roadMode" aria-label="Coach or player mode">
+          <option value="player">Player</option>
+          <option value="coach">Coach</option>
+        </select>
+      </label>
       <button class="btn btn-ghost" id="roadMute" type="button">Sound off</button>
-      <button class="btn btn-ghost bell" id="roadBell" type="button">Inbox <span id="roadBellCount" class="bell-count" hidden>0</span></button>
+      <button class="btn btn-ghost" id="resetBtn" type="button">Reset Sample Data</button>
+      <button class="btn btn-red" id="addPlayerBtn" type="button">+ Add Player</button>
     </div>
-    <button class="btn btn-ghost" id="resetBtn" type="button">Reset Sample Data</button>
-    <button class="btn btn-red" id="addPlayerBtn" type="button">+ Add Player</button>
-  </nav>
+  </div>
 </header>
 
-<div class="sample-banner" role="note">
-  <strong>SAMPLE DATA:</strong> The roster is invented for this prototype, including extra players across 12U, 14U, 16U, and 17U so the facility can be browsed. Names and metrics are fictional. Sample players have no photos, so their cards show the Antonelli logo. Rivalries, challenges, and alerts stay on this browser until a real account backend is connected. Mason and Dylan each include one fictional retired card. Saved browsers do not receive new sample players until Reset Sample Data.
+<div class="sample-banner" id="sampleBanner" role="note">
+  <span><strong>SAMPLE DATA</strong> · Invented roster. Stays on this browser.</span>
+  <button class="sample-dismiss" id="sampleDismiss" type="button" aria-label="Dismiss sample notice">✕</button>
 </div>
 <div id="migrationBanner" class="sample-banner migration-banner" hidden>
   <strong>Hitting metrics moved to Blast.</strong> Saved hitter cards used the older exit-velocity formula. Bat speed was kept when it was between 25 and 95 mph. The other hitting numbers were set to the middle of the published Blast window for that age group — replace them with real Blast readings. Pitcher metrics were kept.
@@ -47,6 +54,7 @@
   <!-- ROSTER VIEW -->
   <section id="rosterView">
     <div id="roadHome"></div>
+    <div id="trainGames"></div>
     <div id="competeHome"></div>
     <div class="hero">
       <div>
@@ -304,6 +312,13 @@
 
 <div id="evoShow" class="evo-show" hidden role="dialog" aria-modal="true" aria-label="Card evolution"></div>
 <div id="inbox" class="inbox" hidden></div>
+<nav class="app-tabs" aria-label="App">
+  <button type="button" data-app="home" class="is-on" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3.2 3 11h2v9h6v-6h2v6h6v-9h2L12 3.2z"/></svg><span>Home</span></button>
+  <button type="button" data-app="card"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 3h12a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm2 4h8v2H8V7zm0 4h5v2H8v-2z"/></svg><span>My Card</span></button>
+  <button type="button" data-app="compete"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 19h4V9H4v10zm6 0h4V4h-4v15zm6 0h4v-7h-4v7z"/></svg><span>Compete</span></button>
+  <button type="button" data-app="trophies"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 3h10v2h3v3a5 5 0 0 1-4 4.9V15h2v2H6v-2h2v-2.1A5 5 0 0 1 4 8V5h3V3zm0 4H6v1a3 3 0 0 0 1.6 2.7C7.2 9.6 7 8.8 7 8V7zm10 0v1c0 .8-.2 1.6-.6 2.7A3 3 0 0 0 18 8V7h-1z"/></svg><span>Trophies</span></button>
+  <button type="button" data-app="train"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13 2 4 14h7l-1 8 10-14h-7l0-6z"/></svg><span>Train</span></button>
+</nav>
 
 <script src="store.js"></script>
 <script src="road.js"></script>

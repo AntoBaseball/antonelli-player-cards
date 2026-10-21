@@ -48,22 +48,27 @@
 .chart-row b{font-family:Impact,"Arial Black",system-ui,sans-serif;font-style:italic;font-size:22px;color:#fff}
 .year-banner{font-family:Impact,"Arial Black",system-ui,sans-serif;font-style:italic;font-size:clamp(26px,4vw,36px);color:#f2d060;margin:4px 0}
 .tier-need{margin-top:8px;font-size:13px;line-height:1.4}
+.card-stack{position:absolute;top:12px;left:12px;z-index:8;display:flex;flex-direction:column;align-items:flex-start;gap:4px;max-width:54%;min-width:0}
+.card-stack .card-brand,.card-stack .lvl-chip,.card-stack .card-quirks{position:static;top:auto;left:auto;right:auto;max-width:100%}
+.card-stack .card-quirks{display:flex;flex-direction:column;align-items:flex-start;gap:4px;width:100%}
+.card-stack .q-badge{max-width:100%}
+.bb-card.large .card-stack{max-width:52%}
 .lvl-chip{position:absolute;top:74px;left:12px;z-index:8;background:#070707;color:#f2d060;border:1px solid #d4af37;border-radius:999px;padding:3px 7px;font-size:10px;font-weight:900;letter-spacing:.6px;line-height:1.1;text-align:center}
 .lvl-chip b{display:block;font-size:13px;font-family:Impact,"Arial Black",system-ui,sans-serif;font-style:italic}
 .card-meta-mini{display:block;margin-top:4px;font-size:9px;font-weight:800;letter-spacing:.3px;opacity:.9;text-shadow:0 1px 4px #000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .card-phrase{display:block;margin-top:3px;font-size:11px;font-style:italic;color:#f7ecc8;text-shadow:0 1px 5px #000}
 .bb-card.is-hot{box-shadow:0 0 0 2px #f97316, 0 0 22px rgba(249,115,22,.75), inset 0 0 0 2px rgba(212,175,55,.7)}
 .bb-card.is-hot::after{box-shadow:inset 0 0 40px rgba(249,115,22,.25)}
-.bb-card.tier-legend{background:linear-gradient(155deg,#2a0408 0%,#7f1020 28%,#e11d48 58%,#ff5a6a 78%,#ffd0d4 100%);border-color:#ff8a96;box-shadow:0 14px 34px rgba(80,0,16,.55), inset 0 0 0 2px rgba(212,175,55,.8), inset 0 0 36px rgba(255,70,90,.45)}
-.bb-card.tier-legend .card-bottom{background:linear-gradient(180deg,transparent 0,rgba(60,0,12,.35) 30%,rgba(40,0,8,.82) 100%)}
-.bb-card.tier-legend .card-brand span{background:linear-gradient(180deg,#3b0610,#e11d48 60%,#ff8a96);color:#fff;border-color:#d4af37}
+.bb-card.tier-legend{background:radial-gradient(90% 55% at 78% 8%, rgba(255,70,40,.45), transparent 46%), linear-gradient(165deg,#140204 0%,#4a060c 20%,#8e1016 46%,#e10600 68%,#ff2a18 82%,#3a060c 100%);border-color:#ff3b30;box-shadow:0 16px 36px rgba(40,0,0,.65), inset 0 0 0 2px rgba(255,214,120,.8), inset 0 0 0 7px rgba(28,0,4,.72), inset 0 -48px 60px rgba(10,0,0,.55)}
+.bb-card.tier-legend .card-bottom{background:linear-gradient(180deg,transparent 0,rgba(40,0,6,.5) 28%,rgba(12,0,2,.92) 100%)}
+.bb-card.tier-legend .card-brand span{background:linear-gradient(180deg,#3a060c,#c4121a 58%,#ff2a18);color:#fff;border-color:#f2d060}
 .bb-card.tier-legend .card-name h2,.bb-card.tier-legend .card-name h3{color:#fff;text-shadow:0 0 1px #000,0 1px 0 #d4af37,0 -1px 0 #d4af37,1px 0 0 #d4af37,-1px 0 0 #d4af37}
-.tier-legend .card-foil{opacity:.82;mix-blend-mode:screen;background:linear-gradient(115deg,rgba(80,0,16,.2),rgba(255,90,110,.8) 24%,rgba(255,255,255,.9) 46%,rgba(255,196,80,.55) 70%,rgba(225,29,72,.7))}
-.tier-legend .card-glare{width:52%;background:linear-gradient(90deg,transparent 0%,rgba(255,180,190,.35) 24%,#fff 50%,rgba(255,210,120,.55) 68%,transparent 84%)}
-.tier-legend .card-sparks i::before,.tier-legend .card-sparks i::after{background:#fff;box-shadow:0 0 8px #ff4d6d}
-.tier-legend .overall-diamond{background:linear-gradient(145deg,#ff8a96,#e11d48 50%,#7f1020);box-shadow:0 0 22px rgba(225,29,72,.8), inset 0 0 0 2px rgba(255,255,255,.55)}
+.tier-legend .card-foil{opacity:.92;mix-blend-mode:screen;background:linear-gradient(115deg,rgba(40,0,0,.2),rgba(255,30,20,.85) 20%,rgba(255,255,255,.95) 40%,rgba(255,40,24,.55) 58%,rgba(255,196,80,.5) 74%,rgba(90,0,8,.45))}
+.tier-legend .card-glare{width:46%;background:linear-gradient(90deg,transparent 0%,rgba(255,80,60,.28) 22%,#fff 48%,rgba(255,210,120,.5) 66%,transparent 84%)}
+.tier-legend .card-sparks i::before,.tier-legend .card-sparks i::after{background:#fff;box-shadow:0 0 8px #ff2a18}
+.tier-legend .overall-diamond{background:linear-gradient(145deg,#ff3b30,#c4121a 48%,#2a0408);box-shadow:0 0 22px rgba(255,30,20,.75), inset 0 0 0 2px rgba(255,255,255,.5)}
 .legend-fx{position:absolute;inset:0;z-index:5;pointer-events:none;overflow:hidden}
-.legend-fx i{position:absolute;bottom:-10%;width:22%;height:48%;border-radius:50% 50% 40% 40%;background:radial-gradient(ellipse at 50% 80%, rgba(255,236,180,.95), rgba(225,29,72,.7) 42%, transparent 72%);filter:blur(0.4px);animation:legend-flame 1.15s ease-in-out infinite;transform-origin:50% 100%}
+.legend-fx i{position:absolute;bottom:-10%;width:22%;height:48%;border-radius:50% 50% 40% 40%;background:radial-gradient(ellipse at 50% 80%, rgba(255,220,120,.95), rgba(225,16,8,.85) 40%, transparent 72%);filter:blur(0.4px);animation:legend-flame 1.15s ease-in-out infinite;transform-origin:50% 100%}
 .legend-fx i:nth-child(1){left:6%}
 .legend-fx i:nth-child(2){left:40%;height:62%;animation-delay:-.35s}
 .legend-fx i:nth-child(3){right:8%;animation-delay:-.6s}
@@ -71,17 +76,17 @@
 .legend-fx::after{content:"";position:absolute;left:0;right:0;bottom:0;height:38%;background:radial-gradient(ellipse at 50% 100%, rgba(40,0,8,.55), transparent 70%);filter:blur(2px)}
 @keyframes legend-flame{0%,100%{transform:scaleY(.86) translateY(4px);opacity:.75}50%{transform:scaleY(1.08) translateY(-6px);opacity:1}}
 @keyframes legend-bolt{0%,72%,100%{opacity:0;transform:translateX(-8%)}78%{opacity:.85}86%{opacity:.15;transform:translateX(6%)}}
-.card-shell.tier-legend .card-back{background:linear-gradient(165deg,#2a0408,#7f1020 50%,#e11d48);border-color:#ff8a96;box-shadow:inset 0 0 0 2px rgba(212,175,55,.65)}
-.pill.tier-legend{background:linear-gradient(180deg,#3b0610,#e11d48 60%,#ff8a96);color:#fff;border:1px solid #d4af37}
-.tier-word.tier-legend{color:#be123c;font-weight:900}
-#profileView .tier-word.tier-legend,.showdown .tier-word.tier-legend{color:#fb7185}
-.tier-swatch.legend{background:linear-gradient(155deg,#2a0408,#e11d48 60%,#ffd0d4)}
-.tier-badge.tier-legend{background:linear-gradient(180deg,#3b0610,#e11d48);border:1px solid #d4af37;color:#fff}
+.card-shell.tier-legend .card-back{background:linear-gradient(165deg,#140204,#6e0c12 48%,#c4121a);border-color:#ff3b30;box-shadow:inset 0 0 0 2px rgba(255,214,120,.7)}
+.pill.tier-legend{background:linear-gradient(180deg,#3a060c,#c4121a 58%,#ff2a18);color:#fff;border:1px solid #f2d060}
+.tier-word.tier-legend{color:#ff2a18;font-weight:900}
+#profileView .tier-word.tier-legend,.showdown .tier-word.tier-legend{color:#ff3b30}
+.tier-swatch.legend{background:linear-gradient(155deg,#2a0408,#c4121a 55%,#ff2a18)}
+.tier-badge.tier-legend{background:linear-gradient(180deg,#3a060c,#c4121a);border:1px solid #f2d060;color:#fff}
 @media (prefers-reduced-motion:no-preference){
   .bb-card.card-live.tier-legend{animation:legend-pulse 2.8s ease-in-out infinite}
   .bb-card.card-live.is-hot{animation:hot-flicker 1.6s ease-in-out infinite}
 }
-@keyframes legend-pulse{0%,100%{box-shadow:0 0 0 2px rgba(212,175,55,.7),0 0 16px rgba(225,29,72,.35)}50%{box-shadow:0 0 0 2px #f2d060,0 0 28px rgba(255,70,90,.85)}}
+@keyframes legend-pulse{0%,100%{box-shadow:0 0 0 2px rgba(255,214,120,.7),0 0 16px rgba(180,12,12,.4)}50%{box-shadow:0 0 0 2px #f2d060,0 0 28px rgba(255,30,16,.9)}}
 @keyframes hot-flicker{0%,100%{filter:saturate(1)}50%{filter:saturate(1.35) brightness(1.08)}}
 .evo-show{position:fixed;inset:0;z-index:140;display:grid;place-items:center;background:#000;color:#fff}
 .evo-show[hidden]{display:none}
@@ -103,7 +108,7 @@
 .confetti i{position:fixed;top:-10px;z-index:130;width:8px;height:12px;animation:confetti-fall 1.3s ease-in forwards}
 @keyframes confetti-fall{to{transform:translateY(100vh) rotate(240deg);opacity:.2}}
 @media (max-width:800px){
-  .road-grid,.chart-windows{grid-template-columns:1fr 1fr}
+  .chart-windows{grid-template-columns:1fr 1fr}
   .road-hello{font-size:36px}
   .container{padding:12px 12px 28px}
   .topbar{padding:12px}
@@ -143,3 +148,107 @@ a{color:#f2d060}
 table,th,td{color:#f4f1ea;border-color:rgba(212,175,55,.22)}
 .hero>div:first-child{border:1px solid rgba(212,175,55,.35);box-shadow:0 16px 40px rgba(0,0,0,.35)}
 #roadTilt[hidden]{display:none}
+
+/* Phone game shell. Desktop keeps the top nav and the full page. */
+.bar-end{display:flex;align-items:center;gap:8px;position:relative}
+.avatar-btn{display:none}
+.settings-sheet{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.sheet-field{display:flex;flex-direction:column;gap:2px;font-size:11px;font-weight:800;letter-spacing:.4px;color:#f2d060}
+.sheet-field select{min-width:148px}
+.icon-btn.bell{position:relative;width:40px;height:40px;border-radius:999px;display:grid;place-items:center;padding:0;color:#f7ecc8}
+.sample-banner{display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:left;padding:8px 16px;font-size:13px;line-height:1.35}
+.sample-banner[hidden]{display:none}
+.sample-dismiss{background:transparent;border:1px solid rgba(212,175,55,.5);color:#f2d060;border-radius:999px;width:28px;height:28px;cursor:pointer;flex:none}
+.app-tabs,#trainGames{display:none}
+.mission-list li{display:block;padding:0}
+.mission-hit{display:flex;align-items:center;gap:12px;width:100%;background:transparent;border:0;color:inherit;padding:11px 2px;text-align:left;cursor:pointer}
+.mission-copy{display:block;flex:1;min-width:0}
+.mission-copy b{display:block;font-size:15px;font-weight:800;color:#fff}
+.mission-copy small{color:#b7aa8a}
+.mission-xp{font-family:Impact,"Arial Black",system-ui,sans-serif;font-style:italic;color:#f2d060;font-size:20px;white-space:nowrap}
+.check-circle{width:26px;height:26px;border-radius:50%;border:2px solid #f2d060;flex:none;position:relative;background:transparent}
+.mission-row.is-done .check-circle,.mission-hit.is-checking .check-circle{background:#f2d060;border-color:#f2d060}
+.mission-row.is-done .check-circle::after,.mission-hit.is-checking .check-circle::after{content:"";position:absolute;left:8px;top:3px;width:6px;height:12px;border:solid #111;border-width:0 3px 3px 0;transform:rotate(45deg)}
+.mission-hit.is-checking .check-circle{animation:check-pop .35s cubic-bezier(.2,.8,.2,1)}
+.mission-hit.is-checking .mission-xp{color:#fff}
+.mission-row.is-done{opacity:.7}
+.mission-row.is-done .mission-copy b{text-decoration:line-through}
+.road-missions h3 b{color:#f2d060}
+@keyframes check-pop{from{transform:scale(.5)}to{transform:scale(1)}}
+@media (max-width:600px){
+  .topbar{flex-wrap:nowrap;align-items:center;gap:8px;padding:8px 12px;min-height:52px;z-index:40}
+  .header-star,.brand-sub{display:none}
+  .header-logo{height:32px;max-width:48px}
+  .brand{gap:8px;min-width:0}
+  .brand-name .road-mark{font-size:16px;letter-spacing:.4px}
+  .avatar-btn{display:grid;place-items:center;width:36px;height:36px;border-radius:50%;border:1px solid #f2d060;background:radial-gradient(circle at 40% 30%,#3a2a10,#100e0a);color:#f2d060;font-family:Impact,"Arial Black",system-ui,sans-serif;font-style:italic;font-size:14px;padding:0;cursor:pointer}
+  .settings-sheet{display:none;position:absolute;top:calc(100% + 8px);right:0;width:min(320px,86vw);flex-direction:column;align-items:stretch;gap:10px;padding:14px;border-radius:16px;background:rgba(10,12,16,.97);border:1px solid rgba(212,175,55,.45);box-shadow:0 18px 40px rgba(0,0,0,.55)}
+  .settings-sheet.is-open{display:flex}
+  .sheet-field select,.settings-sheet .btn{width:100%}
+  .sample-banner{padding:6px 12px;font-size:12px}
+  .app-tabs{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;z-index:50;background:rgba(7,8,12,.96);border-top:1px solid rgba(212,175,55,.45);padding:6px 2px calc(8px + env(safe-area-inset-bottom));backdrop-filter:blur(16px)}
+  .app-tabs button{background:transparent;border:0;color:#8d8268;font-size:10px;font-weight:800;letter-spacing:.15px;padding:4px 0 2px;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer}
+  .app-tabs button svg{width:20px;height:20px}
+  .app-tabs button.is-on{color:#f2d060}
+  body{padding-bottom:72px}
+  .container{padding:10px 12px 16px}
+  .road-grid,.chart-windows,.hero,.hero-stats,.controls{grid-template-columns:1fr}
+  .chart-compare{grid-template-columns:1fr 1fr}
+  .road-quote,.road-bench{display:none}
+  .road-hello{font-size:34px}
+  .road-hero{padding:14px 12px 12px}
+  .inbox{top:56px;right:8px;z-index:80}
+  body[data-app="home"] #competeHome,
+  body[data-app="home"] .hero,
+  body[data-app="home"] .controls,
+  body[data-app="home"] .section-head,
+  body[data-app="home"] #rosterGrid,
+  body[data-app="home"] #emptyState,
+  body[data-app="home"] #trainGames{display:none !important}
+  body[data-app="compete"] #roadHome,
+  body[data-app="compete"] #trainGames,
+  body[data-app="compete"] .hero,
+  body[data-app="compete"] .controls,
+  body[data-app="compete"] .section-head,
+  body[data-app="compete"] #rosterGrid,
+  body[data-app="compete"] #emptyState{display:none !important}
+  body[data-app="train"] .road-kicker,
+  body[data-app="train"] .road-hello,
+  body[data-app="train"] .road-streak,
+  body[data-app="train"] .road-quote,
+  body[data-app="train"] .road-99,
+  body[data-app="train"] .road-coach,
+  body[data-app="train"] .road-chart-card,
+  body[data-app="train"] #competeHome,
+  body[data-app="train"] .hero,
+  body[data-app="train"] .controls,
+  body[data-app="train"] .section-head,
+  body[data-app="train"] #rosterGrid,
+  body[data-app="train"] #emptyState{display:none !important}
+  body[data-app="train"] #roadHome,
+  body[data-app="train"] #trainGames{display:block !important}
+  body[data-app="train"] .road-hero{background:transparent;border:0;padding:0;box-shadow:none}
+  body[data-app="card"] #rosterView,
+  body[data-app="trophies"] #rosterView{display:none !important}
+  body[data-app="trophies"] .show-top,
+  body[data-app="trophies"] .pb-block,
+  body[data-app="trophies"] .show-tabs,
+  body[data-app="trophies"] #backBtn{display:none !important}
+  .show-card{width:min(300px,100%);margin:0 auto}
+  .show-name .first{font-size:14px}
+  .show-name .last{font-size:32px}
+  .show-posrow{margin:8px 0}
+  .pos-diamond{width:42px;height:42px}
+  .show-team{font-size:15px}
+  .show-facts{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  .show-fact b{font-size:18px}
+  .show-fact-overall b{font-size:28px}
+  .show-side{gap:8px}
+  .profile-actions{display:flex;flex-wrap:wrap;gap:6px}
+  .profile-actions .btn{padding:8px 10px;font-size:12px}
+  #profileView{padding:8px 8px 20px;margin-top:0}
+  #backBtn{padding:8px 12px;font-size:13px}
+}
+@media (prefers-reduced-motion:reduce){
+  .mission-hit.is-checking .check-circle{animation:none}
+}
