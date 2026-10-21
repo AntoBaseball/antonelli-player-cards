@@ -306,6 +306,22 @@ const METRICS = {
     entryMin: 40, entryMax: 500,
     help: "Furthest ball off the bat, in feet. Display only. Not graded and not part of the overall. The personal best is the longest one on record.",
   },
+  /* Optional athletic tests. Tracked for quests and leaderboards. Not part of OVR unless a later config says so. */
+  broadJump: {
+    label: "Broad Jump", unit: " in", step: 1, displayOnly: true, mode: "higher",
+    entryMin: 24, entryMax: 140,
+    help: "Standing broad jump, inches. Display only. Not part of the overall.",
+  },
+  vertical: {
+    label: "Vertical Jump", unit: " in", step: 0.5, displayOnly: true, mode: "higher",
+    entryMin: 6, entryMax: 45,
+    help: "Vertical jump, inches. Display only. Not part of the overall.",
+  },
+  flying10: {
+    label: "Flying 10", unit: " s", step: 0.01, displayOnly: true, mode: "lower",
+    entryMin: 0.9, entryMax: 2.4,
+    help: "Flying 10-yard, seconds. Lower is better. Display only. Not part of the overall.",
+  },
 };
 
 /* Strength tests that feed STR. STR is the unweighted average of the tests
@@ -403,7 +419,7 @@ const SAMPLE_PLAYERS = [
     strengthNote: DEFAULT_STRENGTH_NOTE,
     metrics: {
       batSpeed: 69, peakHandSpeed: 22, attackAngle: 12, verticalBatAngle: -28, timeToContact: 0.155, powerKw: 3.9, rotationalAcceleration: 16, onPlaneEfficiency: 76, earlyConnection: 92, connectionAtImpact: 88,
-      tenYard: 1.84, throwVelo: 84, medBall: 24, gripDominant: 118, gripOther: 108, exitVelo: 92, battedDistance: 340,
+      tenYard: 1.84, throwVelo: 84, medBall: 24, gripDominant: 118, gripOther: 108, exitVelo: 92, battedDistance: 340, broadJump: 96, vertical: 32, flying10: 1.18,
     },
     history: {
       batSpeed: metricHistory(69, [63, 65, 72]), peakHandSpeed: metricHistory(22, [20, 20.5, 21]),
@@ -433,7 +449,7 @@ const SAMPLE_PLAYERS = [
     strengthNote: DEFAULT_STRENGTH_NOTE,
     metrics: {
       batSpeed: 58, peakHandSpeed: 19, attackAngle: 8, verticalBatAngle: -22, timeToContact: 0.17, powerKw: 2.4, rotationalAcceleration: 11, onPlaneEfficiency: 72, earlyConnection: 90, connectionAtImpact: 89,
-      tenYard: 1.68, throwVelo: 74, medBall: 17, gripDominant: 84, gripOther: 78, exitVelo: 75, battedDistance: 265,
+      tenYard: 1.68, throwVelo: 74, medBall: 17, gripDominant: 84, gripOther: 78, exitVelo: 75, battedDistance: 265, broadJump: 84, vertical: 26, flying10: 1.12,
     },
     history: {
       batSpeed: metricHistory(58, [56, 57, 60]), peakHandSpeed: metricHistory(19, [18, 18.5, 18.5]),
@@ -466,6 +482,7 @@ const SAMPLE_PLAYERS = [
       strikePct: metricHistory(69, [60, 64, 67]), whiffPct: metricHistory(38, [34, 35, 37]),
       pitchCapacity: metricHistory(95, [85, 88, 92]),
     },
+    road: { xp: 4100, dates: { training: ["2026-10-19", "2026-10-20"], checkin: ["2026-10-19", "2026-10-20"] }, signature: "Strike one." },
   },
   {
     id: "sample-connor-walsh", name: "Connor Walsh", age: 17, ageGroup: "18U", classYear: "Senior / 12th",
@@ -523,7 +540,7 @@ const SAMPLE_PLAYERS = [
     strengthNote: DEFAULT_STRENGTH_NOTE,
     metrics: {
       batSpeed: 66, peakHandSpeed: 21, attackAngle: 10, verticalBatAngle: -26, timeToContact: 0.162, powerKw: 3.2, rotationalAcceleration: 13, onPlaneEfficiency: 74, earlyConnection: 88, connectionAtImpact: 86,
-      tenYard: 1.74, throwVelo: 79, medBall: 21, gripDominant: 102, gripOther: 96, exitVelo: 86, battedDistance: 310,
+      tenYard: 1.74, throwVelo: 79, medBall: 21, gripDominant: 102, gripOther: 96, exitVelo: 86, battedDistance: 310, broadJump: 88, vertical: 28, flying10: 1.22,
     },
     history: {
       batSpeed: metricHistory(66, [60, 62, 64]), peakHandSpeed: metricHistory(21, [19, 19.5, 20]),
@@ -552,15 +569,40 @@ const SAMPLE_PLAYERS = [
       },
       prs: 4,
       challenges: 1,
+      rivalry: true,
       signature: "Evidence over excuses.",
       celebration: "fire",
       bio: "Outfielder from Boston. Chasing 99 one tested rep at a time.",
       scoutingReport: "Bat speed is the tool. The next gain is staying on plane when he sells out for power.",
       links: { perfectGame: "https://www.perfectgame.org/", pbr: "https://www.prepbaseballreport.com/" },
       videos: [{ label: "Cage session", url: "https://www.youtube.com/results?search_query=baseball+hitting+drills" }],
-      timeline: [{ at: "2024-09-01", text: "Joined Antonelli Baseball." }, { at: "2026-10-20", text: "Exit velocity reached 86 mph." }],
+      timeline: [{ at: "2024-09-01", text: "Joined Antonelli Baseball." }, { at: "2025-06-12", text: "First 70 MPH exit velo." }, { at: "2026-10-20", text: "Exit velocity reached 86 mph." }],
+      ageCards: [
+        { age: 14, overall: 71, season: "2024", note: "Age 14 standard" },
+        { age: 15, overall: 74, season: "2025", note: "Age 15 standard" },
+        { age: 16, overall: 78, season: "2026", note: "Current standard" },
+      ],
       evolutions: [],
       trainingLog: [],
+    },
+  },
+  {
+    id: "sample-jake-ellis", name: "Jake Ellis", age: 16, ageGroup: "16U", classYear: "2028",
+    team: "Antonelli 16U", position: "CF", secondaryPosition: "OF", height: "6'0\"", weight: "178 lbs", hometown: "Cambridge, MA", bats: "L", throws: "L", type: "hitter", archetype: "Gap-to-Gap Hitter", photo: "",
+    strengths: ["Barrel is loud when he stays on time", "Closes on the ball in the gaps"],
+    improvements: ["Keep the front side closed on the inner half"],
+    coachQuirks: ["dead-red"],
+    strengthNote: DEFAULT_STRENGTH_NOTE,
+    metrics: {
+      batSpeed: 70, peakHandSpeed: 21.5, attackAngle: 9, verticalBatAngle: -25, timeToContact: 0.16, powerKw: 3.3, rotationalAcceleration: 13.2, onPlaneEfficiency: 75, earlyConnection: 88, connectionAtImpact: 87,
+      tenYard: 1.9, throwVelo: 84, medBall: 20, gripDominant: 100, exitVelo: 87.4, battedDistance: 318, broadJump: 100, vertical: 32, flying10: 1.4,
+    },
+    history: { exitVelo: metricHistory(87.4, [80, 83, 85]), batSpeed: metricHistory(70, [64, 66, 68]) },
+    readingLog: { exitVelo: [{ value: 80, at: "2026-06-02" }, { value: 85, at: "2026-09-20" }, { value: 87.4, at: "2026-10-19" }] },
+    road: {
+      xp: 6400, prs: 2, rivalry: true, signature: "Come get it.",
+      dates: { training: ["2026-10-18", "2026-10-19", "2026-10-20"], checkin: ["2026-10-18", "2026-10-19", "2026-10-20"] },
+      streaks: { training: 3, checkin: 3 },
     },
   },
   {
@@ -572,7 +614,7 @@ const SAMPLE_PLAYERS = [
     strengthNote: DEFAULT_STRENGTH_NOTE,
     metrics: {
       batSpeed: 54, peakHandSpeed: 18, attackAngle: 7, verticalBatAngle: -22, timeToContact: 0.175, powerKw: 2.1, rotationalAcceleration: 10, onPlaneEfficiency: 70, earlyConnection: 86, connectionAtImpact: 85,
-      tenYard: 1.82, throwVelo: 64, medBall: 15, gripDominant: 72, exitVelo: 70, battedDistance: 230,
+      tenYard: 1.82, throwVelo: 64, medBall: 15, gripDominant: 72, exitVelo: 70, battedDistance: 230, broadJump: 74, vertical: 21, flying10: 1.34,
     },
     history: {
       batSpeed: metricHistory(54, [50, 51, 53]), exitVelo: metricHistory(70, [64, 66, 68]),
@@ -589,7 +631,7 @@ const SAMPLE_PLAYERS = [
     strengthNote: DEFAULT_STRENGTH_NOTE,
     metrics: {
       batSpeed: 48, peakHandSpeed: 16, attackAngle: 6, verticalBatAngle: -20, timeToContact: 0.185, powerKw: 1.5, rotationalAcceleration: 8, onPlaneEfficiency: 66, earlyConnection: 80, connectionAtImpact: 82,
-      tenYard: 1.95, throwVelo: 58, medBall: 12.5, gripDominant: 58, exitVelo: 62, battedDistance: 180,
+      tenYard: 1.95, throwVelo: 58, medBall: 12.5, gripDominant: 58, exitVelo: 62, battedDistance: 180, broadJump: 64, vertical: 18, flying10: 1.46,
     },
     history: {
       batSpeed: metricHistory(48, [44, 45, 47]), exitVelo: metricHistory(62, [56, 58, 60]),
@@ -2363,7 +2405,7 @@ function athleticKeys() {
 }
 
 function displayKeys() {
-  return ["battedDistance"];
+  return ["battedDistance", "broadJump", "vertical", "flying10"];
 }
 
 function metricKeysFor(type) {
@@ -3012,6 +3054,7 @@ function cardBackHTML(player, face, subs, opts) {
     <div class="back-grades">${gradeLine}</div>
     <div class="back-raws">${hitting}${pitching}</div>
     ${backPerksHTML(player, face)}
+    ${typeof competeBackAwards === "function" ? competeBackAwards(player) : ""}
     ${bests}
     ${typeof roadBackExtra === "function" ? roadBackExtra(player) : ""}
     </div>
@@ -3045,7 +3088,7 @@ function cardHTML(player, large, face, opts) {
   const phrase = liveRoad && player.road.signature ? `<span class="card-phrase">${celeb}${esc(player.road.signature)}</span>` : "";
   const meta = `<span class="card-meta-mini">${esc(player.age)} · ${esc(player.classYear || "—")} · ${esc(teamBit)}${streakN ? " · " + streakN + "🔥" : ""}</span>`;
   const front = `
-  <div class="bb-card is-front tier-${tier.key} ${large ? "large" : ""} ${quiet ? "foil-dim" : ""} ${hot ? "is-hot" : ""} ${player.photo ? "" : "logo-placeholder"}" style="--foil-delay:${phase.toFixed(2)}s">
+  <div class="bb-card is-front tier-${tier.key} ${large ? "large" : ""} ${quiet ? "foil-dim" : ""} ${hot ? "is-hot" : ""} ${player.photo ? "" : "logo-placeholder"} ${!face && typeof competeCardClass === "function" ? competeCardClass(player) : ""}" style="--foil-delay:${phase.toFixed(2)}s">
     <div class="card-visual">${visual}</div>
     <div class="card-foil" aria-hidden="true"></div>
     <div class="card-glare" aria-hidden="true"></div>
@@ -3056,6 +3099,7 @@ function cardHTML(player, large, face, opts) {
       ${lvlChip}
       ${quirkHTML}
     </div>
+    ${!face && typeof competeMarks === "function" ? competeMarks(player) : ""}
     <div class="overall-diamond"><div><b>${overall}</b><span>OVR</span></div>${badgeSpark}</div>
     <div class="card-bottom">
       <div class="card-name">
@@ -4367,6 +4411,7 @@ function collectSeasonReveal() {
 }
 
 function closeProfile() {
+  if (typeof styleClearCele === "function") styleClearCele();
   const player = players.find((p) => p.id === selectedId);
   if (player && player.pbFresh && Object.keys(player.pbFresh).length) {
     player.pbFresh = {};
