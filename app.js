@@ -306,6 +306,22 @@ const METRICS = {
     entryMin: 40, entryMax: 500,
     help: "Furthest ball off the bat, in feet. Display only. Not graded and not part of the overall. The personal best is the longest one on record.",
   },
+  /* Optional athletic tests. Tracked for quests and leaderboards. Not part of OVR unless a later config says so. */
+  broadJump: {
+    label: "Broad Jump", unit: " in", step: 1, displayOnly: true, mode: "higher",
+    entryMin: 24, entryMax: 140,
+    help: "Standing broad jump, inches. Display only. Not part of the overall.",
+  },
+  vertical: {
+    label: "Vertical Jump", unit: " in", step: 0.5, displayOnly: true, mode: "higher",
+    entryMin: 6, entryMax: 45,
+    help: "Vertical jump, inches. Display only. Not part of the overall.",
+  },
+  flying10: {
+    label: "Flying 10", unit: " s", step: 0.01, displayOnly: true, mode: "lower",
+    entryMin: 0.9, entryMax: 2.4,
+    help: "Flying 10-yard, seconds. Lower is better. Display only. Not part of the overall.",
+  },
 };
 
 /* Strength tests that feed STR. STR is the unweighted average of the tests
@@ -403,7 +419,7 @@ const SAMPLE_PLAYERS = [
     strengthNote: DEFAULT_STRENGTH_NOTE,
     metrics: {
       batSpeed: 69, peakHandSpeed: 22, attackAngle: 12, verticalBatAngle: -28, timeToContact: 0.155, powerKw: 3.9, rotationalAcceleration: 16, onPlaneEfficiency: 76, earlyConnection: 92, connectionAtImpact: 88,
-      tenYard: 1.84, throwVelo: 84, medBall: 24, gripDominant: 118, gripOther: 108, exitVelo: 92, battedDistance: 340,
+      tenYard: 1.84, throwVelo: 84, medBall: 24, gripDominant: 118, gripOther: 108, exitVelo: 92, battedDistance: 340, broadJump: 96, vertical: 32, flying10: 1.18,
     },
     history: {
       batSpeed: metricHistory(69, [63, 65, 72]), peakHandSpeed: metricHistory(22, [20, 20.5, 21]),
@@ -433,7 +449,7 @@ const SAMPLE_PLAYERS = [
     strengthNote: DEFAULT_STRENGTH_NOTE,
     metrics: {
       batSpeed: 58, peakHandSpeed: 19, attackAngle: 8, verticalBatAngle: -22, timeToContact: 0.17, powerKw: 2.4, rotationalAcceleration: 11, onPlaneEfficiency: 72, earlyConnection: 90, connectionAtImpact: 89,
-      tenYard: 1.68, throwVelo: 74, medBall: 17, gripDominant: 84, gripOther: 78, exitVelo: 75, battedDistance: 265,
+      tenYard: 1.68, throwVelo: 74, medBall: 17, gripDominant: 84, gripOther: 78, exitVelo: 75, battedDistance: 265, broadJump: 84, vertical: 26, flying10: 1.12,
     },
     history: {
       batSpeed: metricHistory(58, [56, 57, 60]), peakHandSpeed: metricHistory(19, [18, 18.5, 18.5]),
@@ -466,6 +482,7 @@ const SAMPLE_PLAYERS = [
       strikePct: metricHistory(69, [60, 64, 67]), whiffPct: metricHistory(38, [34, 35, 37]),
       pitchCapacity: metricHistory(95, [85, 88, 92]),
     },
+    road: { xp: 4100, dates: { training: ["2026-10-19", "2026-10-20"], checkin: ["2026-10-19", "2026-10-20"] }, signature: "Strike one." },
   },
   {
     id: "sample-connor-walsh", name: "Connor Walsh", age: 17, ageGroup: "18U", classYear: "Senior / 12th",
@@ -512,6 +529,159 @@ const SAMPLE_PLAYERS = [
       throwVelo: [{ value: 73, at: "2025-07-02" }, { value: 64, at: "2026-09-12" }, { value: 66, at: "2026-09-26" }, { value: 68, at: "2026-10-09" }, { value: 70, at: "2026-10-18" }],
       tenYard: [{ value: 2.02, at: "2025-08-09" }, { value: 2.20, at: "2026-09-12" }, { value: 2.16, at: "2026-09-26" }, { value: 2.12, at: "2026-10-09" }, { value: 2.08, at: "2026-10-18" }],
       battedDistance: [{ value: 245, at: "2025-05-22" }, { value: 190, at: "2026-09-12" }, { value: 205, at: "2026-09-26" }, { value: 214, at: "2026-10-09" }, { value: 220, at: "2026-10-18" }],
+    },
+  },
+  {
+    id: "sample-jack-morales", name: "Jack Morales", age: 16, ageGroup: "16U", classYear: "2028",
+    team: "Antonelli 16U", position: "OF", secondaryPosition: "CF", height: "5'11\"", weight: "175 lbs", hometown: "Boston, MA", bats: "R", throws: "R", type: "hitter", archetype: "Power Hitter", photo: "",
+    strengths: ["Bat speed is climbing month over month", "Competes on every tested rep"],
+    improvements: ["Stay through the ball when he sells out for power", "First-step quickness on the 10-yard"],
+    coachQuirks: ["dead-red"],
+    strengthNote: DEFAULT_STRENGTH_NOTE,
+    metrics: {
+      batSpeed: 66, peakHandSpeed: 21, attackAngle: 10, verticalBatAngle: -26, timeToContact: 0.162, powerKw: 3.2, rotationalAcceleration: 13, onPlaneEfficiency: 74, earlyConnection: 88, connectionAtImpact: 86,
+      tenYard: 1.74, throwVelo: 79, medBall: 21, gripDominant: 102, gripOther: 96, exitVelo: 86, battedDistance: 310, broadJump: 88, vertical: 28, flying10: 1.22,
+    },
+    history: {
+      batSpeed: metricHistory(66, [60, 62, 64]), peakHandSpeed: metricHistory(21, [19, 19.5, 20]),
+      attackAngle: metricHistory(10, [8, 9, 9]), verticalBatAngle: metricHistory(-26, [-24, -25, -25]),
+      timeToContact: metricHistory(0.162, [0.175, 0.170, 0.166]), powerKw: metricHistory(3.2, [2.6, 2.8, 3.0]),
+      rotationalAcceleration: metricHistory(13, [11, 11.5, 12]), onPlaneEfficiency: metricHistory(74, [68, 70, 72]),
+      earlyConnection: metricHistory(88, [82, 84, 86]), connectionAtImpact: metricHistory(86, [80, 82, 84]),
+      tenYard: metricHistory(1.74, [1.84, 1.80, 1.77]), throwVelo: metricHistory(79, [72, 74, 76]),
+      medBall: metricHistory(21, [17.5, 18.5, 19.5]), gripDominant: metricHistory(102, [90, 94, 98]), gripOther: metricHistory(96, [84, 88, 92]),
+      exitVelo: metricHistory(86, [78, 81, 84]),
+      battedDistance: metricHistory(310, [270, 285, 300]),
+    },
+    readingLog: {
+      exitVelo: [{ value: 74, at: "2026-04-02" }, { value: 78, at: "2026-09-15" }, { value: 81, at: "2026-09-28" }, { value: 84, at: "2026-10-08" }, { value: 86, at: "2026-10-20" }],
+      batSpeed: [{ value: 60, at: "2026-09-15" }, { value: 62, at: "2026-09-28" }, { value: 64, at: "2026-10-08" }, { value: 66, at: "2026-10-20" }],
+      throwVelo: [{ value: 76, at: "2026-03-12" }, { value: 72, at: "2026-09-15" }, { value: 74, at: "2026-09-28" }, { value: 76, at: "2026-10-08" }, { value: 79, at: "2026-10-20" }],
+      tenYard: [{ value: 1.70, at: "2026-05-02" }, { value: 1.84, at: "2026-09-15" }, { value: 1.80, at: "2026-09-28" }, { value: 1.77, at: "2026-10-08" }, { value: 1.74, at: "2026-10-20" }],
+      battedDistance: [{ value: 300, at: "2026-04-18" }, { value: 270, at: "2026-09-15" }, { value: 285, at: "2026-09-28" }, { value: 300, at: "2026-10-08" }, { value: 310, at: "2026-10-20" }],
+    },
+    road: {
+      xp: 20240,
+      streaks: { training: 7, checkin: 7, improvement: 4, goal: 2 },
+      dates: {
+        training: ["2026-10-14", "2026-10-15", "2026-10-16", "2026-10-17", "2026-10-18", "2026-10-19", "2026-10-20"],
+        checkin: ["2026-10-14", "2026-10-15", "2026-10-16", "2026-10-17", "2026-10-18", "2026-10-19", "2026-10-20"],
+      },
+      prs: 4,
+      challenges: 1,
+      rivalry: true,
+      signature: "Evidence over excuses.",
+      celebration: "fire",
+      bio: "Outfielder from Boston. Chasing 99 one tested rep at a time.",
+      scoutingReport: "Bat speed is the tool. The next gain is staying on plane when he sells out for power.",
+      links: { perfectGame: "https://www.perfectgame.org/", pbr: "https://www.prepbaseballreport.com/" },
+      videos: [{ label: "Cage session", url: "https://www.youtube.com/results?search_query=baseball+hitting+drills" }],
+      timeline: [{ at: "2024-09-01", text: "Joined Antonelli Baseball." }, { at: "2025-06-12", text: "First 70 MPH exit velo." }, { at: "2026-10-20", text: "Exit velocity reached 86 mph." }],
+      ageCards: [
+        { age: 14, overall: 71, season: "2024", note: "Age 14 standard" },
+        { age: 15, overall: 74, season: "2025", note: "Age 15 standard" },
+        { age: 16, overall: 78, season: "2026", note: "Current standard" },
+      ],
+      evolutions: [],
+      trainingLog: [],
+    },
+  },
+  {
+    id: "sample-jake-ellis", name: "Jake Ellis", age: 16, ageGroup: "16U", classYear: "2028",
+    team: "Antonelli 16U", position: "CF", secondaryPosition: "OF", height: "6'0\"", weight: "178 lbs", hometown: "Cambridge, MA", bats: "L", throws: "L", type: "hitter", archetype: "Gap-to-Gap Hitter", photo: "",
+    strengths: ["Barrel is loud when he stays on time", "Closes on the ball in the gaps"],
+    improvements: ["Keep the front side closed on the inner half"],
+    coachQuirks: ["dead-red"],
+    strengthNote: DEFAULT_STRENGTH_NOTE,
+    metrics: {
+      batSpeed: 70, peakHandSpeed: 21.5, attackAngle: 9, verticalBatAngle: -25, timeToContact: 0.16, powerKw: 3.3, rotationalAcceleration: 13.2, onPlaneEfficiency: 75, earlyConnection: 88, connectionAtImpact: 87,
+      tenYard: 1.9, throwVelo: 84, medBall: 20, gripDominant: 100, exitVelo: 87.4, battedDistance: 318, broadJump: 100, vertical: 32, flying10: 1.4,
+    },
+    history: { exitVelo: metricHistory(87.4, [80, 83, 85]), batSpeed: metricHistory(70, [64, 66, 68]) },
+    readingLog: { exitVelo: [{ value: 80, at: "2026-06-02" }, { value: 85, at: "2026-09-20" }, { value: 87.4, at: "2026-10-19" }] },
+    road: {
+      xp: 6400, prs: 2, rivalry: true, signature: "Come get it.",
+      dates: { training: ["2026-10-18", "2026-10-19", "2026-10-20"], checkin: ["2026-10-18", "2026-10-19", "2026-10-20"] },
+      streaks: { training: 3, checkin: 3 },
+    },
+  },
+  {
+    id: "sample-sofia-alvarez", name: "Sofia Alvarez", age: 14, ageGroup: "14U", classYear: "2028",
+    team: "Antonelli 14U", position: "2B", secondaryPosition: "OF", height: "5'4\"", weight: "125 lbs", hometown: "Providence, RI", bats: "L", throws: "R", type: "hitter", archetype: "Contact / Leadoff", photo: "",
+    strengths: ["Short swing, repeatable contact", "Runs the bases with a plan"],
+    improvements: ["Add strength without slowing the swing down"],
+    coachQuirks: ["table-setter"],
+    strengthNote: DEFAULT_STRENGTH_NOTE,
+    metrics: {
+      batSpeed: 54, peakHandSpeed: 18, attackAngle: 7, verticalBatAngle: -22, timeToContact: 0.175, powerKw: 2.1, rotationalAcceleration: 10, onPlaneEfficiency: 70, earlyConnection: 86, connectionAtImpact: 85,
+      tenYard: 1.82, throwVelo: 64, medBall: 15, gripDominant: 72, exitVelo: 70, battedDistance: 230, broadJump: 74, vertical: 21, flying10: 1.34,
+    },
+    history: {
+      batSpeed: metricHistory(54, [50, 51, 53]), exitVelo: metricHistory(70, [64, 66, 68]),
+      tenYard: metricHistory(1.82, [1.92, 1.88, 1.85]), throwVelo: metricHistory(64, [58, 60, 62]),
+    },
+    road: { xp: 2400, prs: 1, signature: "Small swing, big day.", dates: { training: ["2026-10-19", "2026-10-20"], checkin: ["2026-10-19", "2026-10-20"] } },
+  },
+  {
+    id: "sample-miles-carter", name: "Miles Carter", age: 12, ageGroup: "12U", classYear: "2030",
+    team: "Antonelli 12U", position: "SS", secondaryPosition: "", height: "5'1\"", weight: "105 lbs", hometown: "Worcester, MA", bats: "R", throws: "R", type: "hitter", archetype: "Contact / Leadoff", photo: "",
+    strengths: ["Quick hands", "Listens and adjusts between reps"],
+    improvements: ["Strength comes with time — keep the swing short"],
+    coachQuirks: ["first-pitch"],
+    strengthNote: DEFAULT_STRENGTH_NOTE,
+    metrics: {
+      batSpeed: 48, peakHandSpeed: 16, attackAngle: 6, verticalBatAngle: -20, timeToContact: 0.185, powerKw: 1.5, rotationalAcceleration: 8, onPlaneEfficiency: 66, earlyConnection: 80, connectionAtImpact: 82,
+      tenYard: 1.95, throwVelo: 58, medBall: 12.5, gripDominant: 58, exitVelo: 62, battedDistance: 180, broadJump: 64, vertical: 18, flying10: 1.46,
+    },
+    history: {
+      batSpeed: metricHistory(48, [44, 45, 47]), exitVelo: metricHistory(62, [56, 58, 60]),
+      tenYard: metricHistory(1.95, [2.05, 2.01, 1.98]),
+    },
+    road: { xp: 600, dates: { training: ["2026-10-20"], checkin: ["2026-10-20"] } },
+  },
+  {
+    id: "sample-andre-blake", name: "Andre Blake", age: 17, ageGroup: "18U", classYear: "2027",
+    team: "Antonelli 17U", position: "RHP", secondaryPosition: "", height: "6'2\"", weight: "188 lbs", hometown: "Hartford, CT", bats: "R", throws: "R", type: "pitcher", archetype: "Ace", photo: "",
+    strengths: ["Fastball has carry to the top of the zone", "Strikes early in the count"],
+    improvements: ["Hold the velo deeper into a bullpen"],
+    coachQuirks: ["outlier-1"],
+    metrics: { fastballVelo: 87, spinRate: 2300, strikePct: 64, whiffPct: 32, pitchCapacity: 80 },
+    history: {
+      fastballVelo: metricHistory(87, [82, 84, 85]), spinRate: metricHistory(2300, [2100, 2180, 2240]),
+      strikePct: metricHistory(64, [58, 60, 62]), whiffPct: metricHistory(32, [28, 29, 31]),
+      pitchCapacity: metricHistory(80, [70, 74, 77]),
+    },
+    road: { xp: 8200, prs: 2, signature: "Fill it up.", dates: { training: ["2026-10-18", "2026-10-19", "2026-10-20"], checkin: ["2026-10-18", "2026-10-19", "2026-10-20"] } },
+  },
+  {
+    id: "sample-cole-brennan", name: "Cole Brennan", age: 17, ageGroup: "18U", classYear: "2027",
+    team: "Antonelli 17U", position: "RHP", secondaryPosition: "", height: "6'3\"", weight: "195 lbs", hometown: "Quincy, MA", bats: "R", throws: "R", type: "pitcher", archetype: "Ace", photo: "",
+    strengths: ["Fastball lives at the top of the zone", "Repeats the delivery"],
+    improvements: ["Hold the velo into the fifth"],
+    coachQuirks: ["outlier-1"],
+    metrics: { fastballVelo: 93, spinRate: 2500, strikePct: 73, whiffPct: 42, pitchCapacity: 103 },
+    history: { fastballVelo: metricHistory(93, [88, 90, 92]) },
+    readingLog: {
+      fastballVelo: [{ value: 86, at: "2025-10-02" }, { value: 88, at: "2026-04-11" }, { value: 90, at: "2026-07-18" }, { value: 92, at: "2026-09-20" }, { value: 93, at: "2026-10-18" }],
+    },
+    road: { xp: 0, prs: 0, signature: "Fill the zone.", dates: { training: [], checkin: [] } },
+  },
+  {
+    id: "sample-roman-hale", name: "Roman Hale", age: 18, ageGroup: "18U", classYear: "2026",
+    team: "Antonelli 18U", position: "RHP", secondaryPosition: "", height: "6'4\"", weight: "205 lbs", hometown: "Worcester, MA", bats: "R", throws: "R", type: "pitcher", archetype: "Ace", photo: "",
+    strengths: ["Velocity and a swing-and-miss breaker", "Competes deep into an outing"],
+    improvements: ["Steal a strike with the changeup"],
+    coachQuirks: ["pressure-cooker"],
+    metrics: { fastballVelo: 94.5, spinRate: 2550, strikePct: 74, whiffPct: 44, pitchCapacity: 106 },
+    history: { fastballVelo: metricHistory(94.5, [89, 91, 93]) },
+    readingLog: {
+      fastballVelo: [{ value: 88, at: "2025-09-12" }, { value: 89, at: "2026-04-04" }, { value: 91, at: "2026-07-09" }, { value: 93, at: "2026-09-14" }, { value: 94.5, at: "2026-10-16" }],
+    },
+    road: {
+      xp: 4200, prs: 3, signature: "Light it up.",
+      dates: { training: ["2026-10-18", "2026-10-19", "2026-10-20"], checkin: ["2026-10-18", "2026-10-19", "2026-10-20"] },
+      evolutions: [{ id: "roman-legend", at: "2026-10-16T18:00:00.000Z", fromTier: "diamond", toTier: "legend", overall: 95, score: 96.4 }],
+      timeline: [{ at: "2023-09-01", text: "Joined Antonelli Baseball." }, { at: "2026-10-16", text: "Card evolved to Legend." }],
     },
   },
 ];
@@ -1144,26 +1314,32 @@ function gradesFor(player) {
   return { subs: face, overall: hitting, hitterSubs: face, blastSubs: blast };
 }
 
-function tierFor(overall) {
-  if (overall >= 90) return { key: "diamond", label: "DIAMOND" };
-  if (overall >= 80) return { key: "gold", label: "GOLD" };
-  if (overall >= 70) return { key: "silver", label: "SILVER" };
+function tierFor(overall, player) {
+  const ovr = Number(overall) || 0;
+  if (player && typeof roadEvolution === "function" && typeof roadTierKey === "function") {
+    const evo = roadEvolution(player, ovr);
+    const key = roadTierKey(evo.score, evo.overall);
+    return { key, label: TIER_LABEL[key] || "BRONZE", score: evo.score };
+  }
+  if (ovr >= 90) return { key: "diamond", label: "DIAMOND" };
+  if (ovr >= 80) return { key: "gold", label: "GOLD" };
+  if (ovr >= 70) return { key: "silver", label: "SILVER" };
   return { key: "bronze", label: "BRONZE" };
 }
 
-const TIER_RANK = { bronze: 0, silver: 1, gold: 2, diamond: 3 };
-const TIER_LABEL = { bronze: "BRONZE", silver: "SILVER", gold: "GOLD", diamond: "DIAMOND" };
+const TIER_RANK = { bronze: 0, silver: 1, gold: 2, diamond: 3, legend: 4 };
+const TIER_LABEL = { bronze: "BRONZE", silver: "SILVER", gold: "GOLD", diamond: "DIAMOND", legend: "LEGEND" };
 
 function tierWord(keyOrLabel) {
   const key = TIER_LABEL[keyOrLabel] ? keyOrLabel : Object.keys(TIER_LABEL).find((k) => TIER_LABEL[k] === keyOrLabel);
   const label = (key && TIER_LABEL[key]) || String(keyOrLabel || "");
-  if (key !== "diamond") return esc(label);
-  return `<span class="tier-word tier-diamond">${esc(label)}</span>`;
+  if (key !== "diamond" && key !== "legend") return esc(label);
+  return `<span class="tier-word tier-${key}">${esc(label)}</span>`;
 }
 
 function gradeSnapshot(player) {
   const overall = gradesFor(player).overall;
-  const tier = tierFor(overall).key;
+  const tier = tierFor(overall, player).key;
   return { overall, tier };
 }
 
@@ -1236,9 +1412,9 @@ function projectRollover(player, years) {
     fromGroup: activeAgeGroup(player),
     toGroup: next.ageGroup,
     fromOverall: from.overall,
-    fromTier: tierFor(from.overall).key,
+    fromTier: tierFor(from.overall, player).key,
     toOverall: to.overall,
-    toTier: tierFor(to.overall).key,
+    toTier: tierFor(to.overall, projectedPlayer).key,
     pinned: !!player.ageGroupPinned,
   };
 }
@@ -1284,7 +1460,7 @@ function archiveCurrentCard(player, archivedAt) {
     ageGroup,
     archivedAt: archivedAt || new Date().toISOString(),
     overall: graded.overall,
-    tier: tierFor(graded.overall).key,
+    tier: tierFor(graded.overall, player).key,
     subGrades: graded.subs.map((s) => ({ key: s.key, label: s.label, grade: s.grade })),
     metrics: structuredClone(player.metrics || {}),
     metricGrades,
@@ -1359,7 +1535,7 @@ function ackSeasonReveal(player) {
 function careerSummary(player) {
   const cards = Array.isArray(player.cardCollection) ? player.cardCollection : [];
   const live = gradesFor(player);
-  const liveTier = tierFor(live.overall).key;
+  const liveTier = tierFor(live.overall, player).key;
   const overalls = cards.map((c) => c.overall).concat(live.overall);
   const goldPlus = cards.filter((c) => TIER_RANK[c.tier] >= TIER_RANK.gold).length + (TIER_RANK[liveTier] >= TIER_RANK.gold ? 1 : 0);
   return {
@@ -2229,7 +2405,7 @@ function athleticKeys() {
 }
 
 function displayKeys() {
-  return ["battedDistance"];
+  return ["battedDistance", "broadJump", "vertical", "flying10"];
 }
 
 function metricKeysFor(type) {
@@ -2702,7 +2878,7 @@ function foilPhase(id) {
 }
 
 function sparkleHTML(tier, seed, quiet) {
-  const base = { bronze: 3, silver: 5, gold: 8, diamond: 11 }[tier] || 4;
+  const base = { bronze: 3, silver: 5, gold: 8, diamond: 11, legend: 14 }[tier] || 4;
   const count = quiet ? Math.max(2, Math.ceil(base / 2)) : base;
   let n = (Math.round(seed * 1000) || 1) >>> 0;
   const bits = [];
@@ -2717,7 +2893,7 @@ function sparkleHTML(tier, seed, quiet) {
     else if (edge === 1) { left = 100 - inset; top = along; }
     const delay = ((n >>> 12) % 3400) / 1000;
     const dur = (1.5 + ((n >>> 20) % 18) / 10).toFixed(2);
-    const badge = tier === "diamond" && i < 2;
+    const badge = (tier === "diamond" || tier === "legend") && i < 2;
     const pos = badge ? `left:${i === 0 ? 58 : 88}%;top:${i === 0 ? 2 : 18}%` : `left:${left}%;top:${top}%`;
     bits.push(`<i class="${badge ? "sp-badge" : ""}" style="${pos};--sp-d:${delay.toFixed(2)}s;--sp-t:${dur}s"></i>`);
   }
@@ -2816,7 +2992,7 @@ function personalBestsPanel(player) {
   const rows = personalBests(player).map((row) => {
     const season = row.season ? `${formatPbValue(row, row.season.value)} ${row.unit}` : "--";
     const career = row.career ? `${formatPbValue(row, row.career.value)} ${row.unit}` : "--";
-    const when = row.career && row.career.at ? row.career.at.slice(0, 10) : "--";
+    const when = row.career && row.career.at ? (typeof roadPrettyDate === "function" ? roadPrettyDate(row.career.at) : row.career.at.slice(0, 10)) : "--";
     const badge = row.fresh ? ` <em class="pb-new">NEW PB</em>` : "";
     const note = row.manualUsed ? ` <span class="muted">coach</span>` : "";
     return `<tr><td>${esc(row.label)}</td><td>${esc(season)}</td><td><strong>${esc(career)}</strong>${badge}${note}</td><td>${esc(when)}</td></tr>`;
@@ -2826,7 +3002,35 @@ function personalBestsPanel(player) {
     <div class="table-scroll"><table class="pb-table"><thead><tr><th>Record</th><th>This season</th><th>Career</th><th>Set</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
 }
 
-function cardBackHTML(player, face, subs, opts) {
+function perkTierOf(player) {
+  if (!player || typeof gradesFor !== "function" || typeof tierFor !== "function") return "";
+  const graded = gradesFor(player);
+  const tier = tierFor(graded.overall, player);
+  return tier && tier.key ? tier.key : "";
+}
+
+function perkBadgeHTML(q, opts) {
+  if (!q) return "";
+  const o = opts || {};
+  const size = o.size === "front" ? "perk-front" : (o.size === "xl" ? "perk-xl" : "perk-lg");
+  const kind = (o.kind || q.kind) === "coach" ? "q-coach" : "q-earned";
+  const tier = o.tier ? " tier-" + o.tier : "";
+  const name = esc(q.name || "Perk");
+  const detail = esc(q.milestone || q.description || q.name || "Perk");
+  const icon = q.icon || "⭐";
+  const caption = o.caption === false ? "" : `<small>${name}</small>`;
+  return `<span class="perk-badge ${size} ${kind}${tier}" tabindex="0" data-perk="${name}" data-detail="${detail}" aria-label="${name}"><b class="perk-ico" aria-hidden="true">${icon}</b>${caption}</span>`;
+}
+
+function backPerksHTML(player, face, cap) {
+  const list = face && Array.isArray(face.quirks) ? face.quirks : (typeof displayQuirks === "function" ? displayQuirks(player) : []);
+  const rest = list.slice(cap == null ? 3 : cap);
+  if (!rest.length) return "";
+  const tier = face && face.tier ? face.tier : perkTierOf(player);
+  return `<section class="pb-block"><h4>More perks</h4><div class="back-perks">${rest.map((q) => perkBadgeHTML(q, { size: "lg", tier: tier })).join("")}</div></section>`;
+}
+
+function cardBackHTML(player, face, subs, opts, perkCap) {
   const group = face && face.ageGroup ? face.ageGroup : activeAgeGroup(player);
   const ageShown = face && face.age != null ? face.age : player.age;
   const classShown = face && face.classYear != null ? face.classYear : player.classYear;
@@ -2870,7 +3074,11 @@ function cardBackHTML(player, face, subs, opts) {
     </div>
     <div class="back-grades">${gradeLine}</div>
     <div class="back-raws">${hitting}${pitching}</div>
+    ${backPerksHTML(player, face, perkCap)}
+    ${typeof competeBackAwards === "function" ? competeBackAwards(player) : ""}
     ${bests}
+    ${typeof roadBackExtra === "function" ? roadBackExtra(player) : ""}
+    ${typeof styleBackExtra === "function" ? styleBackExtra(player) : ""}
     </div>
     ${profileBtn}
   </div>`;
@@ -2879,7 +3087,7 @@ function cardBackHTML(player, face, subs, opts) {
 function cardHTML(player, large, face, opts) {
   const graded = gradesFor(player);
   const overall = face && face.overall != null ? face.overall : graded.overall;
-  const tier = face && face.tier ? { key: face.tier, label: TIER_LABEL[face.tier] || tierFor(overall).label } : tierFor(overall);
+  const tier = face && face.tier ? { key: face.tier, label: TIER_LABEL[face.tier] || tierFor(overall, player).label } : tierFor(overall, player);
   const subs = face && Array.isArray(face.subs) ? face.subs : graded.subs;
   const shownSubs = stripSubs(player, subs, large);
   const backSubs = face && Array.isArray(face.subs) ? face.subs : graded.subs;
@@ -2887,41 +3095,105 @@ function cardHTML(player, large, face, opts) {
     ? `<img class="card-photo" src="${esc(player.photo)}" alt="Photo of ${esc(player.name)}">`
     : logoPlaceholder();
   const quirkList = face && Array.isArray(face.quirks) ? face.quirks : displayQuirks(player);
-  const quirkShown = quirkList.slice(0, 3);
-  const quirkExtra = quirkList.length - quirkShown.length;
-  const quirkHTML = quirkShown.length ? `<div class="card-quirks">${quirkShown.map((q) => `<span class="q-badge ${q.kind === "coach" ? "q-coach" : "q-earned"}" title="${esc(q.name)}">${q.icon} ${esc(q.name)}</span>`).join("")}${quirkExtra > 0 ? `<span class="q-badge q-more">+${quirkExtra}</span>` : ""}</div>` : "";
+  const perkCap = large ? 3 : 2;
+  const quirkShown = quirkList.slice(0, perkCap);
+  const quirkHTML = quirkShown.length ? `<div class="card-quirks">${quirkShown.map((q) => perkBadgeHTML(q, { size: "front", caption: false, tier: tier.key })).join("")}</div>` : "";
   const quiet = !!(face && face.quiet);
   const phase = foilPhase(player.id || player.name);
-  const badgeSpark = tier.key === "diamond" ? `<i class="badge-spark" aria-hidden="true"></i>` : "";
+  const badgeSpark = (tier.key === "diamond" || tier.key === "legend") ? `<i class="badge-spark" aria-hidden="true"></i>` : "";
+  const liveRoad = !face && player.road;
+  const hot = !face && typeof roadIsHot === "function" && roadIsHot(player);
+  const lvl = !face && typeof roadLevel === "function" ? roadLevel(player) : null;
+  const lvlChip = lvl ? `<div class="lvl-chip" title="Level ${lvl.level}"><b>${lvl.level}</b></div>` : "";
+  const teamBit = String(player.team || "ANT").replace(/^Antonelli\s*/i, "") || "ANT";
+  const celeb = liveRoad && typeof styleGlyph === "function" ? styleGlyph(player) : (liveRoad && player.road.celebration === "fire" ? "🔥 " : "");
+  const streakN = liveRoad && player.road.streaks ? player.road.streaks.training : 0;
+  const phrase = liveRoad && player.road.signature ? `<span class="card-phrase">${celeb}${esc(player.road.signature)}</span>` : "";
+  const meta = `<span class="card-meta-mini">${esc(player.age)} · ${esc(player.classYear || "—")} · ${esc(teamBit)}${streakN ? " · " + streakN + "🔥" : ""}</span>`;
   const front = `
-  <div class="bb-card is-front tier-${tier.key} ${large ? "large" : ""} ${quiet ? "foil-dim" : ""} ${player.photo ? "" : "logo-placeholder"}" style="--foil-delay:${phase.toFixed(2)}s">
+  <div class="bb-card is-front tier-${tier.key} ${large ? "large" : ""} ${quiet ? "foil-dim" : ""} ${hot ? "is-hot" : ""} ${player.photo ? "" : "logo-placeholder"} ${!face && typeof competeCardClass === "function" ? competeCardClass(player) : ""} ${!face && typeof styleCardClass === "function" ? styleCardClass(player) : ""}" style="--foil-delay:${phase.toFixed(2)}s">
     <div class="card-visual">${visual}</div>
     <div class="card-foil" aria-hidden="true"></div>
     <div class="card-glare" aria-hidden="true"></div>
+    ${tier.key === "legend" ? `<div class="legend-fx" aria-hidden="true"><i></i><i></i><i></i></div>` : ""}
     ${sparkleHTML(tier.key, phase, quiet)}
-    <div class="card-brand"><b>ANTONELLI</b><span>${tier.label}</span></div>
-    ${quirkHTML}
-    <div class="overall-diamond"><div><b>${overall}</b><span>OVR</span></div>${badgeSpark}</div>
+    <div class="card-stack">
+      <div class="card-brand"><b>ANTONELLI</b><span>${tier.label}</span></div>
+      ${lvlChip}
+      ${quirkHTML}
+    </div>
+    ${!face && typeof competeMarks === "function" ? competeMarks(player) : ""}
+    <div class="overall-diamond"><div><div class="ovr-lock"><b>${overall}</b><span>OVR</span></div></div>${badgeSpark}</div>
     <div class="card-bottom">
       <div class="card-name">
         <span class="archetype">${esc(player.archetype)}</span>
         <${large ? "h2" : "h3"}>${esc(player.name)}</${large ? "h2" : "h3"}>
-        <span class="pos-bar">${esc(positionLine(player))} - ${esc(player.bats)}/${esc(player.throws)}</span>
+        <div class="card-facts"><span class="pos-bar">${esc(positionLine(player))} - ${esc(player.bats)}/${esc(player.throws)}</span>${meta}${phrase}</div>
+        ${!face && player.road && player.road.autograph && String(player.road.autograph).indexOf("data:image") === 0 ? `<img class="card-auto auto-${esc(player.road.autographTier || "standard")}" alt="Signature" src="${player.road.autograph}">` : ""}
       </div>
-      <div class="subgrades${shownSubs.length > 5 ? " is-legacy" : ""}">${shownSubs.map((x) => `<div class="subgrade"><b>${x.grade ?? "—"}</b><span>${x.key}</span></div>`).join("")}</div>
+      <div class="subgrades${shownSubs.length > 5 ? " is-legacy" : ""}">${shownSubs.map((x, i) => `<div class="subgrade">${i === 0 && !face && typeof competeReactHTML === "function" ? competeReactHTML(player) : ""}<b>${x.grade ?? "—"}</b><span>${x.key}</span></div>`).join("")}</div>
     </div>
   </div>`;
   if (!opts || !opts.flip) return front;
   return `<div class="card-shell tier-${tier.key}" data-flip tabindex="0" aria-label="Flip ${esc(player.name)}'s card" aria-pressed="false" style="--foil-delay:${phase.toFixed(2)}s">
     <div class="card-flipper">
       ${front}
-      ${cardBackHTML(player, face, backSubs, opts)}
+      ${cardBackHTML(player, face, backSubs, opts, perkCap)}
     </div>
   </div>`;
 }
 
+/* One star for every card. On the 420px-tall phone card the ink is 163.5px
+   (327px on a 600px-wide render) and its top sits 121px down. Shorter cards
+   keep that top and give the height back, so a 392px desktop card is about 135px. */
+function fitCardStar(card) {
+  const logo = card.querySelector(".card-logo");
+  const visual = card.querySelector(".card-visual");
+  if (!logo || !visual) return;
+  const layoutW = card.offsetWidth;
+  const layoutH = card.offsetHeight;
+  const cardBox = card.getBoundingClientRect();
+  if (cardBox.width < 40 || cardBox.height < 40 || layoutW < 40 || layoutH < 40) return;
+  const scale = cardBox.height / layoutH || 1;
+  const padT = 8 / 500;
+  const inkFrac = 1 - padT - 10 / 500;
+  const ink = Math.max(48, 163.5 - (420 - layoutH) * (33.5 / 28));
+  const height = ink / inkFrac;
+  const width = height * (512 / 500);
+  const visualInset = (visual.getBoundingClientRect().top - cardBox.top) / scale;
+  const marginTop = 121 - visualInset - height * padT;
+  logo.style.width = width.toFixed(2) + "px";
+  logo.style.height = height.toFixed(2) + "px";
+  logo.style.marginTop = marginTop.toFixed(2) + "px";
+  logo.style.marginRight = "0px";
+}
+
+function watchCardStars() {
+  if (watchCardStars.on || typeof document === "undefined") return;
+  watchCardStars.on = true;
+  const seen = new WeakSet();
+  const hook = (card) => {
+    if (!card || seen.has(card)) return;
+    seen.add(card);
+    const run = () => fitCardStar(card);
+    run();
+    if (typeof ResizeObserver === "function") new ResizeObserver(run).observe(card);
+  };
+  const scan = (node) => {
+    if (!node || node.nodeType !== 1) return;
+    if (node.classList && node.classList.contains("bb-card")) hook(node);
+    if (node.querySelectorAll) node.querySelectorAll(".bb-card").forEach(hook);
+  };
+  if (document.body) scan(document.body);
+  if (document.body && typeof MutationObserver === "function") {
+    new MutationObserver((list) => list.forEach((rec) => rec.addedNodes.forEach(scan))).observe(document.body, { childList: true, subtree: true });
+  }
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => document.querySelectorAll(".bb-card").forEach(fitCardStar));
+}
+
 function wireCardFlips(root) {
   const scope = root && root.querySelectorAll ? root : document;
+  if (scope.querySelectorAll) scope.querySelectorAll(".bb-card").forEach(fitCardStar);
   scope.querySelectorAll("[data-flip]").forEach((shell) => {
     if (shell.dataset.flipWired) return;
     shell.dataset.flipWired = "1";
@@ -2930,7 +3202,7 @@ function wireCardFlips(root) {
       shell.setAttribute("aria-pressed", on ? "true" : "false");
     };
     shell.addEventListener("click", (e) => {
-      if (e.target.closest("button, a, input, textarea, select, [data-open]")) return;
+      if (e.target.closest("button, a, input, textarea, select, [data-open], .perk-badge")) return;
       toggle();
     });
     shell.addEventListener("keydown", (e) => {
@@ -2938,6 +3210,41 @@ function wireCardFlips(root) {
       if (e.key !== "Enter" && e.key !== " ") return;
       e.preventDefault();
       toggle();
+    });
+  });
+  wirePerkTips(scope);
+}
+
+function wirePerkTips(root) {
+  const scope = root && root.querySelectorAll ? root : document;
+  scope.querySelectorAll(".perk-badge").forEach((badge) => {
+    if (badge.dataset.tipWired) return;
+    badge.dataset.tipWired = "1";
+    const open = (e) => {
+      if (e) { e.stopPropagation(); e.preventDefault(); }
+      const was = badge.classList.contains("is-open");
+      document.querySelectorAll(".perk-badge.is-open").forEach((node) => node.classList.remove("is-open"));
+      let pop = document.getElementById("perkPop");
+      if (!pop) {
+        pop = document.createElement("div");
+        pop.id = "perkPop";
+        pop.className = "perk-pop";
+        pop.setAttribute("role", "tooltip");
+        document.body.appendChild(pop);
+      }
+      if (was) { pop.hidden = true; return; }
+      badge.classList.add("is-open");
+      pop.innerHTML = "<b>" + (badge.getAttribute("data-perk") || "") + "</b><span>" + (badge.getAttribute("data-detail") || "") + "</span>";
+      pop.hidden = false;
+      const rect = badge.getBoundingClientRect();
+      const width = Math.min(220, window.innerWidth - 16);
+      pop.style.width = width + "px";
+      pop.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - width - 8)) + "px";
+      pop.style.top = Math.min(window.innerHeight - 78, rect.bottom + 8) + "px";
+    };
+    badge.addEventListener("click", open);
+    badge.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") open(e);
     });
   });
 }
@@ -2986,13 +3293,15 @@ function renderRoster() {
   $("emptyState").hidden = list.length > 0;
   $("rosterGrid").innerHTML = list.map((p) => {
     const { overall } = gradesFor(p);
+    const tier = tierFor(overall, p);
+    const tierClass = (tier.key === "diamond" || tier.key === "legend") ? " tier-" + tier.key : "";
     return `
     <article class="roster-card">
       ${cardHTML(p, false, null, { flip: true, profileButton: true })}
       <div class="roster-info">
         <h3>${esc(p.name)}</h3>
         <div class="meta">${esc(positionLine(p))} • ${esc(p.team)} • Age ${esc(p.age)} • ${esc(activeAgeGroup(p))} • ${esc(p.classYear)}<br>Bats ${esc(p.bats)} / Throws ${esc(p.throws)} • Overall ${overall}</div>
-        <div class="pills"><span class="pill red">${esc(p.archetype)}</span><span class="pill">${typeLabel(p.type)}</span><span class="pill${tierFor(overall).key === "diamond" ? " tier-diamond" : ""}">${tierFor(overall).label}</span></div>
+        <div class="pills"><span class="pill red">${esc(p.archetype)}</span><span class="pill">${typeLabel(p.type)}</span><span class="pill${tierClass}">${tier.label}</span></div>
         <p class="snippet"><strong>Does well:</strong> ${esc((p.strengths || [])[0] || "—")}</p>
         <p class="snippet"><strong>Work on:</strong> ${esc((p.improvements || [])[0] || "—")}</p>
         <button class="btn btn-red roster-profile" type="button" data-open="${esc(p.id)}">View Profile</button>
@@ -3004,6 +3313,7 @@ function renderRoster() {
   });
   wireCardFlips($("rosterGrid"));
   watchCardMotion();
+  if (typeof roadPaint === "function") roadPaint();
 }
 
 let cardMotionObserver = null;
@@ -3170,8 +3480,9 @@ function metricsTable(player) {
 function quirksPanel(player) {
   const earned = displayQuirks(player).filter((q) => q.kind === "earned");
   const coach = displayQuirks(player).filter((q) => q.kind === "coach");
+  const tier = perkTierOf(player);
   const row = (q) => `<button type="button" class="quirk-row" data-replay="${esc(q.id)}">
-      <span class="q-badge ${q.kind === "coach" ? "q-coach" : "q-earned"}">${q.icon}</span>
+      ${perkBadgeHTML(q, { size: "lg", caption: false, tier: tier })}
       <span><strong>${esc(q.name)}</strong> <span class="quirk-tag">${q.kind === "coach" ? "Coach Awarded" : "Earned"}</span> <span class="quirk-tag">${esc(q.category)}</span><br>
       <span class="muted small">${esc(q.description)}</span><br>
       <span class="small">${esc(q.milestone || "")}</span></span>
@@ -3252,7 +3563,7 @@ function revealButtonLabel() {
 }
 
 function fillRevealFace(quirk, player, item) {
-  $("quirkRevealFace").innerHTML = `<span class="q-badge q-earned q-lg">${quirk.icon || "⭐"}</span>
+  $("quirkRevealFace").innerHTML = `${perkBadgeHTML(quirk, { size: "xl", caption: false, tier: perkTierOf(player) })}
     <p class="quirk-face-cat">${esc(quirk.category || "Training")}</p>
     <h3>${esc(quirk.name)}</h3>
     <p>${esc(quirk.description || "")}</p>
@@ -3826,7 +4137,7 @@ function archiveMetricsTable(card) {
 }
 
 function archivePerks(card) {
-  const row = (q, kind) => `<div class="quirk-row quirk-static"><span class="q-badge ${kind === "Coach Awarded" ? "q-coach" : "q-earned"}">${q.icon || ""}</span><span><strong>${esc(q.name)}</strong> <span class="quirk-tag">${kind}</span><br><span class="small">${esc(q.milestone || q.description || "")}</span></span></div>`;
+  const row = (q, kind) => `<div class="quirk-row quirk-static">${perkBadgeHTML({ ...q, kind: kind === "Coach Awarded" ? "coach" : "earned" }, { size: "lg", caption: false })}<span><strong>${esc(q.name)}</strong> <span class="quirk-tag">${kind}</span><br><span class="small">${esc(q.milestone || q.description || "")}</span></span></div>`;
   const earned = (card.perksEarned || []).map((q) => row(q, "Earned")).join("") || `<p class="muted small">No training perks were earned that season.</p>`;
   const coach = (card.assignedPerks || []).map((q) => row(q, "Coach Awarded")).join("") || `<p class="muted small">No coach-awarded perks on this snapshot.</p>`;
   return `<p class="muted small">Snapshot of that season. Training perks start over on the new card. Coach-awarded perks stay on the current card too.</p><h4 class="quirk-sub">Earned that season</h4>${earned}<h4 class="quirk-sub">Coach Awarded</h4>${coach}`;
@@ -3870,9 +4181,14 @@ function collectionPanel(player) {
 function openProfile(id, opts) {
   const p = players.find((x) => x.id === id);
   if (!p) return;
+  if (document.body) {
+    document.body.dataset.app = opts && opts.focus === "trophyCase" ? "trophies" : "card";
+    if (typeof roadSyncTabs === "function") roadSyncTabs();
+  }
   selectedId = id;
   const { subs, overall } = gradesFor(p);
-  const tier = tierFor(overall);
+  const tier = tierFor(overall, p);
+  const canEdit = typeof roadCanEdit !== "function" || roadCanEdit(p);
   const group = activeAgeGroup(p);
   const names = nameParts(p.name);
   const delta = assessmentDelta(p);
@@ -3912,12 +4228,12 @@ function openProfile(id, opts) {
           ${fact("Hometown", showOrDash(p.hometown))}
         </div>
         <div class="profile-actions">
-          <button class="btn btn-red" type="button" id="editProfileBtn">Edit Metrics / Profile</button>
+          ${canEdit ? `<button class="btn btn-red" type="button" id="editProfileBtn">Edit Metrics / Profile</button>
           <button class="btn btn-ghost" type="button" id="previewOverallBtn">Preview overall-up</button>
           <button class="btn btn-ghost" type="button" id="previewTierBtn">Preview tier-up</button>
-          <button class="btn btn-ghost" type="button" id="showdownProfileBtn">Challenge in SHOWDOWN</button>
           <button class="btn btn-ghost" type="button" id="rolloverBtn">Start New Season (Sept 1 Rollover)</button>
-          <button class="btn btn-ghost" type="button" id="deleteProfileBtn">Delete Player</button>
+          <button class="btn btn-ghost" type="button" id="deleteProfileBtn">Delete Player</button>` : `<p class="muted">Read only. Signed-in players can open any card. Edits stay on your own card unless you are in coach mode.</p>`}
+          <button class="btn btn-ghost" type="button" id="showdownProfileBtn">Challenge in SHOWDOWN</button>
         </div>
       </div>
       <div class="show-side">${sidePanels(p)}</div>
@@ -3929,6 +4245,7 @@ function openProfile(id, opts) {
       <button class="show-tab" type="button" role="tab" aria-selected="false" data-tab="perks">Player Perks</button>
       <button class="show-tab" type="button" role="tab" aria-selected="false" data-tab="growth">Strengths &amp; Growth</button>
       <button class="show-tab" type="button" role="tab" aria-selected="false" data-tab="collection">Collection</button>
+      <button class="show-tab" type="button" role="tab" aria-selected="false" data-tab="road">Road to 99</button>
     </div>
     <div class="show-panel" data-panel="attributes">${attributePanel(p)}</div>
     <div class="show-panel" data-panel="metrics" hidden>
@@ -3951,7 +4268,8 @@ function openProfile(id, opts) {
     </div>
     <div class="show-panel" data-panel="collection" hidden>
       <div class="panel"><h3>Card collection</h3>${collectionPanel(p)}</div>
-    </div>`;
+    </div>
+    <div class="show-panel" data-panel="road" hidden>${typeof roadProfileHTML === "function" ? roadProfileHTML(p) : ""}</div>`;
   document.querySelectorAll(".show-tab").forEach((btn) => {
     btn.addEventListener("click", () => {
       document.querySelectorAll(".show-tab").forEach((tab) => {
@@ -3965,22 +4283,27 @@ function openProfile(id, opts) {
       if (btn.dataset.tab === "attributes") growAttrBars();
     });
   });
-  $("editProfileBtn").addEventListener("click", () => openModal(p));
+  const editProfileBtn = $("editProfileBtn");
+  if (editProfileBtn) editProfileBtn.addEventListener("click", () => openModal(p));
   document.querySelectorAll("[data-replay]").forEach((btn) => {
     btn.addEventListener("click", () => replayQuirk(p.id, btn.dataset.replay));
   });
   const previewBtn = $("previewRevealBtn");
   if (previewBtn) previewBtn.addEventListener("click", () => previewReveal(p.id));
-  $("previewOverallBtn").addEventListener("click", () => previewOverallUp(p.id));
-  $("previewTierBtn").addEventListener("click", () => previewTierUp(p.id));
-  $("rolloverBtn").addEventListener("click", () => askRollover(p.id));
+  const previewOverallBtn = $("previewOverallBtn");
+  if (previewOverallBtn) previewOverallBtn.addEventListener("click", () => previewOverallUp(p.id));
+  const previewTierBtn = $("previewTierBtn");
+  if (previewTierBtn) previewTierBtn.addEventListener("click", () => previewTierUp(p.id));
+  const rolloverBtn = $("rolloverBtn");
+  if (rolloverBtn) rolloverBtn.addEventListener("click", () => askRollover(p.id));
   const showdownProfileBtn = $("showdownProfileBtn");
   if (showdownProfileBtn) showdownProfileBtn.addEventListener("click", () => openShowdownPicker(p.id));
   document.querySelectorAll("[data-archive]").forEach((btn) => {
     btn.addEventListener("click", () => openRetired(p.id, Number(btn.dataset.archive)));
   });
-  $("deleteProfileBtn").addEventListener("click", () => {
-    if (confirm(`Delete ${p.name}? This cannot be undone (Reset Sample Data only restores the 5 sample players).`)) {
+  const deleteProfileBtn = $("deleteProfileBtn");
+  if (deleteProfileBtn) deleteProfileBtn.addEventListener("click", () => {
+    if (confirm(`Delete ${p.name}? This cannot be undone (Reset Sample Data restores the sample roster).`)) {
       players = players.filter((x) => x.id !== p.id);
       savePlayers(); closeProfile(); renderRoster();
     }
@@ -3988,11 +4311,14 @@ function openProfile(id, opts) {
   growAttrBars();
   wireCardFlips($("profileContent"));
   watchCardMotion();
+  if (typeof roadWireProfile === "function") roadWireProfile(p);
   if (opts && opts.tab) {
     const tabBtn = document.querySelector(`.show-tab[data-tab="${opts.tab}"]`);
     if (tabBtn) tabBtn.click();
   }
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  const focus = opts && opts.focus ? (document.getElementById(opts.focus) || (opts.focus === "trophyCase" ? document.getElementById("roadTrophies") : null)) : null;
+  if (focus) focus.scrollIntoView({ block: "start" });
+  else window.scrollTo(0, 0);
 }
 
 function openRetired(id, index) {
@@ -4192,6 +4518,7 @@ function collectSeasonReveal() {
 }
 
 function closeProfile() {
+  if (typeof styleClearCele === "function") styleClearCele();
   const player = players.find((p) => p.id === selectedId);
   if (player && player.pbFresh && Object.keys(player.pbFresh).length) {
     player.pbFresh = {};
@@ -4416,8 +4743,9 @@ function renderQuirkFields(selected) {
   const picked = new Set(selected || []);
   const cats = [...new Set(SHOW_QUIRKS.map((q) => q.category))];
   box.innerHTML = cats.map((cat) => `<fieldset class="quirk-set"><legend>${esc(cat)}</legend>${
-    SHOW_QUIRKS.filter((q) => q.category === cat).map((q) => `<label class="quirk-check"><input type="checkbox" data-quirk value="${esc(q.id)}" ${picked.has(q.id) ? "checked" : ""}> <span>${q.icon} ${esc(q.name)}</span><small>${esc(q.criteria)}</small></label>`).join("")
+    SHOW_QUIRKS.filter((q) => q.category === cat).map((q) => `<label class="quirk-check"><input type="checkbox" data-quirk value="${esc(q.id)}" ${picked.has(q.id) ? "checked" : ""}> ${perkBadgeHTML(q, { size: "lg", caption: false, kind: "coach" })} <span>${esc(q.name)}</span><small>${esc(q.criteria)}</small></label>`).join("")
   }</fieldset>`).join("");
+  if (typeof wirePerkTips === "function") wirePerkTips(box);
 }
 
 function provisionalPlayer() {
@@ -4476,9 +4804,10 @@ function formPlayerLike() {
 function updateLivePreview() {
   const like = formPlayerLike();
   const { subs, overall } = gradesFor(like);
-  const tier = tierFor(overall);
+  const tier = tierFor(overall, like);
   const groupNote = like.type === "pitcher" ? "" : ` · ${esc(activeAgeGroup(like))}`;
-  $("livePreview").innerHTML = `<div>Live Overall${groupNote}<br><b>${overall}</b> <span class="tier-badge${tier.key === "diamond" ? " tier-diamond" : ""}">${esc(tier.label)}</span></div><div class="pills" style="margin:0">${subs.map((s) => `<span class="pill">${s.key} ${s.grade ?? "—"}</span>`).join("")}</div>`;
+  const tierClass = (tier.key === "diamond" || tier.key === "legend") ? " tier-" + tier.key : "";
+  $("livePreview").innerHTML = `<div>Live Overall${groupNote}<br><b>${overall}</b> <span class="tier-badge${tierClass}">${esc(tier.label)}</span></div><div class="pills" style="margin:0">${subs.map((s) => `<span class="pill">${s.key} ${s.grade ?? "—"}</span>`).join("")}</div>`;
   renderEarnPreview();
 }
 
@@ -4582,8 +4911,8 @@ function buildShowdown(a, b) {
   if (!a || !b || !a.id || !b.id || a.id === b.id) return { ok: false, reason: "same" };
   const ga = gradesFor(a);
   const gb = gradesFor(b);
-  const ta = tierFor(ga.overall);
-  const tb = tierFor(gb.overall);
+  const ta = tierFor(ga.overall, a);
+  const tb = tierFor(gb.overall, b);
   const aSubs = Object.fromEntries(ga.subs.map((s) => [s.key, s.grade]));
   const bSubs = Object.fromEntries(gb.subs.map((s) => [s.key, s.grade]));
   const rows = [
@@ -4630,6 +4959,8 @@ function buildShowdown(a, b) {
     aText: String(aPerks.length), bText: String(bPerks.length),
     aNames: aPerks.map((rec) => TRAINING_BY_ID[rec.id].name),
     bNames: bPerks.map((rec) => TRAINING_BY_ID[rec.id].name),
+    aMarks: aPerks.map((rec) => TRAINING_BY_ID[rec.id]),
+    bMarks: bPerks.map((rec) => TRAINING_BY_ID[rec.id]),
   }));
   const scored = rows.filter((row) => row.counted);
   const aWins = scored.filter((row) => row.winner === "a").length;
@@ -4745,8 +5076,9 @@ function renderShowdownResults() {
         <div class="sd-side b ${row.winner === "b" ? "is-lead" : ""}">${sdChip(row, "b")}${row.bRaw ? `<small>${esc(row.bRaw)}</small>` : ""}${cell(row.bText)}</div>
       </div>`;
     }).join("");
+    const marks = (items) => (items && items.length) ? items.map((q) => perkBadgeHTML(q, { size: "lg" })).join("") : "<p>None yet</p>";
     const extra = key === "exhibit" ? `<p class="sd-note">Training perks earned this season. The count is not part of the tally.</p>
-      <div class="sd-perk-lists"><div><h4>${esc(result.aName.split(" ")[0])}</h4><p>${esc((list[0].aNames || []).join(", ") || "None yet")}</p></div><div><h4>${esc(result.bName.split(" ")[0])}</h4><p>${esc((list[0].bNames || []).join(", ") || "None yet")}</p></div></div>` : "";
+      <div class="sd-perk-lists"><div><h4>${esc(result.aName.split(" ")[0])}</h4><div class="back-perks">${marks(list[0].aMarks)}</div></div><div><h4>${esc(result.bName.split(" ")[0])}</h4><div class="back-perks">${marks(list[0].bMarks)}</div></div></div>` : "";
     return `<section class="sd-section"><h3>${title}</h3>${rows}${extra}</section>`;
   }).join("");
   const chaseList = (items, name) => items.length
@@ -4773,6 +5105,7 @@ function renderShowdownResults() {
       <button class="btn btn-ghost" type="button" id="sd-close">Close</button>
     </div>`;
   host.hidden = false;
+  if (typeof wirePerkTips === "function") wirePerkTips(host);
   $("sd-rematch").addEventListener("click", runShowdownFaceoff);
   $("sd-change").addEventListener("click", () => openShowdownPicker($("sd-a").value));
   $("sd-view-a").addEventListener("click", () => { const id = $("sd-a").value; closeShowdown(); openProfile(id); });
@@ -4828,7 +5161,12 @@ function bindApp() {
     $(id).addEventListener("input", renderRoster);
     $(id).addEventListener("change", renderRoster);
   });
-  $("backBtn").addEventListener("click", () => { closeProfile(); renderRoster(); });
+  $("backBtn").addEventListener("click", () => {
+    closeProfile();
+    document.body.dataset.app = "home";
+    if (typeof roadSyncTabs === "function") roadSyncTabs();
+    renderRoster();
+  });
   $("addPlayerBtn").addEventListener("click", () => openModal(null));
   $("closeModalBtn").addEventListener("click", closeModal);
   $("cancelBtn").addEventListener("click", closeModal);
@@ -4891,6 +5229,7 @@ function bindApp() {
     const existing = players.find((p) => p.id === like.id);
     let saved = existing;
     const today = chosen.date;
+    const beforeTier = existing ? gradeSnapshot(existing).tier : null;
     if (existing) {
       const before = careerBestMap(existing);
       const history = structuredClone(existing.history || {});
@@ -4921,16 +5260,18 @@ function bindApp() {
     renderRoster();
     if (selectedId) openProfile(selectedId);
     else if (!existing) openProfile(like.id);
+    const afterTier = gradeSnapshot(saved).tier;
     const celeb = (plan.kind === "tier-up" || plan.kind === "overall-up")
       ? [{ ...plan, playerId: saved.id, reason: topGainText(saved) }]
       : [];
     beginCelebrations(celeb, () => {
+      if (typeof roadAfterSave === "function") roadAfterSave(saved, { beforeTier, afterTier, isNew: !existing });
       if (added.length) startReveal(added.map((rec) => ({ playerId: saved.id, quirkId: rec.id })));
     });
   });
 
   $("resetBtn").addEventListener("click", () => {
-    if (confirm("Reset to the 5 sample players? Any players you added or edits you made will be removed.")) {
+    if (confirm("Reset to the sample roster? Any players you added or edits you made will be removed.")) {
       players = structuredClone(SAMPLE_PLAYERS);
       migrationNotice = false;
       if (banner) banner.hidden = true;
@@ -4980,7 +5321,9 @@ function bindApp() {
   });
   pendingCeleb.sort((a, b) => (a.kind === "tier-up" ? 0 : 1) - (b.kind === "tier-up" ? 0 : 1));
   if (earnedDirty) savePlayers();
+  watchCardStars();
   renderRoster();
+  if (typeof roadBoot === "function") roadBoot();
   beginSeasonReveals(pendingSeason, () => {
     beginCelebrations(pendingCeleb, () => {
       if (pendingReveal.length) startReveal(pendingReveal);

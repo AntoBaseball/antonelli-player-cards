@@ -1,0 +1,87 @@
+/* Phase 3 — cosmetics. Color and motion only. Grades do not change. */
+.bb-card.skin-spring{box-shadow:inset 0 0 0 3px #86efac, 0 0 18px rgba(134,239,172,.35)}
+.bb-card.skin-opening{box-shadow:inset 0 0 0 3px #f8fafc, 0 0 16px rgba(248,250,252,.4)}
+.bb-card.skin-allstar{box-shadow:inset 0 0 0 3px #38bdf8, 0 0 18px rgba(56,189,248,.45)}
+.bb-card.skin-playoff{box-shadow:inset 0 0 0 3px #fb7185, 0 0 18px rgba(251,113,133,.4)}
+.bb-card.skin-halloween{box-shadow:inset 0 0 0 3px #f97316, 0 0 18px rgba(249,115,22,.45)}
+.bb-card.skin-winter{box-shadow:inset 0 0 0 3px #e2e8f0, 0 0 16px rgba(226,232,240,.35)}
+.bb-card.skin-boston{box-shadow:inset 0 0 0 3px #b91c1c, 0 0 16px rgba(185,28,28,.4)}
+.bb-card.skin-newengland{box-shadow:inset 0 0 0 3px #1d4ed8, 0 0 16px rgba(29,78,216,.4)}
+.bb-card.skin-summer{box-shadow:inset 0 0 0 3px #facc15, 0 0 16px rgba(250,204,21,.35)}
+.bb-card.skin-christmas{box-shadow:inset 0 0 0 3px #ef4444, 0 0 16px rgba(239,68,68,.4)}
+.bb-card.skin-thanksgiving{box-shadow:inset 0 0 0 3px #d97706}
+.bb-card.skin-worldseries{box-shadow:inset 0 0 0 3px #f2d060, 0 0 22px rgba(242,208,96,.55)}
+.card-auto{position:absolute;left:8%;bottom:22%;width:46%;height:auto;z-index:7;pointer-events:none;mix-blend-mode:screen;opacity:.9}
+.style-qr{width:148px;height:148px;background:#fff;border-radius:8px;image-rendering:pixelated;display:block}
+.card-auto.auto-gold{filter:drop-shadow(0 0 4px #f2d060) sepia(.4)}
+.card-auto.auto-holo{filter:hue-rotate(170deg) saturate(1.6) drop-shadow(0 0 6px #7dd3fc)}
+.card-auto.auto-animated{animation:sign-shimmer 2.2s linear infinite}
+@keyframes sign-shimmer{0%,100%{filter:drop-shadow(0 0 2px #fff)}50%{filter:drop-shadow(0 0 8px #f2d060) brightness(1.3)}}
+.cele-overlay{position:fixed;left:12px;right:12px;bottom:78px;z-index:60;display:flex;align-items:center;gap:12px;padding:8px 14px 8px 8px;border-radius:14px;border:1px solid rgba(242,208,96,.85);background:linear-gradient(90deg,rgba(8,8,10,.94),rgba(28,14,10,.9));box-shadow:0 12px 28px rgba(0,0,0,.55);pointer-events:none;animation:cele-lower 2.2s ease forwards}
+.cele-fx{width:64px;height:52px;flex:none;position:relative;overflow:hidden}
+.cele-copy{min-width:0}
+.cele-copy span{display:block;font-size:10px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:#f2d060}
+.cele-copy b{display:block;font-family:Impact,"Arial Black",system-ui,sans-serif;font-style:italic;font-size:20px;line-height:1;color:#fff;letter-spacing:.3px;text-shadow:0 2px 8px #000}
+@keyframes cele-lower{0%{opacity:0;transform:translateY(14px)}14%{opacity:1;transform:translateY(0)}76%{opacity:1}100%{opacity:0;transform:translateY(8px)}}
+.fx-fire i{position:absolute;bottom:4px;width:9px;border-radius:8px 8px 3px 3px;background:linear-gradient(#fff 0%,#f2d060 28%,#e10600 72%,transparent);transform-origin:50% 100%;animation:flame .55s ease-in-out infinite}
+.fx-fire i:nth-child(1){left:16px;height:22px}
+.fx-fire i:nth-child(2){left:26px;height:34px;animation-delay:.08s}
+.fx-fire i:nth-child(3){left:36px;height:26px;animation-delay:.16s}
+.fx-fire i:nth-child(4){left:8px;height:14px;opacity:.75;animation-delay:.12s}
+.fx-fire i:nth-child(5){left:46px;height:16px;opacity:.7;animation-delay:.2s}
+@keyframes flame{0%,100%{transform:scaleY(.85) scaleX(1)}50%{transform:scaleY(1.2) scaleX(.8)}}
+.fx-bat{position:absolute;left:8px;top:20px;width:44px;height:10px;transform-origin:10px 5px;animation:bat-flip 1.15s ease forwards}
+.fx-bat i{position:absolute;left:0;top:3px;width:26px;height:4px;background:#c4a574;border-radius:2px}
+.fx-bat b{position:absolute;right:0;top:0;width:18px;height:10px;background:#f4efe4;border-radius:3px 7px 7px 3px}
+@keyframes bat-flip{0%{transform:rotate(-40deg) translateY(10px)}45%{transform:rotate(210deg) translateY(-8px)}100%{transform:rotate(150deg) translateY(-2px)}}
+.fx-crown{position:absolute;left:12px;top:16px;width:40px;height:26px;animation:crown-rise .9s ease forwards}
+.fx-crown i{position:absolute;bottom:0;width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:16px solid #f2d060}
+.fx-crown i:nth-child(1){left:0}
+.fx-crown i:nth-child(2){left:13px;border-bottom-width:22px;border-left-width:7px;border-right-width:7px}
+.fx-crown i:nth-child(3){left:26px}
+@keyframes crown-rise{0%{transform:translateY(12px) scale(.5);opacity:0}55%{opacity:1}100%{transform:translateY(0) scale(1);filter:drop-shadow(0 0 6px #f2d060)}}
+.fx-ice i{position:absolute;background:linear-gradient(160deg,#fff,#7dd3fc);animation:ice-shard .9s ease forwards}
+.fx-ice i:nth-child(1){left:28px;top:6px;width:8px;height:30px;clip-path:polygon(50% 0,100% 100%,0 100%)}
+.fx-ice i:nth-child(2){left:10px;top:18px;width:16px;height:8px;transform:rotate(-28deg)}
+.fx-ice i:nth-child(3){left:42px;top:20px;width:12px;height:7px;transform:rotate(22deg)}
+.fx-ice i:nth-child(4){left:20px;top:32px;width:20px;height:5px}
+@keyframes ice-shard{0%{opacity:0;transform:scale(.3)}35%{opacity:1}100%{opacity:.9}}
+.fx-eagle{position:absolute;inset:6px 2px;animation:eagle-sweep 1.3s ease forwards}
+.fx-eagle svg{width:100%;height:100%;fill:#f2d060}
+@keyframes eagle-sweep{0%{transform:translateX(-18px) scale(.65);opacity:0}35%{opacity:1}100%{transform:translateX(6px) scale(1)}}
+.fx-lights i{position:absolute;top:0;width:8px;height:50px;background:linear-gradient(rgba(255,255,255,.95),rgba(242,208,96,0));transform-origin:50% 0;animation:beam 1s ease-in-out infinite}
+.fx-lights i:nth-child(1){left:12px;transform:rotate(-16deg)}
+.fx-lights i:nth-child(2){left:28px}
+.fx-lights i:nth-child(3){left:44px;transform:rotate(16deg);animation-delay:.15s}
+@keyframes beam{0%,100%{opacity:.3}50%{opacity:1}}
+.fx-confetti i{position:absolute;top:-6px;width:6px;height:8px;animation:bit-fall 1.25s ease-in forwards}
+.fx-confetti i:nth-child(1){left:6px;background:#e10600}
+.fx-confetti i:nth-child(2){left:16px;background:#f2d060;animation-delay:.08s}
+.fx-confetti i:nth-child(3){left:26px;background:#fff;animation-delay:.04s}
+.fx-confetti i:nth-child(4){left:36px;background:#7dd3fc;animation-delay:.12s}
+.fx-confetti i:nth-child(5){left:46px;background:#e10600;animation-delay:.06s}
+.fx-confetti i:nth-child(6){left:22px;background:#f2d060;width:5px;height:5px;animation-delay:.16s}
+.fx-confetti i:nth-child(7){left:40px;background:#fff;animation-delay:.1s}
+@keyframes bit-fall{0%{opacity:0;transform:translateY(0) rotate(0)}18%{opacity:1}100%{opacity:0;transform:translateY(48px) rotate(160deg)}}
+.fx-pump{position:absolute;left:22px;bottom:6px;width:16px;height:22px;border-radius:8px 8px 5px 5px;background:#f2d060;animation:pump .55s ease-in-out infinite}
+.fx-pump i{position:absolute;top:-6px;left:2px;width:8px;height:10px;border-radius:4px;background:#ffe9a0}
+.fx-pump b{position:absolute;bottom:-8px;left:5px;width:6px;height:10px;background:#f7ecc8;border-radius:2px}
+@keyframes pump{0%,100%{transform:translateY(3px)}50%{transform:translateY(-7px)}}
+@media (min-width:601px){
+  .cele-overlay{left:auto;right:24px;bottom:24px;width:min(420px,42vw)}
+}
+@media (prefers-reduced-motion:reduce){
+  .card-auto.auto-animated,.cele-overlay,.fx-fire i,.fx-bat,.fx-crown,.fx-ice i,.fx-eagle,.fx-lights i,.fx-confetti i,.fx-pump{animation:none}
+}
+.pack-show{position:fixed;inset:0;z-index:145;display:grid;place-items:center;background:rgba(0,0,0,.82);color:#fff}
+.pack-show[hidden]{display:none}
+.pack-card{width:min(280px,80vw);aspect-ratio:5/7;border-radius:18px;background:linear-gradient(160deg,#041428,#7dd3fc);display:grid;place-items:center;font-family:Impact,"Arial Black",system-ui,sans-serif;font-style:italic;font-size:42px;cursor:pointer}
+.pack-show.is-shake .pack-card{animation:pack-shake .45s linear}
+@keyframes pack-shake{25%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}75%{transform:rotate(-2deg)}}
+.game-q{font-family:Impact,"Arial Black",system-ui,sans-serif;font-style:italic;font-size:clamp(26px,6vw,40px);line-height:.95;margin:8px 0;color:#fff}
+.game-pitch{height:140px;border-radius:16px;margin:8px 0;background:radial-gradient(circle at 50% 40%, #1a1c22, #07080c);border:1px solid rgba(212,175,55,.35);position:relative;overflow:hidden}
+.game-pitch i{position:absolute;width:28px;height:28px;border-radius:50%;left:12px;top:56px;box-shadow:0 0 16px currentColor}
+[data-game-host] .btn{display:block;width:100%;margin-top:8px;text-align:center}
+@media (prefers-reduced-motion:reduce){
+  .pack-show.is-shake .pack-card{animation:none}
+}

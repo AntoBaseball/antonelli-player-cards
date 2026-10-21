@@ -1,8 +1,63 @@
-# Antonelli Baseball — Player Profiles & Baseball Cards
+# ROAD TO 99 — Antonelli Baseball
 
-A polished, self-contained static web app prototype (v2) for Antonelli Baseball player profiles. Each player has a profile showing what type of hitter/pitcher they are, what they do well, what they need to improve, their metrics and progress — and a baseball card with an MLB The Show-style overall grade (20–99) that improves as metrics improve.
+A polished, self-contained static web app. Antonelli Baseball player cards sit inside a development loop: train, test, improve, level up. The overall is still an MLB The Show-style grade (20–99) earned only from testing. A separate XP level tracks showing up.
 
-**No build step, no backend, no external images.** Plain HTML/CSS/JS.
+**No build step. No accounts yet.** Plain HTML/CSS/JS. `store.js` is the data-access layer a hosted backend (Supabase, Firebase, or similar) can replace without rewriting the screens.
+
+## ROAD TO 99
+
+Two numbers on every live card:
+
+- **Overall (OVR)** — baseball ability from the testing tables. XP, streaks, and missions never add to it.
+- **Level (LVL)** — participation. Training is 100 XP, a home assignment is 40, a new personal best is 250, a finished daily mission list is 125, and a 5-day training streak adds 150. Level 17 is 1,840 / 2,000 XP inside that level (`400 + (level − 1) × 100` XP per level).
+
+**Card Evolution** is what picks the tier. With no development bonus, Evolution equals overall, so a quiet card keeps Bronze / Silver / Gold / Diamond where it was. Bonus (level, training streak, personal bests, challenges, hot streak) is capped at 24 and blended 70% overall / 30% (overall + bonus). Bands: Bronze under 70, Silver 70–79, Gold 80–89, Diamond 90–94, Legend 95+. **Legend also requires overall 90+**, so app activity alone cannot make a Legend. The profile states the points still needed.
+
+Hot streak (exit velocity up in three straight tests) adds a fire border for seven days and extends while the run continues.
+
+The whole page is a dark glass shell: black field, gold line, light type. The home screen is time-aware and shows the road to 99, the XP bar, today's four missions (chosen from the equipment library, or assigned in coach mode), and a rule-based development coach. `RoadCoach.compose` is the seam for a real model later. The next upgrade is one line with the gain and the grade it moves, for example `NEXT UPGRADE · +0.5 MPH Exit Velo → POW 76 → 77`. Progress on the home screen and the profile shows where the player started, where they are, and the 30-day, 90-day, 1-year, and career change. Trajectory copy uses Antonelli Good / Great bands only. It does not make recruiting predictions.
+
+Legend is deep crimson to bright red chrome, with darker edges, a gold rim, and flame, lightning, and smoke. Effects step up with the tier: Bronze is quiet, Silver shimmers, Gold pulses, Diamond carries ice foil, Legend is the loudest. The tier name, level chip, and perk chips stack down the left side so they stay clear of the overall. Phones can tilt a live card. iOS asks for motion permission from Enable card tilt. Desktop follows the pointer. `prefers-reduced-motion` turns the motion off. Cole Brennan is the sample Diamond arm. Roman Hale is the sample Legend arm, and his evolution can be replayed from the profile.
+
+On a phone the top bar is the logo, ROAD TO 99, a bell, and an avatar. Signed in as, Mode, Sound, and Reset live in that menu. The sample-data line is one sentence and stays dismissed. A bottom tab bar switches Home, My Card, Compete, Trophies, and Train. Below 600px the mission list and the coach sit in one column. A mission row is the check: the circle fills, then the XP lands. Desktop keeps the controls in the top bar and the full page.
+
+**Signed in as** switches the sample player. Player mode edits only that card. Coach mode edits everyone and can assign the day's four missions. Everyone else's card and profile are read-only. The inbox is rate-limited to one note of each kind per player per day. Short clips can be stored in IndexedDB (1.2 MB) or saved as a YouTube, Instagram, or Hudl link.
+
+Sounds are synthesized in the browser and start muted. Unmute is a tap, so nothing autoplays.
+
+### Simulated on this browser vs needs a backend
+
+Works today on one browser, saved in `localStorage` (`antonelli-player-cards-v2`, `antonelli-road-session-v1`, `antonelli-road-inbox-v1`) and IndexedDB (`antonelli-road-videos`):
+
+- The roster, grades, seasons, personal bests, XP, missions, streaks, evolution replays, and the inbox.
+- Read-only browsing of every sample card, including the extra 12U / 14U / 16U / 17U / 18U players. Cole Brennan is Diamond. Roman Hale is Legend.
+- Coach vs player is a switcher, not an account.
+
+Needs a real backend before it is actually multi-user:
+
+- Accounts, so a phone is a person instead of a "signed in as" menu.
+- Rivalry alerts delivered to the other player's device.
+- Challenge accept / decline across two sessions.
+- Shared team progress, chemistry, and reactions that stay in sync.
+- Notifications that arrive when the app is closed.
+
+Replace `store.js` and keep the `DataLayer` function names. Do not fork the roster into a second store.
+
+### Compete (phase 2)
+
+Weekly and monthly quests, the seasonal event that is open this month, a shared team power bar, and team chemistry (70% glow, 100% perfect week) are computed from the roster on this browser. Leaderboards cover bat speed, exit velo, arm, sprint, broad jump, and most improved this month. Awards are spread so the same player does not take every title, and each pin has a hover or tap tooltip. King of the Hill shows the crown and a days-held board. Opt-in rivalries alert only when the gap is inside `COMPETE_CLOSE` (about 2 MPH or 3% on velocities, 0.05 s on sprints). Challenge a teammate supports accept or decline and a head-to-head view with days left. Reactions sit on the card. The trophy case replays evolutions. The career timeline, the age-card collection, the facility record board ("YOU ARE #N ALL-TIME"), and a short alumni list live in `compete.js`.
+
+Broad jump, vertical, and flying 10 are optional display-only tests. They do not move overall.
+
+### Customize, share, and the phone games (phase 3)
+
+Skins, celebrations, signature phrases, and the drawn autograph are cosmetics. They never change overall. A training pack reveals one of those cosmetics plus a small XP grant under the daily mini-game cap.
+
+Share builds a PNG for a story (1080×1920), a post (1080×1350), an X card (1600×900), or TikTok (1080×1920) and uses the device share sheet when the browser allows it. Otherwise it downloads. The card back draws a real QR with the vendored MIT generator in `vendor/qrcode.js` (Kazuhiko Arase, no CDN). It encodes the progress URL (`#player=`). A phone camera opens that link when the site is hosted. Autograph tiers are Standard, Gold, Holographic, and Animated, unlocked by level. A player's chosen celebration plays when someone else opens their profile, and the glyph stays on the card.
+
+Mini-games (pitch recognition, reaction, baseball IQ, count leverage, tunnel, zone discipline) grant a little XP, capped each day, and keep a short score list on this browser. Trash-talk lines stay one sentence and kid-appropriate. The combine note uses benchmark language only.
+
+Challenge results, reactions, and crowns are stored in `antonelli-road-facility-v1` on this browser. The other player sees them when you switch "Signed in as." Delivering those to a second phone needs the backend.
 
 ## How to open / run
 
