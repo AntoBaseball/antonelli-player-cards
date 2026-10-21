@@ -2826,7 +2826,35 @@ function personalBestsPanel(player) {
     <div class="table-scroll"><table class="pb-table"><thead><tr><th>Record</th><th>This season</th><th>Career</th><th>Set</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
 }
 
-function cardBackHTML(player, face, subs, opts) {
+function perkTierOf(player) {
+  if (!player || typeof gradesFor !== "function" || typeof tierFor !== "function") return "";
+  const graded = gradesFor(player);
+  const tier = tierFor(graded.overall);
+  return tier && tier.key ? tier.key : "";
+}
+
+function perkBadgeHTML(q, opts) {
+  if (!q) return "";
+  const o = opts || {};
+  const size = o.size === "front" ? "perk-front" : (o.size === "xl" ? "perk-xl" : "perk-lg");
+  const kind = (o.kind || q.kind) === "coach" ? "q-coach" : "q-earned";
+  const tier = o.tier ? " tier-" + o.tier : "";
+  const name = esc(q.name || "Perk");
+  const detail = esc(q.milestone || q.description || q.name || "Perk");
+  const icon = q.icon || "⭐";
+  const caption = o.caption === false ? "" : `<small>${name}</small>`;
+  return `<span class="perk-badge ${size} ${kind}${tier}" tabindex="0" data-perk="${name}" data-detail="${detail}" aria-label="${name}"><b class="perk-ico" aria-hidden="true">${icon}</b>${caption}</span>`;
+}
+
+function backPerksHTML(player, face, cap) {
+  const list = face && Array.isArray(face.quirks) ? face.quirks : (typeof displayQuirks === "function" ? displayQuirks(player) : []);
+  const rest = list.slice(cap == null ? 3 : cap);
+  if (!rest.length) return "";
+  const tier = face && face.tier ? face.tier : perkTierOf(player);
+  return `<section class="pb-block"><h4>More perks</h4><div class="back-perks">${rest.map((q) => perkBadgeHTML(q, { size: "lg", tier: tier })).join("")}</div></section>`;
+}
+
+function cardBackHTML(player, face, subs, opts, perkCap) {
   const group = face && face.ageGroup ? face.ageGroup : activeAgeGroup(player);
   const ageShown = face && face.age != null ? face.age : player.age;
   const classShown = face && face.classYear != null ? face.classYear : player.classYear;
@@ -2870,6 +2898,7 @@ function cardBackHTML(player, face, subs, opts) {
     </div>
     <div class="back-grades">${gradeLine}</div>
     <div class="back-raws">${hitting}${pitching}</div>
+    ${backPerksHTML(player, face, perkCap)}
     ${bests}
     </div>
     ${profileBtn}
@@ -2887,9 +2916,9 @@ function cardHTML(player, large, face, opts) {
     ? `<img class="card-photo" src="${esc(player.photo)}" alt="Photo of ${esc(player.name)}">`
     : logoPlaceholder();
   const quirkList = face && Array.isArray(face.quirks) ? face.quirks : displayQuirks(player);
-  const quirkShown = quirkList.slice(0, 3);
-  const quirkExtra = quirkList.length - quirkShown.length;
-  const quirkHTML = quirkShown.length ? `<div class="card-quirks">${quirkShown.map((q) => `<span class="q-badge ${q.kind === "coach" ? "q-coach" : "q-earned"}" title="${esc(q.name)}">${q.icon} ${esc(q.name)}</span>`).join("")}${quirkExtra > 0 ? `<span class="q-badge q-more">+${quirkExtra}</span>` : ""}</div>` : "";
+  const perkCap = large ? 3 : 2;
+  const quirkShown = quirkList.slice(0, perkCap);
+  const quirkHTML = quirkShown.length ? `<div class="card-quirks">${quirkShown.map((q) => perkBadgeHTML(q, { size: "front", caption: false, tier: tier.key })).join("")}</div>` : "";
   const quiet = !!(face && face.quiet);
   const phase = foilPhase(player.id || player.name);
   const badgeSpark = tier.key === "diamond" ? `<i class="badge-spark" aria-hidden="true"></i>` : "";
@@ -2899,29 +2928,79 @@ function cardHTML(player, large, face, opts) {
     <div class="card-foil" aria-hidden="true"></div>
     <div class="card-glare" aria-hidden="true"></div>
     ${sparkleHTML(tier.key, phase, quiet)}
-    <div class="card-brand"><b>ANTONELLI</b><span>${tier.label}</span></div>
-    ${quirkHTML}
-    <div class="overall-diamond"><div><b>${overall}</b><span>OVR</span></div>${badgeSpark}</div>
+    <div class="card-stack">
+      <div class="card-brand"><b>ANTONELLI</b><span>${tier.label}</span></div>
+      ${quirkHTML}
+    </div>
+    <div class="overall-diamond"><div><div class="ovr-lock"><b>${overall}</b><span>OVR</span></div></div>${badgeSpark}</div>
     <div class="card-bottom">
       <div class="card-name">
         <span class="archetype">${esc(player.archetype)}</span>
         <${large ? "h2" : "h3"}>${esc(player.name)}</${large ? "h2" : "h3"}>
-        <span class="pos-bar">${esc(positionLine(player))} - ${esc(player.bats)}/${esc(player.throws)}</span>
+        <div class="card-facts"><span class="pos-bar">${esc(positionLine(player))} - ${esc(player.bats)}/${esc(player.throws)}</span></div>
       </div>
-      <div class="subgrades${shownSubs.length > 5 ? " is-legacy" : ""}">${shownSubs.map((x) => `<div class="subgrade"><b>${x.grade ?? "—"}</b><span>${x.key}</span></div>`).join("")}</div>
+      <div class="subgrades${shownSubs.length > 5 ? " is-legacy" : ""}">${shownSubs.map((x, i) => `<div class="subgrade">${i === 0 && !face && typeof competeReactHTML === "function" ? competeReactHTML(player) : ""}<b>${x.grade ?? "—"}</b><span>${x.key}</span></div>`).join("")}</div>
     </div>
   </div>`;
   if (!opts || !opts.flip) return front;
   return `<div class="card-shell tier-${tier.key}" data-flip tabindex="0" aria-label="Flip ${esc(player.name)}'s card" aria-pressed="false" style="--foil-delay:${phase.toFixed(2)}s">
     <div class="card-flipper">
       ${front}
-      ${cardBackHTML(player, face, backSubs, opts)}
+      ${cardBackHTML(player, face, backSubs, opts, perkCap)}
     </div>
   </div>`;
 }
 
+/* One star for every card. On the 420px-tall phone card the ink is 163.5px
+   (327px on a 600px-wide render). Shorter cards keep that top, so a 392px desktop card is 130px. */
+function fitCardStar(card) {
+  const logo = card.querySelector(".card-logo");
+  const visual = card.querySelector(".card-visual");
+  if (!logo || !visual) return;
+  const layoutW = card.offsetWidth;
+  const layoutH = card.offsetHeight;
+  const cardBox = card.getBoundingClientRect();
+  if (cardBox.width < 40 || cardBox.height < 40 || layoutW < 40 || layoutH < 40) return;
+  const scale = cardBox.height / layoutH || 1;
+  const padT = 8 / 500;
+  const inkFrac = 1 - padT - 10 / 500;
+  const ink = Math.max(48, 163.5 - (420 - layoutH) * (33.5 / 28));
+  const height = ink / inkFrac;
+  const width = height * (512 / 500);
+  const visualInset = (visual.getBoundingClientRect().top - cardBox.top) / scale;
+  const marginTop = 121 - visualInset - height * padT;
+  logo.style.width = width.toFixed(2) + "px";
+  logo.style.height = height.toFixed(2) + "px";
+  logo.style.marginTop = marginTop.toFixed(2) + "px";
+  logo.style.marginRight = "0px";
+}
+
+function watchCardStars() {
+  if (watchCardStars.on || typeof document === "undefined") return;
+  watchCardStars.on = true;
+  const seen = new WeakSet();
+  const hook = (card) => {
+    if (!card || seen.has(card)) return;
+    seen.add(card);
+    const run = () => fitCardStar(card);
+    run();
+    if (typeof ResizeObserver === "function") new ResizeObserver(run).observe(card);
+  };
+  const scan = (node) => {
+    if (!node || node.nodeType !== 1) return;
+    if (node.classList && node.classList.contains("bb-card")) hook(node);
+    if (node.querySelectorAll) node.querySelectorAll(".bb-card").forEach(hook);
+  };
+  if (document.body) scan(document.body);
+  if (document.body && typeof MutationObserver === "function") {
+    new MutationObserver((list) => list.forEach((rec) => rec.addedNodes.forEach(scan))).observe(document.body, { childList: true, subtree: true });
+  }
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => document.querySelectorAll(".bb-card").forEach(fitCardStar));
+}
+
 function wireCardFlips(root) {
   const scope = root && root.querySelectorAll ? root : document;
+  if (scope.querySelectorAll) scope.querySelectorAll(".bb-card").forEach(fitCardStar);
   scope.querySelectorAll("[data-flip]").forEach((shell) => {
     if (shell.dataset.flipWired) return;
     shell.dataset.flipWired = "1";
@@ -2930,7 +3009,7 @@ function wireCardFlips(root) {
       shell.setAttribute("aria-pressed", on ? "true" : "false");
     };
     shell.addEventListener("click", (e) => {
-      if (e.target.closest("button, a, input, textarea, select, [data-open]")) return;
+      if (e.target.closest("button, a, input, textarea, select, [data-open], .perk-badge")) return;
       toggle();
     });
     shell.addEventListener("keydown", (e) => {
@@ -2938,6 +3017,41 @@ function wireCardFlips(root) {
       if (e.key !== "Enter" && e.key !== " ") return;
       e.preventDefault();
       toggle();
+    });
+  });
+  wirePerkTips(scope);
+}
+
+function wirePerkTips(root) {
+  const scope = root && root.querySelectorAll ? root : document;
+  scope.querySelectorAll(".perk-badge").forEach((badge) => {
+    if (badge.dataset.tipWired) return;
+    badge.dataset.tipWired = "1";
+    const open = (e) => {
+      if (e) { e.stopPropagation(); e.preventDefault(); }
+      const was = badge.classList.contains("is-open");
+      document.querySelectorAll(".perk-badge.is-open").forEach((node) => node.classList.remove("is-open"));
+      let pop = document.getElementById("perkPop");
+      if (!pop) {
+        pop = document.createElement("div");
+        pop.id = "perkPop";
+        pop.className = "perk-pop";
+        pop.setAttribute("role", "tooltip");
+        document.body.appendChild(pop);
+      }
+      if (was) { pop.hidden = true; return; }
+      badge.classList.add("is-open");
+      pop.innerHTML = "<b>" + (badge.getAttribute("data-perk") || "") + "</b><span>" + (badge.getAttribute("data-detail") || "") + "</span>";
+      pop.hidden = false;
+      const rect = badge.getBoundingClientRect();
+      const width = Math.min(220, window.innerWidth - 16);
+      pop.style.width = width + "px";
+      pop.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - width - 8)) + "px";
+      pop.style.top = Math.min(window.innerHeight - 78, rect.bottom + 8) + "px";
+    };
+    badge.addEventListener("click", open);
+    badge.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") open(e);
     });
   });
 }
@@ -4980,6 +5094,7 @@ function bindApp() {
   });
   pendingCeleb.sort((a, b) => (a.kind === "tier-up" ? 0 : 1) - (b.kind === "tier-up" ? 0 : 1));
   if (earnedDirty) savePlayers();
+  watchCardStars();
   renderRoster();
   beginSeasonReveals(pendingSeason, () => {
     beginCelebrations(pendingCeleb, () => {
