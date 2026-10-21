@@ -364,7 +364,7 @@ function competeCrowns(key, scope) {
   if (king && row.holder && row.holder !== king.id) {
     const held = Math.max(1, Math.round((new Date(today) - new Date(row.since)) / 86400000));
     row.totals[row.holder] = (row.totals[row.holder] || 0) + held;
-    DataLayer.notify(king.id, "new-king", "NEW KING · " + key + ", " + scope + ".");
+    DataLayer.notify(king.id, "new-king", "NEW KING · " + competeMetricLabel(key) + ", " + scope + ".");
     DataLayer.notify(row.holder, "crown-taken", "The crown moved.");
     row.holder = king.id;
     row.since = today;
@@ -381,6 +381,55 @@ function competeCrowns(key, scope) {
   if (king && !board.some((item) => item.id === king.id)) board.push({ id: king.id, days: soFar });
   board.sort((a, b) => b.days - a.days);
   return { king: king, board: board, days: king ? soFar : 0 };
+}
+
+function competeMetricLabel(key) {
+  const spec = COMPETE_METRICS.find((m) => m.key === key);
+  if (spec) return spec.label;
+  if (typeof METRICS !== "undefined" && METRICS[key] && METRICS[key].label) return METRICS[key].label;
+  return String(key || "").replace(/([a-z])([A-Z])/g, "$1 $2").replace(/^./, (c) => c.toUpperCase());
+}
+
+function competePrettyDate(value) {
+  if (typeof roadPrettyDate === "function") return roadPrettyDate(value);
+  return String(value || "").slice(0, 10);
+}
+
+function competeInitials(player) {
+  return String(player && player.name || "?").trim().split(/\s+/).slice(0, 2).map((part) => part[0] || "").join("").toUpperCase();
+}
+
+function competeFace(player) {
+  if (!player) return "<div class=\"h2h-ava\"><span>?</span></div>";
+  const graded = typeof gradesFor === "function" ? gradesFor(player) : { overall: "—" };
+  const tier = typeof tierFor === "function" ? tierFor(graded.overall, player) : { key: "silver" };
+  return "<div class=\"h2h-ava tier-" + tier.key + "\"><span>" + competeEsc(competeInitials(player)) + "</span><small>" + graded.overall + "</small></div>";
+}
+
+function competeH2H(ch) {
+  const a = competeRoster().find((p) => p.id === ch.from);
+  const b = competeRoster().find((p) => p.id === ch.to);
+  const spec = COMPETE_METRICS.find((m) => m.key === ch.metric) || { label: competeMetricLabel(ch.metric), unit: "", better: "higher" };
+  const left = competeDaysLeft(ch.deadline);
+  const circ = 2 * Math.PI * 16;
+  const pct = Math.max(0, Math.min(1, left / 31));
+  const av = a ? Number(competeNum(a, ch.metric)) : NaN;
+  const bv = b ? Number(competeNum(b, ch.metric)) : NaN;
+  let lead = "EVEN";
+  if (Number.isFinite(av) && Number.isFinite(bv) && av !== bv) {
+    const diff = Math.round((av - bv) * 10) / 10;
+    const higherWins = spec.better !== "lower";
+    const leader = (higherWins ? diff > 0 : diff < 0) ? a : b;
+    lead = (leader ? leader.name.split(" ")[0] + " " : "") + "+" + Math.abs(diff);
+  }
+  const shown = (p) => {
+    const n = p ? competeNum(p, ch.metric) : null;
+    return n == null || n === "" ? "—" : n;
+  };
+  return "<div class=\"h2h\"><div class=\"h2h-side\">" + competeFace(a) + "<b>" + shown(a) + "</b><div>" + competeEsc(a ? a.name : "") + "</div></div>" +
+    "<div class=\"h2h-mid\"><span>HEAD TO HEAD</span><strong>" + competeEsc(spec.label) + "</strong><em class=\"h2h-lead\">" + competeEsc(lead) + "</em>" +
+    "<div class=\"h2h-ring\" aria-label=\"" + left + " days left\"><svg viewBox=\"0 0 40 40\" aria-hidden=\"true\"><circle cx=\"20\" cy=\"20\" r=\"16\"></circle><circle class=\"h2h-arc\" cx=\"20\" cy=\"20\" r=\"16\" stroke-dasharray=\"" + circ.toFixed(1) + "\" stroke-dashoffset=\"" + (circ * (1 - pct)).toFixed(1) + "\"></circle></svg><b>" + left + "</b></div></div>" +
+    "<div class=\"h2h-side\">" + competeFace(b) + "<b>" + shown(b) + "</b><div>" + competeEsc(b ? b.name : "") + "</div></div></div>";
 }
 
 function competeTimeline(player) {
@@ -445,7 +494,7 @@ function competeSettle() {
     ch.status = "done";
     ch.winner = winner.id;
     if (!winner.road.trophies) winner.road.trophies = [];
-    winner.road.trophies.push({ id: "challenge-" + ch.id, at: today, note: "Won the " + ch.metric + " challenge." });
+    winner.road.trophies.push({ id: "challenge-" + ch.id, at: today, note: "Won the " + competeMetricLabel(ch.metric) + " challenge." });
     DataLayer.notify(winner.id, "challenge-win", "Challenge won. Trophy is in the case.");
     DataLayer.notify(winner.id === a.id ? b.id : a.id, "challenge-loss", "Challenge closed. The trophy went the other way. Next rep.");
   });
@@ -478,15 +527,9 @@ function competePaint() {
   const mine = facility.challenges.filter((ch) => (ch.from === me.id || ch.to === me.id) && ch.status === "accepted");
   const incomingHTML = incoming.map((ch) => {
     const from = competeRoster().find((p) => p.id === ch.from);
-    return "<div class=\"lb-row\"><span>" + competeEsc(from ? from.name : "Teammate") + " challenged your " + competeEsc(ch.metric) + " · due " + competeEsc(ch.deadline) + "</span><span><button class=\"btn btn-red\" type=\"button\" data-accept=\"" + competeEsc(ch.id) + "\">Accept</button> <button class=\"btn btn-ghost\" type=\"button\" data-decline=\"" + competeEsc(ch.id) + "\">Decline</button></span></div>";
+    return "<div class=\"lb-row\"><span>" + competeEsc(from ? from.name : "Teammate") + " challenged your " + competeEsc(competeMetricLabel(ch.metric)) + " · due " + competeEsc(competePrettyDate(ch.deadline)) + "</span><span><button class=\"btn btn-red\" type=\"button\" data-accept=\"" + competeEsc(ch.id) + "\">Accept</button> <button class=\"btn btn-ghost\" type=\"button\" data-decline=\"" + competeEsc(ch.id) + "\">Decline</button></span></div>";
   }).join("");
-  const h2h = mine.map((ch) => {
-    const a = competeRoster().find((p) => p.id === ch.from);
-    const b = competeRoster().find((p) => p.id === ch.to);
-    const spec = COMPETE_METRICS.find((m) => m.key === ch.metric) || { label: ch.metric, unit: "" };
-    const left = competeDaysLeft(ch.deadline);
-    return "<div class=\"h2h\"><div><b>" + (a ? competeNum(a, ch.metric) : "—") + "</b><div>" + competeEsc(a ? a.name : "") + "</div></div><div class=\"h2h-mid\"><span>HEAD TO HEAD</span><strong>" + competeEsc(spec.label) + "</strong><small>" + left + " DAYS LEFT</small></div><div><b>" + (b ? competeNum(b, ch.metric) : "—") + "</b><div>" + competeEsc(b ? b.name : "") + "</div></div></div>";
-  }).join("");
+  const h2h = mine.map((ch) => competeH2H(ch)).join("");
   const options = competeRoster().filter((p) => p.id !== me.id).map((p) => "<option value=\"" + competeEsc(p.id) + "\">" + competeEsc(p.name) + "</option>").join("");
   const metrics = COMPETE_METRICS.map((m) => "<option value=\"" + m.key + "\">" + m.label + "</option>").join("");
   const card = cotd && typeof cardHTML === "function" ? "<div class=\"mini-card\">" + cardHTML(cotd.player, true) + "</div>" : "";
@@ -497,11 +540,19 @@ function competePaint() {
     return "<div class=\"lb-row\"><span>" + competeEsc(who ? who.name : "Alumni") + "</span><b>" + row.days + " days</b></div>";
   }).join("");
   const rivalLine = me.road.rivalry ? competeRivalLine(rival) : "Rivalries are off. Turn them on if you want the chase.";
-  const h2hBlock = h2h || "<div class=\"h2h\"><div><b>—</b><div>You</div></div><div class=\"h2h-mid\"><span>HEAD TO HEAD</span><strong>No live challenge</strong></div><div><b>—</b><div>Teammate</div></div></div>";
+  const endChoices = [7, 14, 21, 31].map((n) => {
+    const iso = typeof roadAddDays === "function" ? roadAddDays(competeToday(), n) : competeToday();
+    const tail = n === 31 ? " · 1 month" : (n === 14 ? " · 2 weeks" : "");
+    return "<option value=\"" + iso + "\"" + (n === 14 ? " selected" : "") + ">" + competeEsc(competePrettyDate(iso) + tail) + "</option>";
+  }).join("");
+  const h2hBlock = h2h || "<div class=\"h2h\"><div class=\"h2h-side\"><div class=\"h2h-ava\"><span>?</span></div><b>—</b><div>You</div></div><div class=\"h2h-mid\"><span>HEAD TO HEAD</span><strong>No live challenge</strong></div><div class=\"h2h-side\"><div class=\"h2h-ava\"><span>?</span></div><b>—</b><div>Teammate</div></div></div>";
   mount.innerHTML = "<div class=\"compete-stack\">" +
     "<div class=\"compete-board\" id=\"challengeBoard\"><p class=\"compete-kicker\">HEAD TO HEAD</p><div id=\"h2hBoard\">" + h2hBlock + "</div>" +
     (incomingHTML ? "<p class=\"compete-kicker\">INCOMING</p>" + incomingHTML : "<p>No pending challenges.</p>") +
-    "<div class=\"road-actions\"><select id=\"chWho\">" + options + "</select><select id=\"chMetric\">" + metrics + "</select><input id=\"chDeadline\" type=\"date\" value=\"" + competeToday() + "\"><button class=\"btn btn-red\" type=\"button\" id=\"chSend\">Challenge</button></div></div>" +
+    "<ol class=\"ch-steps\"><li><span>1</span><label>Pick teammate<select id=\"chWho\">" + options + "</select></label></li>" +
+    "<li><span>2</span><label>Pick category<select id=\"chMetric\">" + metrics + "</select></label></li>" +
+    "<li><span>3</span><label>Pick end date <em>up to 1 month</em><select id=\"chDeadline\">" + endChoices + "</select></label></li>" +
+    "<li><span>4</span><button class=\"btn btn-red\" type=\"button\" id=\"chSend\">Send</button></li></ol></div>" +
     "<div class=\"compete-board lb-board\"><p class=\"compete-kicker\">LEADERBOARD</p><div class=\"trophy-grid\">" + boards + "</div>" +
     "<h3>Most improved this month</h3>" + improved.map((p, i) => "<div class=\"lb-row\"><span>" + (i + 1) + ". " + competeEsc(p.name) + "</span><b>" + (competeExitDelta(p, 30) > 0 ? "+" : "") + (Math.round(competeExitDelta(p, 30) * 10) / 10) + " MPH</b></div>").join("") +
     "<h3>Awards</h3>" + awards +
@@ -572,14 +623,14 @@ function competeProfileHTML(player) {
   const reactions = (competeFacility().reactions[player.id] || []).map((r) => r.emoji).join(" ") || "No reactions yet.";
   const viewer = typeof roadSignedIn === "function" ? roadSignedIn() : null;
   const reactBtns = viewer && viewer.id !== player.id ? COMPETE_REACTIONS.map((emoji) => "<button class=\"react-btn\" type=\"button\" data-react=\"" + emoji + "\">" + emoji + "</button>").join(" ") : "<p>Reactions are for teammates. Switch signed-in player to leave one.</p>";
-  const timeline = competeTimeline(player).map((row) => "<li><b>" + competeEsc(row.at) + "</b><span>" + competeEsc(row.text) + "</span></li>").join("");
+  const timeline = competeTimeline(player).map((row) => "<li><b>" + competeEsc(competePrettyDate(row.at)) + "</b><span>" + competeEsc(row.text) + "</span></li>").join("");
   const records = competeRecords(player, "exitVelo");
   const board = records.board.map((row, i) => "<div class=\"lb-row\"><span>" + (i + 1) + ". " + competeEsc(row.name) + (row.alumni ? " · alumni" : "") + "</span><b>" + row.value + " " + records.spec.unit + "</b></div>").join("");
   const ages = ((player.road && player.road.ageCards) || []).map((card) => "<article class=\"age-card\"><b>" + card.overall + "</b><span>AGE " + card.age + "</span><small>" + competeEsc(card.season || "") + "</small></article>").join("");
   const ageNote = ages ? "<p class=\"coach-line\">A lower overall on an older age card means the standard for that age was different. It does not mean the player got worse.</p>" : "";
   const alumni = COMPETE_ALUMNI.map((a) => "<div class=\"trophy-card\"><b>" + competeEsc(a.name) + " · " + competeEsc(a.pos) + "</b><p>" + competeEsc(a.start) + " → " + competeEsc(a.end) + "</p><p>" + competeEsc(a.college) + " · final card " + a.ovr + "</p></div>").join("");
   const evos = ((player.road && player.road.evolutions) || []).map((m) => "<button type=\"button\" class=\"btn btn-ghost\" data-replay-evo=\"" + competeEsc(m.id) + "\">Replay " + competeEsc(m.toTier) + "</button>").join(" ") || "<p>No evolution yet. Cross a tier and the replay lands here.</p>";
-  const trophies = ((player.road && player.road.trophies) || []).map((t) => "<div class=\"lb-row\"><span>" + competeEsc(t.at) + "</span><b>" + competeEsc(t.note) + "</b></div>").join("") || "<p>Win a challenge, a quest, or an event and it lands here.</p>";
+  const trophies = ((player.road && player.road.trophies) || []).map((t) => "<div class=\"lb-row\"><span>" + competeEsc(competePrettyDate(t.at)) + "</span><b>" + competeEsc(t.note) + "</b></div>").join("") || "<p>Win a challenge, a quest, or an event and it lands here.</p>";
   const you = records.rank ? "<p class=\"rank-line\">YOU ARE #" + records.rank + " ALL-TIME</p><p>Age " + records.age + " · " + competeEsc(records.spec.label) + ", inside this facility.</p>" : "";
   return "<div class=\"panel compete-board\" id=\"trophyCase\"><h3>My trophy case</h3><div class=\"trophy-grid\">" + awards + "</div><h3>Achievements</h3><div class=\"trophy-grid\">" + ach + "</div>" + hiddenNote +
     "<h3>Evolutions</h3><div class=\"road-actions\">" + evos + "</div><h3>Quests, events, challenges</h3>" + trophies +
