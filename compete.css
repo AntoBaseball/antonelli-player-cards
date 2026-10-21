@@ -1,0 +1,27 @@
+/* Phase 2 — compete. Same dark athletic surface as the home. */
+#competeHome{margin:0 0 18px}
+.compete-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}
+.compete-board{background:#100e0a;color:#f6f1e4;border:1px solid rgba(212,175,55,.4);border-radius:16px;padding:14px}
+.compete-board h3{margin:0 0 8px;color:#fff;font-size:18px}
+.compete-kicker{letter-spacing:2px;font-size:11px;font-weight:800;color:#f2d060;margin:0 0 4px}
+.lb-row,.award-row,.react-row{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid rgba(212,175,55,.16);font-size:14px}
+.lb-row b{color:#f2d060}
+.cotd{display:flex;gap:12px;align-items:center}
+.cotd .mini-card{width:92px;flex:none}
+.crown-mark{position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:9;font-size:22px;filter:drop-shadow(0 2px 4px #000)}
+.award-pin{position:absolute;top:108px;right:10px;z-index:8;background:#070707;border:1px solid #d4af37;border-radius:999px;padding:2px 6px;font-size:11px}
+.bb-card.is-chem{box-shadow:0 0 0 2px #86efac, 0 0 18px rgba(134,239,172,.45)}
+.bb-card.is-perfect{box-shadow:0 0 0 2px #f2d060, 0 0 22px rgba(242,208,96,.7)}
+.react-btn{background:transparent;border:1px solid rgba(212,175,55,.4);color:#fff;border-radius:999px;padding:4px 8px;cursor:pointer}
+.react-btn:hover{border-color:#f2d060}
+.h2h{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;text-align:center}
+.h2h b{font-size:28px;font-family:Impact,"Arial Black",system-ui,sans-serif;font-style:italic}
+.trophy-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.trophy-card{border:1px solid rgba(212,175,55,.35);border-radius:12px;padding:8px;background:rgba(0,0,0,.35)}
+.hidden-ach{opacity:.45}
+@media (max-width:800px){
+  .compete-grid,.trophy-grid{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){
+  .bb-card.is-chem,.bb-card.is-perfect{box-shadow:0 0 0 2px #f2d060}
+}

@@ -39,6 +39,14 @@ Needs a real backend before it is actually multi-user:
 
 Replace `store.js` and keep the `DataLayer` function names. Do not fork the roster into a second store.
 
+### Compete (phase 2)
+
+Weekly and monthly quests, the seasonal event that is open this month, a shared team power bar, and team chemistry (70% glow, 100% perfect week) are computed from the roster on this browser. Leaderboards cover bat speed, exit velo, arm, sprint, broad jump, and most improved this month. Awards are spread so the same player does not take every title. King of the Hill, opt-in rivalries, accept/decline challenges, reactions (no comment box), the trophy case, a career timeline, the facility record board, and a short alumni list live in `compete.js`.
+
+Broad jump, vertical, and flying 10 are optional display-only tests. They do not move overall.
+
+Challenge results, reactions, and crowns are stored in `antonelli-road-facility-v1` on this browser. The other player sees them when you switch "Signed in as." Delivering those to a second phone needs the backend.
+
 ## How to open / run
 
 From the root of this repository (the folder that contains `index.html`).
