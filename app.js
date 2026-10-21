@@ -611,6 +611,37 @@ const SAMPLE_PLAYERS = [
     },
     road: { xp: 8200, prs: 2, signature: "Fill it up.", dates: { training: ["2026-10-18", "2026-10-19", "2026-10-20"], checkin: ["2026-10-18", "2026-10-19", "2026-10-20"] } },
   },
+  {
+    id: "sample-cole-brennan", name: "Cole Brennan", age: 17, ageGroup: "18U", classYear: "2027",
+    team: "Antonelli 17U", position: "RHP", secondaryPosition: "", height: "6'3\"", weight: "195 lbs", hometown: "Quincy, MA", bats: "R", throws: "R", type: "pitcher", archetype: "Ace", photo: "",
+    strengths: ["Fastball lives at the top of the zone", "Repeats the delivery"],
+    improvements: ["Hold the velo into the fifth"],
+    coachQuirks: ["outlier-1"],
+    metrics: { fastballVelo: 93, spinRate: 2500, strikePct: 73, whiffPct: 42, pitchCapacity: 103 },
+    history: { fastballVelo: metricHistory(93, [88, 90, 92]) },
+    readingLog: {
+      fastballVelo: [{ value: 86, at: "2025-10-02" }, { value: 88, at: "2026-04-11" }, { value: 90, at: "2026-07-18" }, { value: 92, at: "2026-09-20" }, { value: 93, at: "2026-10-18" }],
+    },
+    road: { xp: 0, prs: 0, signature: "Fill the zone.", dates: { training: [], checkin: [] } },
+  },
+  {
+    id: "sample-roman-hale", name: "Roman Hale", age: 18, ageGroup: "18U", classYear: "2026",
+    team: "Antonelli 18U", position: "RHP", secondaryPosition: "", height: "6'4\"", weight: "205 lbs", hometown: "Worcester, MA", bats: "R", throws: "R", type: "pitcher", archetype: "Ace", photo: "",
+    strengths: ["Velocity and a swing-and-miss breaker", "Competes deep into an outing"],
+    improvements: ["Steal a strike with the changeup"],
+    coachQuirks: ["pressure-cooker"],
+    metrics: { fastballVelo: 94.5, spinRate: 2550, strikePct: 74, whiffPct: 44, pitchCapacity: 106 },
+    history: { fastballVelo: metricHistory(94.5, [89, 91, 93]) },
+    readingLog: {
+      fastballVelo: [{ value: 88, at: "2025-09-12" }, { value: 89, at: "2026-04-04" }, { value: 91, at: "2026-07-09" }, { value: 93, at: "2026-09-14" }, { value: 94.5, at: "2026-10-16" }],
+    },
+    road: {
+      xp: 4200, prs: 3, signature: "Light it up.",
+      dates: { training: ["2026-10-18", "2026-10-19", "2026-10-20"], checkin: ["2026-10-18", "2026-10-19", "2026-10-20"] },
+      evolutions: [{ id: "roman-legend", at: "2026-10-16T18:00:00.000Z", fromTier: "diamond", toTier: "legend", overall: 95, score: 96.4 }],
+      timeline: [{ at: "2023-09-01", text: "Joined Antonelli Baseball." }, { at: "2026-10-16", text: "Card evolved to Legend." }],
+    },
+  },
 ];
 
 /* ---------- Grade math ---------- */
@@ -3011,6 +3042,7 @@ function cardHTML(player, large, face, opts) {
     <div class="card-visual">${visual}</div>
     <div class="card-foil" aria-hidden="true"></div>
     <div class="card-glare" aria-hidden="true"></div>
+    ${tier.key === "legend" ? `<div class="legend-fx" aria-hidden="true"><i></i><i></i><i></i></div>` : ""}
     ${sparkleHTML(tier.key, phase, quiet)}
     <div class="card-brand"><b>ANTONELLI</b><span>${tier.label}</span></div>
     ${lvlChip}
