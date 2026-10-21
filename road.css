@@ -63,8 +63,9 @@
 .bb-card.tier-legend .card-bottom{background:linear-gradient(180deg,transparent 0,rgba(40,0,6,.5) 28%,rgba(12,0,2,.92) 100%)}
 .bb-card.tier-legend .card-brand span{background:linear-gradient(180deg,#3a060c,#c4121a 58%,#ff2a18);color:#fff;border-color:#f2d060}
 .bb-card.tier-legend .card-name h2,.bb-card.tier-legend .card-name h3{color:#fff;text-shadow:0 0 1px #000,0 1px 0 #d4af37,0 -1px 0 #d4af37,1px 0 0 #d4af37,-1px 0 0 #d4af37}
-.tier-legend .card-foil{opacity:.92;mix-blend-mode:screen;background:linear-gradient(115deg,rgba(40,0,0,.2),rgba(255,30,20,.85) 20%,rgba(255,255,255,.95) 40%,rgba(255,40,24,.55) 58%,rgba(255,196,80,.5) 74%,rgba(90,0,8,.45))}
-.tier-legend .card-glare{width:46%;background:linear-gradient(90deg,transparent 0%,rgba(255,80,60,.28) 22%,#fff 48%,rgba(255,210,120,.5) 66%,transparent 84%)}
+.bb-card.tier-legend::after{background:linear-gradient(115deg,transparent 0 64%,rgba(255,255,255,.28) 64% 67%,transparent 67%),repeating-linear-gradient(45deg,rgba(120,0,8,.18) 0 14px,transparent 14px 32px),radial-gradient(circle at 80% 0%,rgba(255,40,20,.35),transparent 42%)}
+.tier-legend .card-foil{opacity:.85;mix-blend-mode:soft-light;background:linear-gradient(118deg,rgba(40,0,0,.15) 8%,rgba(255,24,12,.55) 30%,#fff 47%,rgba(255,32,16,.6) 62%,rgba(90,0,8,.4) 84%)}
+.tier-legend .card-glare{width:34%;background:linear-gradient(90deg,transparent 0%,rgba(255,60,40,.2) 28%,#fff 50%,rgba(255,180,60,.35) 70%,transparent 88%)}
 .tier-legend .card-sparks i::before,.tier-legend .card-sparks i::after{background:#fff;box-shadow:0 0 8px #ff2a18}
 .tier-legend .overall-diamond{background:linear-gradient(145deg,#ff3b30,#c4121a 48%,#2a0408);box-shadow:0 0 22px rgba(255,30,20,.75), inset 0 0 0 2px rgba(255,255,255,.5)}
 .legend-fx{position:absolute;inset:0;z-index:5;pointer-events:none;overflow:hidden}
@@ -235,15 +236,19 @@ table,th,td{color:#f4f1ea;border-color:rgba(212,175,55,.22)}
   body[data-app="trophies"] .show-tabs,
   body[data-app="trophies"] #backBtn{display:none !important}
   .show-card{width:min(300px,100%);margin:0 auto}
-  .show-name .first{font-size:14px}
-  .show-name .last{font-size:32px}
-  .show-posrow{margin:8px 0}
-  .pos-diamond{width:42px;height:42px}
-  .show-team{font-size:15px}
-  .show-facts{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-  .show-fact b{font-size:18px}
-  .show-fact-overall b{font-size:28px}
-  .show-side{gap:8px}
+  .show-name{line-height:.85}
+  .show-name .first{font-size:12px;letter-spacing:.4px}
+  .show-name .last{font-size:26px}
+  .show-posrow{margin:6px 0}
+  .pos-diamond{width:36px;height:36px}
+  .show-team{font-size:14px}
+  .show-arch{font-size:12px}
+  .show-facts{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px 8px}
+  .show-facts .show-fact:nth-child(n+7){display:none}
+  .show-fact b{font-size:16px}
+  .show-fact-overall b{font-size:26px}
+  .show-side{display:none}
+  #trophyCase,.road-chart-card,.lb-board,#challengeBoard{scroll-margin-top:68px}
   .profile-actions{display:flex;flex-wrap:wrap;gap:6px}
   .profile-actions .btn{padding:8px 10px;font-size:12px}
   #profileView{padding:8px 8px 20px;margin-top:0}
