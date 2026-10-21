@@ -451,14 +451,15 @@ function competeCardClass(player) {
 function competeMarks(player) {
   const bits = [];
   if (competeIsKing(player, "exitVelo") || competeIsKing(player, "tenYard") || competeIsKing(player, "broadJump")) bits.push("<span class=\"crown-mark\" title=\"King of the Hill\">👑</span>");
-  const awards = competePlayerAwards(player).slice(0, 2);
-  if (awards.length) {
-    const tip = awards.map((a) => a.name + " — " + a.tip).join(" · ");
-    bits.push("<span class=\"award-pin\" tabindex=\"0\">" + awards.map((a) => a.icon).join(" ") + "<span class=\"award-tip\" role=\"tooltip\">" + competeEsc(tip) + "</span></span>");
-  }
   const reacts = ((competeFacility().reactions || {})[player.id] || []).map((r) => r.emoji);
   if (reacts.length) bits.push("<span class=\"react-mark\">" + reacts.slice(-4).join(" ") + "</span>");
   return bits.join("");
+}
+
+function competeBackAwards(player) {
+  const awards = competePlayerAwards(player);
+  if (!awards.length) return "";
+  return "<section class=\"pb-block\"><h4>Awards</h4><div class=\"back-perks\">" + awards.map((a) => "<span class=\"q-badge\" title=\"" + competeEsc(a.tip) + "\">" + a.icon + " " + competeEsc(a.name) + "</span>").join("") + "</div></section>";
 }
 
 function competeDaysLeft(deadline) {

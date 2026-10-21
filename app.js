@@ -3054,6 +3054,7 @@ function cardBackHTML(player, face, subs, opts) {
     <div class="back-grades">${gradeLine}</div>
     <div class="back-raws">${hitting}${pitching}</div>
     ${backPerksHTML(player, face)}
+    ${typeof competeBackAwards === "function" ? competeBackAwards(player) : ""}
     ${bests}
     ${typeof roadBackExtra === "function" ? roadBackExtra(player) : ""}
     </div>
@@ -4410,6 +4411,7 @@ function collectSeasonReveal() {
 }
 
 function closeProfile() {
+  if (typeof styleClearCele === "function") styleClearCele();
   const player = players.find((p) => p.id === selectedId);
   if (player && player.pbFresh && Object.keys(player.pbFresh).length) {
     player.pbFresh = {};
