@@ -2950,7 +2950,7 @@ function personalBestsPanel(player) {
   const rows = personalBests(player).map((row) => {
     const season = row.season ? `${formatPbValue(row, row.season.value)} ${row.unit}` : "--";
     const career = row.career ? `${formatPbValue(row, row.career.value)} ${row.unit}` : "--";
-    const when = row.career && row.career.at ? row.career.at.slice(0, 10) : "--";
+    const when = row.career && row.career.at ? (typeof roadPrettyDate === "function" ? roadPrettyDate(row.career.at) : row.career.at.slice(0, 10)) : "--";
     const badge = row.fresh ? ` <em class="pb-new">NEW PB</em>` : "";
     const note = row.manualUsed ? ` <span class="muted">coach</span>` : "";
     return `<tr><td>${esc(row.label)}</td><td>${esc(season)}</td><td><strong>${esc(career)}</strong>${badge}${note}</td><td>${esc(when)}</td></tr>`;
@@ -2958,6 +2958,13 @@ function personalBestsPanel(player) {
   return `<div class="panel pb-panel" id="personalBestsPanel"><h3>Personal Bests</h3>
     <p class="muted small">Career best is the best reading on record: this season, every retired season, and a coach override when that number is better. This season uses only the current card. The 10-yard best is the lower time. Batted-ball distance is shown here and is not part of the grade.</p>
     <div class="table-scroll"><table class="pb-table"><thead><tr><th>Record</th><th>This season</th><th>Career</th><th>Set</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+}
+
+function backPerksHTML(player, face) {
+  const list = face && Array.isArray(face.quirks) ? face.quirks : (typeof displayQuirks === "function" ? displayQuirks(player) : []);
+  const rest = list.slice(2);
+  if (!rest.length) return "";
+  return `<section class="pb-block"><h4>More perks</h4><div class="back-perks">${rest.map((q) => `<span class="q-badge ${q.kind === "coach" ? "q-coach" : "q-earned"}">${q.icon || ""} ${esc(q.name)}</span>`).join("")}</div></section>`;
 }
 
 function cardBackHTML(player, face, subs, opts) {
@@ -3004,6 +3011,7 @@ function cardBackHTML(player, face, subs, opts) {
     </div>
     <div class="back-grades">${gradeLine}</div>
     <div class="back-raws">${hitting}${pitching}</div>
+    ${backPerksHTML(player, face)}
     ${bests}
     ${typeof roadBackExtra === "function" ? roadBackExtra(player) : ""}
     </div>
@@ -3022,16 +3030,15 @@ function cardHTML(player, large, face, opts) {
     ? `<img class="card-photo" src="${esc(player.photo)}" alt="Photo of ${esc(player.name)}">`
     : logoPlaceholder();
   const quirkList = face && Array.isArray(face.quirks) ? face.quirks : displayQuirks(player);
-  const quirkShown = quirkList.slice(0, 3);
-  const quirkExtra = quirkList.length - quirkShown.length;
-  const quirkHTML = quirkShown.length ? `<div class="card-quirks">${quirkShown.map((q) => `<span class="q-badge ${q.kind === "coach" ? "q-coach" : "q-earned"}" title="${esc(q.name)}">${q.icon} ${esc(q.name)}</span>`).join("")}${quirkExtra > 0 ? `<span class="q-badge q-more">+${quirkExtra}</span>` : ""}</div>` : "";
+  const quirkShown = quirkList.slice(0, 2);
+  const quirkHTML = quirkShown.length ? `<div class="card-quirks">${quirkShown.map((q) => `<span class="q-badge ${q.kind === "coach" ? "q-coach" : "q-earned"}" title="${esc(q.name)}">${q.icon} ${esc(q.name)}</span>`).join("")}</div>` : "";
   const quiet = !!(face && face.quiet);
   const phase = foilPhase(player.id || player.name);
   const badgeSpark = (tier.key === "diamond" || tier.key === "legend") ? `<i class="badge-spark" aria-hidden="true"></i>` : "";
   const liveRoad = !face && player.road;
   const hot = !face && typeof roadIsHot === "function" && roadIsHot(player);
   const lvl = !face && typeof roadLevel === "function" ? roadLevel(player) : null;
-  const lvlChip = lvl ? `<div class="lvl-chip"><b>LVL ${lvl.level}</b><span>${lvl.into}/${lvl.span}</span></div>` : "";
+  const lvlChip = lvl ? `<div class="lvl-chip" title="Level ${lvl.level}"><b>${lvl.level}</b></div>` : "";
   const teamBit = String(player.team || "ANT").replace(/^Antonelli\s*/i, "") || "ANT";
   const celeb = liveRoad && player.road.celebration === "fire" ? "🔥 " : "";
   const streakN = liveRoad && player.road.streaks ? player.road.streaks.training : 0;

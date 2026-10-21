@@ -50,6 +50,17 @@ function roadToday() {
   return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
 }
 
+function roadPrettyDate(value) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(value || ""));
+  if (!match) return String(value || "");
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const month = months[Number(match[2]) - 1] || match[2];
+  const day = String(Number(match[3]));
+  const year = Number(match[1]);
+  const nowY = (typeof nowDate === "function" ? nowDate() : new Date()).getFullYear();
+  return year === nowY ? (month + " " + day) : (month + " " + day + ", " + year);
+}
+
 function roadAddDays(stamp, days) {
   const p = String(stamp || roadToday()).slice(0, 10).split("-");
   const d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
@@ -502,6 +513,8 @@ function roadCompleteMission(player, id) {
   if (!row) return;
   row.done = true;
   const meta = roadMissionMeta(id);
+  const origin = typeof document !== "undefined" ? document.querySelector('[data-mission="' + id + '"]') : null;
+  roadFloatFrom = origin ? origin.getBoundingClientRect() : null;
   roadAward(player, meta.xp === "minigame" ? ROAD_XP.minigame : ROAD_XP.assignment, meta.xp === "minigame" ? "minigame" : "assignment");
   const r = roadEnsure(player);
   if (!r.dailyBonus && missions.every((m) => m.done)) {
@@ -542,6 +555,7 @@ function roadAfterSave(player, info) {
   if (prs.length) {
     player.road.prs = (player.road.prs || 0) + prs.length;
     roadAward(player, ROAD_XP.pr, "pr");
+    if (typeof stylePlayCele === "function") stylePlayCele(player, { pr: true });
     roadConfetti();
     roadPing("crack");
     roadPing("cheer");
@@ -596,20 +610,29 @@ function roadPing(kind) {
   osc.stop(now + 0.5);
 }
 
+let roadFloatFrom = null;
 function roadFloat(text) {
   if (typeof document === "undefined") return;
+  const from = roadFloatFrom;
+  roadFloatFrom = null;
   const el = document.createElement("div");
   el.className = "xp-float";
   el.textContent = text;
-  document.body.appendChild(el);
-  const line = document.getElementById("xpReadout");
-  if (line && String(text).indexOf("XP") >= 0) {
-    const tag = document.createElement("b");
-    tag.className = "xp-pop";
-    tag.textContent = " " + text;
-    line.appendChild(tag);
+  if (from) {
+    el.style.left = Math.round(from.left + from.width - 54) + "px";
+    el.style.top = Math.round(from.top + 6) + "px";
   }
-  setTimeout(() => el.remove(), 2200);
+  document.body.appendChild(el);
+  requestAnimationFrame(() => {
+    const bar = document.getElementById("xpTrack") || document.getElementById("xpReadout");
+    if (!bar) return;
+    const to = bar.getBoundingClientRect();
+    const startX = from ? from.left + from.width - 54 : to.left;
+    const startY = from ? from.top + 6 : to.top + 28;
+    el.style.setProperty("--xp-x", Math.round((to.left + to.width * 0.72) - startX) + "px");
+    el.style.setProperty("--xp-y", Math.round((to.top + to.height / 2) - startY) + "px");
+  });
+  setTimeout(() => el.remove(), 1200);
 }
 
 function roadConfetti() {
@@ -670,7 +693,7 @@ function roadChangeList(player) {
   if (series.length) {
     const a = series[0];
     const b = series[series.length - 1];
-    compare = "<div class=\"chart-compare\"><div><span>WHERE I STARTED</span><b>" + a.value + "</b><small>" + roadEsc(String(a.at).slice(0, 10)) + "</small></div><div><span>WHERE I AM</span><b>" + b.value + "</b><small>" + roadEsc(String(b.at).slice(0, 10)) + "</small></div></div>";
+    compare = "<div class=\"chart-compare\"><div><span>WHERE I STARTED</span><b>" + a.value + "</b><small>" + roadEsc(roadPrettyDate(a.at)) + "</small></div><div><span>WHERE I AM</span><b>" + b.value + "</b><small>" + roadEsc(roadPrettyDate(b.at)) + "</small></div></div>";
   }
   return "<div class=\"chart-block\">" + compare + banner + roadChartSVG(series) + "<div class=\"chart-windows\">" + rows + "</div></div>";
 }
@@ -688,7 +711,7 @@ function roadProfileHTML(player) {
   };
   const videos = (player.road.videos || []).map((v) => "<li><a href=\"" + roadEsc(v.url) + "\" target=\"_blank\" rel=\"noopener\">" + roadEsc(v.label || v.url) + "</a></li>").join("") || "<li>No clips yet.</li>";
   const evos = (player.road.evolutions || []).map((m) => "<li><button type=\"button\" class=\"btn btn-ghost\" data-replay-evo=\"" + roadEsc(m.id) + "\">Replay " + roadEsc(m.toTier) + "</button> <button type=\"button\" class=\"btn btn-ghost\" data-export-evo=\"" + roadEsc(m.id) + "\">PNG</button></li>").join("") || "<li>No evolution yet. Cross a tier and it lives here.</li>";
-  const timeline = (player.road.timeline || []).map((t) => "<li><b>" + roadEsc(t.at) + "</b> " + roadEsc(t.text) + "</li>").join("") || "<li>The story starts with the next session.</li>";
+  const timeline = (player.road.timeline || []).map((t) => "<li><b>" + roadEsc(roadPrettyDate(t.at)) + "</b> " + roadEsc(t.text) + "</li>").join("") || "<li>The story starts with the next session.</li>";
   const links = player.road.links || {};
   const can = roadCanEdit(player);
   const edit = can ? "<div class=\"road-actions\"><input id=\"roadVideoUrl\" placeholder=\"YouTube, Instagram, or Hudl link\"><button class=\"btn btn-ghost\" type=\"button\" id=\"roadAddVideo\">Add link</button><input id=\"roadVideoFile\" type=\"file\" accept=\"video/*\"><button class=\"btn btn-red\" type=\"button\" id=\"roadEvoPreview\">Preview Legend evolution</button></div>" : "<p class=\"muted\">Read only. Switch to this player, or to coach mode, to log work.</p>";
@@ -869,6 +892,7 @@ function roadSyncTabs() {
 
 function roadSetApp(name) {
   if (typeof document === "undefined") return;
+  if (typeof styleClearCele === "function") styleClearCele();
   const tab = name || "home";
   document.body.dataset.app = tab;
   roadSyncTabs();
@@ -1138,6 +1162,7 @@ globalThis.roadAward = roadAward;
 globalThis.roadAfterSave = roadAfterSave;
 globalThis.roadBoot = roadBoot;
 globalThis.roadPaint = roadPaint;
+globalThis.roadPrettyDate = roadPrettyDate;
 globalThis.roadSetApp = roadSetApp;
 globalThis.roadSyncTabs = roadSyncTabs;
 globalThis.roadEnsure = roadEnsure;
