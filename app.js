@@ -3133,7 +3133,7 @@ function cardHTML(player, large, face, opts) {
         ${phrase}
         ${!face && player.road && player.road.autograph && String(player.road.autograph).indexOf("data:image") === 0 ? `<img class="card-auto auto-${esc(player.road.autographTier || "standard")}" alt="Signature" src="${player.road.autograph}">` : ""}
       </div>
-      <div class="subgrades${shownSubs.length > 5 ? " is-legacy" : ""}">${shownSubs.map((x) => `<div class="subgrade"><b>${x.grade ?? "—"}</b><span>${x.key}</span></div>`).join("")}</div>
+      <div class="subgrades${shownSubs.length > 5 ? " is-legacy" : ""}">${shownSubs.map((x, i) => `<div class="subgrade">${i === 0 && !face && typeof competeReactHTML === "function" ? competeReactHTML(player) : ""}<b>${x.grade ?? "—"}</b><span>${x.key}</span></div>`).join("")}</div>
     </div>
   </div>`;
   if (!opts || !opts.flip) return front;
