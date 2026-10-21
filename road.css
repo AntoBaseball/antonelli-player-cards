@@ -47,17 +47,17 @@
 .chart-row b{font-family:Impact,"Arial Black",system-ui,sans-serif;font-style:italic;font-size:22px;color:#fff}
 .year-banner{font-family:Impact,"Arial Black",system-ui,sans-serif;font-style:italic;font-size:clamp(26px,4vw,36px);color:#f2d060;margin:4px 0}
 .tier-need{margin-top:8px;font-size:13px;line-height:1.4}
-.card-stack{position:absolute;top:12px;left:12px;z-index:8;display:flex;flex-direction:column;align-items:flex-start;gap:4px;max-width:54%;min-width:0}
+.card-stack{position:absolute;top:12px;left:12px;z-index:8;display:flex;flex-direction:column;align-items:flex-start;gap:6px;max-width:58%;min-width:0}
 .card-stack .card-brand,.card-stack .lvl-chip,.card-stack .card-quirks{position:static;top:auto;left:auto;right:auto;max-width:100%}
-.card-stack .card-quirks{display:flex;flex-direction:column;align-items:flex-start;gap:4px;width:100%}
-.card-stack .q-badge{max-width:100%}
-.bb-card.large .card-stack{max-width:52%}
+.card-stack .card-quirks{display:flex;flex-direction:row;flex-wrap:wrap;align-items:flex-start;gap:6px;width:auto}
+.card-stack .perk-badge{max-width:none;overflow:visible}
+.bb-card.large .card-stack{max-width:62%}
 .lvl-chip{position:absolute;top:74px;left:12px;z-index:8;width:26px;height:22px;display:grid;place-items:center;background:#070707;color:#f2d060;border:1px solid #d4af37;border-radius:7px;padding:0;font-size:9px;font-weight:900;line-height:1;text-align:center}
 .lvl-chip b{display:block;font-size:13px;font-family:Impact,"Arial Black",system-ui,sans-serif;font-style:italic}
 .card-brand .brand-row{display:flex;align-items:center;gap:6px;margin-top:6px}
 .card-brand .brand-row em{font-style:normal}
-.back-perks{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
-.back-perks .q-badge{position:static;max-width:none}
+.back-perks{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+.back-perks .perk-badge,.back-perks .q-badge{position:static;max-width:none;overflow:visible}
 .card-meta-mini{display:block;margin-top:4px;font-size:9px;font-weight:800;letter-spacing:.3px;opacity:.9;text-shadow:0 1px 4px #000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .card-phrase{display:block;margin-top:3px;font-size:11px;font-style:italic;color:#f7ecc8;text-shadow:0 1px 5px #000}
 .bb-card.is-hot{box-shadow:0 0 0 2px #f97316, 0 0 22px rgba(249,115,22,.75), inset 0 0 0 2px rgba(212,175,55,.7)}
