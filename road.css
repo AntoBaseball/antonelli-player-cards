@@ -75,7 +75,7 @@
 .tier-legend .card-glare{width:34%;background:linear-gradient(90deg,transparent 0%,rgba(255,60,40,.2) 28%,#fff 50%,rgba(255,180,60,.35) 70%,transparent 88%)}
 .tier-legend .card-sparks i::before,.tier-legend .card-sparks i::after{background:#fff;box-shadow:0 0 8px #ff2a18}
 .tier-legend .overall-diamond > div::before{background:linear-gradient(145deg,#ff3b30,#c4121a 48%,#2a0408)}
-.tier-legend .overall-diamond{box-shadow:0 0 22px rgba(255,30,20,.75)}
+.tier-legend .overall-diamond{box-shadow:none}
 .legend-fx{position:absolute;inset:0;z-index:5;pointer-events:none;overflow:hidden}
 .legend-fx i{position:absolute;bottom:-10%;width:22%;height:48%;border-radius:50% 50% 40% 40%;background:radial-gradient(ellipse at 50% 80%, rgba(255,220,120,.95), rgba(225,16,8,.85) 40%, transparent 72%);filter:blur(0.4px);animation:legend-flame 1.15s ease-in-out infinite;transform-origin:50% 100%}
 .legend-fx i:nth-child(1){left:6%}
