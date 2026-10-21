@@ -106,12 +106,12 @@ input:focus,select:focus,textarea:focus{outline:2px solid rgba(201,162,39,.45);b
 .card-brand b{display:block;font-size:11px;letter-spacing:1.6px;text-shadow:0 1px 6px rgba(0,0,0,.45)}
 .card-brand span{display:inline-block;margin-top:6px;background:rgba(6,18,42,.55);border:1px solid rgba(255,255,255,.45);padding:4px 7px;border-radius:999px;font-size:10px;font-weight:900;letter-spacing:1.2px}
 /* Diamond-shaped overall badge, top-right */
-.overall-diamond{position:absolute;top:13px;right:13px;z-index:8;width:82px;height:82px;display:grid;place-items:center;text-align:center;
+.overall-diamond{position:absolute;top:12px;right:12px;z-index:8;width:73px;height:73px;display:grid;place-items:center;text-align:center;
   clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);
   background:linear-gradient(145deg,#38e1ff,#0077ff);color:#fff;
   filter:drop-shadow(0 6px 10px rgba(0,0,0,.35));}
 .overall-diamond::before{content:"";position:absolute;inset:7px;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);background:rgba(255,255,255,.18)}
-.overall-diamond b{position:relative;display:block;font-size:28px;line-height:.9;text-shadow:0 2px 5px rgba(0,0,0,.4)}
+.overall-diamond b{position:relative;display:block;font-size:25px;line-height:.9;text-shadow:0 2px 5px rgba(0,0,0,.4)}
 .overall-diamond span{position:relative;display:block;font-size:8px;font-weight:900;letter-spacing:1.4px;margin-top:3px}
 .tier-bronze .overall-diamond{background:linear-gradient(145deg,#d99a4e,#7c4a16)}
 .tier-silver .overall-diamond{background:linear-gradient(145deg,#111,#4b5563);color:var(--gold-bright);box-shadow:inset 0 0 0 2px rgba(212,175,55,.6)}
@@ -155,12 +155,13 @@ input:focus,select:focus,textarea:focus{outline:2px solid rgba(201,162,39,.45);b
   .card-name h3,.card-name h2{font-size:16px}
   .pos-bar{font-size:9px;padding:3px 5px}
 }
-.bb-card.large .overall-diamond{width:104px;height:104px;top:16px;right:16px}
-.bb-card.large .overall-diamond b{font-size:36px}
+.bb-card.large .overall-diamond{width:92px;height:92px;top:14px;right:14px}
+.bb-card.large .overall-diamond::before{inset:6px}
+.bb-card.large .overall-diamond b{font-size:32px}
 .bb-card.large .team-mark{width:96px}.bb-card.large .card-star{width:88px;height:88px}.bb-card.large .team-code{font-size:18px}
-.bb-card.large .card-logo{width:26%;margin-top:50%;margin-right:0}
+.bb-card.large .card-logo{width:34%;margin-top:43%;margin-right:0}
 @container (min-width:300px){
-  .bb-card.large .card-logo{width:32%;margin-top:47%}
+  .bb-card.large .card-logo{width:34%;margin-top:43%}
 }
 .tier-badge{display:inline-block;margin-top:6px;background:rgba(0,0,0,.28);padding:4px 8px;border-radius:999px;font-size:11px;font-weight:900;letter-spacing:1px;color:#fff}
 .tier-badge.tier-diamond{background:linear-gradient(180deg,#06284d,#1d6fe0 58%,#7dd3fc);border:1px solid #d4af37;color:#fff}
@@ -289,13 +290,13 @@ th{font-size:11px;letter-spacing:.7px;text-transform:uppercase;color:var(--muted
 .perk-badge{position:relative;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;width:88px;padding:8px 6px 6px;border-radius:18px;border:1px solid rgba(242,208,96,.8);background:radial-gradient(120% 80% at 50% 0%, rgba(255,255,255,.42), transparent 48%), linear-gradient(180deg, rgba(255,255,255,.16), rgba(0,0,0,.55));box-shadow:inset 0 1px 0 rgba(255,255,255,.55), 0 0 12px rgba(242,208,96,.35);color:#f7ecc8;cursor:pointer;vertical-align:top;overflow:hidden}
 .perk-ico{display:grid;place-items:center;width:62px;height:62px;overflow:hidden;font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",emoji,sans-serif;font-size:62px;font-weight:400;font-style:normal;line-height:1;font-synthesis:none}
 .perk-badge small{font-size:10px;font-weight:800;line-height:1.15;text-align:center;letter-spacing:.2px;max-width:84px}
-.perk-front{box-sizing:border-box;width:44px;height:44px;padding:0;border-radius:14px;gap:0;overflow:hidden}
-.perk-front .perk-ico{width:32px;height:32px;font-size:32px}
-.bb-card.large .perk-front{width:44px;height:44px}
-.bb-card.large .perk-front .perk-ico{width:32px;height:32px;font-size:32px}
+.perk-front{box-sizing:border-box;width:27px;height:27px;padding:0;border-radius:9px;gap:0;overflow:hidden}
+.perk-front .perk-ico{width:19px;height:19px;font-size:19px}
+.bb-card.large .perk-front{width:27px;height:27px}
+.bb-card.large .perk-front .perk-ico{width:19px;height:19px;font-size:19px}
 @container (min-width:300px){
-  .bb-card.large .perk-front{width:48px;height:48px}
-  .bb-card.large .perk-front .perk-ico{width:34px;height:34px;font-size:34px}
+  .bb-card.large .perk-front{width:28px;height:28px}
+  .bb-card.large .perk-front .perk-ico{width:20px;height:20px;font-size:20px}
 }
 .perk-xl{width:108px;height:auto;padding:10px 8px}
 .perk-xl .perk-ico{width:78px;height:78px;font-size:78px}
