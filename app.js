@@ -3127,9 +3127,7 @@ function cardHTML(player, large, face, opts) {
       <div class="card-name">
         <span class="archetype">${esc(player.archetype)}</span>
         <${large ? "h2" : "h3"}>${esc(player.name)}</${large ? "h2" : "h3"}>
-        <span class="pos-bar">${esc(positionLine(player))} - ${esc(player.bats)}/${esc(player.throws)}</span>
-        ${meta}
-        ${phrase}
+        <div class="card-facts"><span class="pos-bar">${esc(positionLine(player))} - ${esc(player.bats)}/${esc(player.throws)}</span>${meta}${phrase}</div>
       </div>
       <div class="subgrades${shownSubs.length > 5 ? " is-legacy" : ""}">${shownSubs.map((x, i) => `<div class="subgrade">${i === 0 && !face && typeof competeReactHTML === "function" ? competeReactHTML(player) : ""}<b>${x.grade ?? "—"}</b><span>${x.key}</span></div>`).join("")}</div>
     </div>
@@ -3143,48 +3141,27 @@ function cardHTML(player, large, face, opts) {
   </div>`;
 }
 
-/* Size the center star to the open band under the perks and overall, above the role line.
-   The asset is 512×500 with a thin transparent margin; the ink, not the box, keeps
-   about 12px of clearance on a 600px-wide render, scaled with the card. */
+/* One star for every card. On the 420px-tall phone card the ink is 163.5px
+   (327px on a 600px-wide render) and its top sits 121px down. Shorter cards
+   keep that top and give the height back, so a 392px desktop card is about 135px. */
 function fitCardStar(card) {
   const logo = card.querySelector(".card-logo");
-  const role = card.querySelector(".archetype") || card.querySelector(".card-name");
-  if (!logo || !role) return;
   const visual = card.querySelector(".card-visual");
-  if (!visual) return;
-  const cardBox = card.getBoundingClientRect();
+  if (!logo || !visual) return;
   const layoutW = card.offsetWidth;
-  if (cardBox.width < 40 || cardBox.height < 40 || layoutW < 40) return;
-  const scale = cardBox.width / layoutW || 1;
-  const local = (px) => px / scale;
-  const visualTop = visual.getBoundingClientRect().top;
-  let topLimit = visualTop;
-  card.querySelectorAll(".perk-badge, .overall-diamond, .lvl-chip, .card-brand").forEach((el) => {
-    const box = el.getBoundingClientRect();
-    if (box.width > 0 && box.height > 0) topLimit = Math.max(topLimit, box.bottom);
-  });
-  const roleTop = role.getBoundingClientRect().top;
-  if (!(roleTop > topLimit)) return;
-  const clearance = Math.max(6, cardBox.width * (12 / 600));
-  const avail = roleTop - topLimit - clearance * 2;
-  if (avail < 8) return;
-  const padT = 8 / 500, padB = 10 / 500, padX = 10 / 512;
-  const inkH = 1 - padT - padB;
-  const inkW = 1 - padX * 2;
-  const inkAspect = (512 * inkW) / (500 * inkH);
-  let inkHeight = avail;
-  let inkWidth = inkHeight * inkAspect;
-  const maxInkW = cardBox.width - clearance * 2;
-  if (inkWidth > maxInkW) {
-    inkWidth = maxInkW;
-    inkHeight = inkWidth / inkAspect;
-  }
-  const height = inkHeight / inkH;
-  const width = inkWidth / inkW;
-  const extra = Math.max(0, avail - inkHeight);
-  const marginTop = local(topLimit - visualTop + clearance + extra / 2) - local(height) * padT;
-  logo.style.width = local(width).toFixed(2) + "px";
-  logo.style.height = local(height).toFixed(2) + "px";
+  const layoutH = card.offsetHeight;
+  const cardBox = card.getBoundingClientRect();
+  if (cardBox.width < 40 || cardBox.height < 40 || layoutW < 40 || layoutH < 40) return;
+  const scale = cardBox.height / layoutH || 1;
+  const padT = 8 / 500;
+  const inkFrac = 1 - padT - 10 / 500;
+  const ink = Math.max(48, 163.5 - (420 - layoutH) * (33.5 / 28));
+  const height = ink / inkFrac;
+  const width = height * (512 / 500);
+  const visualInset = (visual.getBoundingClientRect().top - cardBox.top) / scale;
+  const marginTop = 121 - visualInset - height * padT;
+  logo.style.width = width.toFixed(2) + "px";
+  logo.style.height = height.toFixed(2) + "px";
   logo.style.marginTop = marginTop.toFixed(2) + "px";
   logo.style.marginRight = "0px";
 }
