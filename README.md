@@ -43,7 +43,7 @@ Replace `store.js` and keep the `DataLayer` function names. Do not fork the rost
 
 ### Compete (phase 2)
 
-Weekly and monthly quests, the seasonal event that is open this month, a shared team power bar, and team chemistry (70% glow, 100% perfect week) are computed from the roster on this browser. Leaderboards cover bat speed, exit velo, arm, sprint, broad jump, and most improved this month. Awards are spread so the same player does not take every title. King of the Hill, opt-in rivalries, accept/decline challenges, reactions (no comment box), the trophy case, a career timeline, the facility record board, and a short alumni list live in `compete.js`.
+Weekly and monthly quests, the seasonal event that is open this month, a shared team power bar, and team chemistry (70% glow, 100% perfect week) are computed from the roster on this browser. Leaderboards cover bat speed, exit velo, arm, sprint, broad jump, and most improved this month. Awards are spread so the same player does not take every title, and each pin has a hover or tap tooltip. King of the Hill shows the crown and a days-held board. Opt-in rivalries alert only when the gap is inside `COMPETE_CLOSE` (about 2 MPH or 3% on velocities, 0.05 s on sprints). Challenge a teammate supports accept or decline and a head-to-head view with days left. Reactions sit on the card. The trophy case replays evolutions. The career timeline, the age-card collection, the facility record board ("YOU ARE #N ALL-TIME"), and a short alumni list live in `compete.js`.
 
 Broad jump, vertical, and flying 10 are optional display-only tests. They do not move overall.
 
