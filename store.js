@@ -76,6 +76,20 @@ const DataLayer = {
     this.saveInbox(list);
   },
 
+  facility() {
+    try {
+      const raw = localStorage.getItem("antonelli-road-facility-v1");
+      const data = raw ? JSON.parse(raw) : null;
+      if (data && typeof data === "object") return data;
+    } catch (e) { /* private mode */ }
+    return { challenges: [], reactions: {}, claims: {}, kings: {} };
+  },
+
+  saveFacility(data) {
+    try { localStorage.setItem("antonelli-road-facility-v1", JSON.stringify(data)); } catch (e) { /* ignore */ }
+    return data;
+  },
+
   videoDb() {
     return new Promise((resolve, reject) => {
       if (typeof indexedDB === "undefined") { reject(new Error("no IndexedDB")); return; }

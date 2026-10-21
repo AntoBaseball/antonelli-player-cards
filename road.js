@@ -769,6 +769,7 @@ function roadWireProfile(player) {
   });
   const preview = document.getElementById("roadEvoPreview");
   if (preview) preview.addEventListener("click", () => roadPreviewLegend(player));
+  if (typeof competeWire === "function") competeWire(player);
 }
 
 function roadHomeHTML(player) {
@@ -838,10 +839,6 @@ function roadPaint() {
   }
   if (player) roadLastBar = { id: player.id, pct: nextPct };
   if (typeof competePaint === "function") competePaint();
-  else {
-    const compete = document.getElementById("competeHome");
-    if (compete) compete.innerHTML = "<div class=\"road-card\"><p class=\"road-kicker\">COMPETE</p><h3>Head to head</h3><p class=\"coach-line\">Leaderboards and challenges open on this tab.</p></div>";
-  }
   if (typeof styleTrainMount === "function") styleTrainMount();
   mount.querySelectorAll("[data-mission]").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -1145,6 +1142,7 @@ function roadBoot() {
   });
   roadBanner();
   roadPaint();
+  if (typeof competeBoot === "function") competeBoot();
 }
 
 globalThis.ROAD_XP = ROAD_XP;
