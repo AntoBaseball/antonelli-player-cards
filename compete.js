@@ -448,12 +448,15 @@ function competeCardClass(player) {
   return chem.perfect ? "is-perfect" : chem.glow ? "is-chem" : "";
 }
 
+function competeReactHTML(player) {
+  const reacts = ((competeFacility().reactions || {})[player.id] || []).map((r) => r.emoji).filter(Boolean).slice(-3);
+  if (!reacts.length) return "";
+  return "<span class=\"react-mark\" title=\"Reactions\">" + reacts.join("") + "</span>";
+}
+
 function competeMarks(player) {
-  const bits = [];
-  if (competeIsKing(player, "exitVelo") || competeIsKing(player, "tenYard") || competeIsKing(player, "broadJump")) bits.push("<span class=\"crown-mark\" title=\"King of the Hill\">👑</span>");
-  const reacts = ((competeFacility().reactions || {})[player.id] || []).map((r) => r.emoji);
-  if (reacts.length) bits.push("<span class=\"react-mark\">" + reacts.slice(-4).join(" ") + "</span>");
-  return bits.join("");
+  if (competeIsKing(player, "exitVelo") || competeIsKing(player, "tenYard") || competeIsKing(player, "broadJump")) return "<span class=\"crown-mark\" title=\"King of the Hill\">👑</span>";
+  return "";
 }
 
 function competeBackAwards(player) {
@@ -696,6 +699,7 @@ function competeBoot() {
 
 globalThis.competeCardClass = competeCardClass;
 globalThis.competeMarks = competeMarks;
+globalThis.competeReactHTML = competeReactHTML;
 globalThis.competePaint = competePaint;
 globalThis.competeWire = competeWire;
 globalThis.competeBoot = competeBoot;
