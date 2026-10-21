@@ -13,6 +13,27 @@ var COMPETE_METRICS = [
   { key: "flying10", label: "Flying 10", unit: "s", better: "lower" },
 ];
 
+/* A rivalry alert only fires inside these gaps. Velocities use 2 MPH or 3%. Sprints use 0.05 s. */
+var COMPETE_CLOSE = {
+  batSpeed: { abs: 2, pct: 0.03 },
+  exitVelo: { abs: 2, pct: 0.03 },
+  throwVelo: { abs: 2, pct: 0.03 },
+  tenYard: { abs: 0.05 },
+  flying10: { abs: 0.05 },
+  broadJump: { abs: 3, pct: 0.03 },
+  vertical: { abs: 1.5, pct: 0.03 },
+};
+
+var COMPETE_BOOK = [
+  { age: 12, key: "exitVelo", name: "Luis Ortega", value: 72 },
+  { age: 16, key: "exitVelo", name: "Luis Ortega", value: 91 },
+  { age: 18, key: "exitVelo", name: "Luis Ortega", value: 101 },
+  { age: 11, key: "tenYard", name: "Ava Brooks", value: 1.98 },
+  { age: 16, key: "tenYard", name: "Ava Brooks", value: 1.62 },
+  { age: 15, key: "throwVelo", name: "Chris Nguyen", value: 74 },
+  { age: 18, key: "throwVelo", name: "Chris Nguyen", value: 91 },
+];
+
 var COMPETE_ALUMNI = [
   { name: "Luis Ortega", pos: "OF", college: "State U", start: "72 MPH EV at 12", end: "101 MPH EV", ovr: 91 },
   { name: "Chris Nguyen", pos: "RHP", college: "City College", start: "74 MPH FB at 15", end: "91 MPH FB", ovr: 88 },
@@ -55,11 +76,39 @@ function competeFacility() {
       status: "pending",
       at: "2026-10-20",
     });
-    data.reactions["sample-jack-morales"] = [{ from: "sample-mason-carter", emoji: "🔥", at: "2026-10-20" }];
+    data.reactions["sample-jack-morales"] = [{ from: "sample-mason-carter", emoji: "🔥", at: "2026-10-20" }, { from: "sample-jake-ellis", emoji: "🚀", at: "2026-10-21" }];
     data.seeded = true;
     DataLayer.saveFacility(data);
   }
+  if (!data.h2hSeed) {
+    data.challenges.push({
+      id: "seed-jake-jack",
+      from: "sample-jake-ellis",
+      to: "sample-jack-morales",
+      metric: "exitVelo",
+      deadline: "2026-11-04",
+      status: "accepted",
+      at: "2026-10-18",
+    });
+    data.h2hSeed = true;
+    DataLayer.saveFacility(data);
+  }
+  if (!data.crownDays) data.crownDays = {};
   return data;
+}
+
+function competeGapOk(key, a, b) {
+  const rule = COMPETE_CLOSE[key];
+  if (!rule || a == null || b == null) return false;
+  const gap = Math.abs(a - b);
+  if (rule.abs != null && gap <= rule.abs) return true;
+  if (rule.pct != null && gap / Math.max(Math.abs(a), Math.abs(b), 0.001) <= rule.pct) return true;
+  return false;
+}
+
+function competeLead(spec, mine, theirs) {
+  if (spec.better === "lower") return mine < theirs;
+  return mine > theirs;
 }
 
 function competeNum(player, key) {
@@ -214,7 +263,10 @@ function competeAchievements(player) {
     { id: "king", name: "King of the Hill", icon: "👑", hidden: false, on: competeIsKing(player, "exitVelo") || competeIsKing(player, "tenYard") },
     { id: "five-pr", name: "Five-PR Season", icon: "🎯", hidden: true, on: prs >= 5 },
   ];
-  return defs.filter((d) => d.on || !d.hidden);
+  const hiddenLeft = defs.filter((d) => d.hidden && !d.on).length;
+  const shown = defs.filter((d) => d.on || !d.hidden);
+  shown.hiddenLeft = hiddenLeft;
+  return shown;
 }
 
 function competeCardOfDay() {
@@ -239,29 +291,96 @@ function competeCardOfDay() {
 
 function competeRival(player) {
   if (!player || !player.road || !player.road.rivalry) return null;
-  const mine = competeNum(player, "exitVelo");
-  if (mine == null) return null;
-  const peers = competeRoster().filter((p) => p.id !== player.id && competeGroup(p) === competeGroup(player) && competeNum(p, "exitVelo") != null);
-  if (!peers.length) return null;
-  peers.sort((a, b) => Math.abs(competeNum(a, "exitVelo") - mine) - Math.abs(competeNum(b, "exitVelo") - mine));
-  const other = peers[0];
-  const gap = Math.round((competeNum(other, "exitVelo") - mine) * 10) / 10;
-  return { other: other, gap: gap, metric: "Exit Velo" };
+  const peers = competeRoster().filter((p) => p.id !== player.id && competeGroup(p) === competeGroup(player));
+  let best = null;
+  COMPETE_METRICS.forEach((spec) => {
+    const mine = competeNum(player, spec.key);
+    if (mine == null) return;
+    peers.forEach((other) => {
+      const theirs = competeNum(other, spec.key);
+      if (!competeGapOk(spec.key, mine, theirs)) return;
+      const abs = Math.abs(theirs - mine);
+      const rel = abs / Math.max(Math.abs(mine), 0.001);
+      if (!best || rel < best.rel) {
+        best = {
+          other: other,
+          spec: spec,
+          mine: mine,
+          theirs: theirs,
+          abs: Math.round(abs * 100) / 100,
+          rel: rel,
+          iLead: competeLead(spec, mine, theirs),
+        };
+      }
+    });
+  });
+  return best;
 }
 
-function competeRecords(player) {
-  const ages = {};
-  competeRoster().forEach((p) => {
-    const age = Number(p.age) || 0;
-    const exit = competeNum(p, "exitVelo");
-    if (exit == null) return;
-    if (!ages[age]) ages[age] = [];
-    ages[age].push({ name: p.name, id: p.id, value: exit });
-  });
+function competeRivalLine(rival) {
+  if (!rival) return "No teammate is close enough for a rivalry alert.";
+  const unit = rival.spec.unit;
+  const label = rival.spec.label;
+  const name = rival.other.name;
+  const n = rival.abs;
+  if (rival.mine === rival.theirs) return "Tied with " + name + " in " + label + ".";
+  if (rival.iLead) return "WATCH YOUR BACK · you lead " + name + " by " + n + " " + unit + " in " + label + ".";
+  return "RIVAL ALERT · " + n + " " + unit + " behind " + name + " in " + label + ".";
+}
+
+function competeRecords(player, key) {
+  const spec = COMPETE_METRICS.find((m) => m.key === (key || "exitVelo")) || { key: "exitVelo", label: "Exit Velo", unit: "MPH", better: "higher" };
   const age = player ? Number(player.age) : 0;
-  const board = (ages[age] || []).slice().sort((a, b) => b.value - a.value);
-  const rank = board.findIndex((row) => player && row.id === player.id);
-  return { age: age, board: board.slice(0, 5), rank: rank >= 0 ? rank + 1 : null };
+  const rows = [];
+  COMPETE_BOOK.filter((row) => row.age === age && row.key === spec.key).forEach((row) => {
+    rows.push({ name: row.name, value: row.value, alumni: true });
+  });
+  competeRoster().forEach((p) => {
+    if (Number(p.age) !== age) return;
+    const value = competeNum(p, spec.key);
+    if (value == null) return;
+    rows.push({ name: p.name, id: p.id, value: value });
+  });
+  rows.sort((a, b) => spec.better === "lower" ? a.value - b.value : b.value - a.value);
+  const rank = rows.findIndex((row) => player && row.id === player.id);
+  return { age: age, spec: spec, board: rows.slice(0, 8), rank: rank >= 0 ? rank + 1 : null };
+}
+
+function competeCrowns(key, scope) {
+  const facility = competeFacility();
+  const slot = (scope || "all") + ":" + key;
+  if (!facility.crownDays[slot] && scope === "16U" && key === "exitVelo") {
+    facility.crownDays[slot] = {
+      holder: "sample-jake-ellis",
+      since: "2026-10-14",
+      totals: { "sample-jack-morales": 9, "sample-eli-ramirez": 4 },
+    };
+    DataLayer.saveFacility(facility);
+  }
+  if (!facility.crownDays[slot]) facility.crownDays[slot] = { holder: null, since: competeToday(), totals: {} };
+  const row = facility.crownDays[slot];
+  const king = competeKing(key, scope);
+  const today = competeToday();
+  if (king && row.holder && row.holder !== king.id) {
+    const held = Math.max(1, Math.round((new Date(today) - new Date(row.since)) / 86400000));
+    row.totals[row.holder] = (row.totals[row.holder] || 0) + held;
+    DataLayer.notify(king.id, "new-king", "NEW KING · " + key + ", " + scope + ".");
+    DataLayer.notify(row.holder, "crown-taken", "The crown moved.");
+    row.holder = king.id;
+    row.since = today;
+    DataLayer.saveFacility(facility);
+  } else if (king && !row.holder) {
+    row.holder = king.id;
+    row.since = today;
+  }
+  const soFar = row.since ? Math.max(0, Math.round((new Date(today) - new Date(row.since)) / 86400000)) : 0;
+  const board = Object.keys(row.totals || {}).map((id) => ({
+    id: id,
+    days: (row.totals[id] || 0) + (id === (king && king.id) ? soFar : 0),
+  }));
+  if (king && !board.some((item) => item.id === king.id)) board.push({ id: king.id, days: soFar });
+  board.sort((a, b) => b.days - a.days);
+  return { king: king, board: board, days: king ? soFar : 0 };
 }
 
 function competeTimeline(player) {
@@ -284,8 +403,21 @@ function competeMarks(player) {
   const bits = [];
   if (competeIsKing(player, "exitVelo") || competeIsKing(player, "tenYard") || competeIsKing(player, "broadJump")) bits.push("<span class=\"crown-mark\" title=\"King of the Hill\">👑</span>");
   const awards = competePlayerAwards(player).slice(0, 2);
-  if (awards.length) bits.push("<span class=\"award-pin\" title=\"" + competeEsc(awards.map((a) => a.name + " — " + a.tip).join(" · ")) + "\">" + awards.map((a) => a.icon).join(" ") + "</span>");
+  if (awards.length) {
+    const tip = awards.map((a) => a.name + " — " + a.tip).join(" · ");
+    bits.push("<span class=\"award-pin\" tabindex=\"0\">" + awards.map((a) => a.icon).join(" ") + "<span class=\"award-tip\" role=\"tooltip\">" + competeEsc(tip) + "</span></span>");
+  }
+  const reacts = ((competeFacility().reactions || {})[player.id] || []).map((r) => r.emoji);
+  if (reacts.length) bits.push("<span class=\"react-mark\">" + reacts.slice(-4).join(" ") + "</span>");
   return bits.join("");
+}
+
+function competeDaysLeft(deadline) {
+  const a = String(competeToday()).slice(0, 10).split("-").map(Number);
+  const b = String(deadline || competeToday()).slice(0, 10).split("-").map(Number);
+  const from = Date.UTC(a[0], a[1] - 1, a[2]);
+  const to = Date.UTC(b[0], b[1] - 1, b[2]);
+  return Math.round((to - from) / 86400000);
 }
 
 function competeClaim(player, key, amount, note) {
@@ -340,7 +472,7 @@ function competePaint() {
     return "<div class=\"trophy-card\"><h3>" + spec.label + "</h3>" + rows + "</div>";
   }).join("");
   const improved = competeRoster().slice().sort((a, b) => competeExitDelta(b, 30) - competeExitDelta(a, 30)).slice(0, 5);
-  const awards = competeAwards().map((row) => "<div class=\"award-row\" title=\"" + competeEsc(row.tip) + "\"><span>" + row.icon + " " + competeEsc(row.name) + "</span><b>" + competeEsc(row.player.name.split(" ")[0]) + "</b></div>").join("");
+  const awards = competeAwards().map((row) => "<div class=\"award-row\" tabindex=\"0\"><span>" + row.icon + " " + competeEsc(row.name) + "</span><b>" + competeEsc(row.player.name.split(" ")[0]) + "</b><span class=\"award-tip\" role=\"tooltip\">" + competeEsc(row.tip) + "</span></div>").join("");
   const facility = competeFacility();
   const incoming = facility.challenges.filter((ch) => ch.to === me.id && ch.status === "pending");
   const mine = facility.challenges.filter((ch) => (ch.from === me.id || ch.to === me.id) && ch.status === "accepted");
@@ -351,26 +483,40 @@ function competePaint() {
   const h2h = mine.map((ch) => {
     const a = competeRoster().find((p) => p.id === ch.from);
     const b = competeRoster().find((p) => p.id === ch.to);
-    return "<div class=\"h2h\"><div><b>" + (a ? competeNum(a, ch.metric) : "—") + "</b><div>" + competeEsc(a ? a.name : "") + "</div></div><div>vs<br>" + competeEsc(ch.metric) + "<br>" + competeEsc(ch.deadline) + "</div><div><b>" + (b ? competeNum(b, ch.metric) : "—") + "</b><div>" + competeEsc(b ? b.name : "") + "</div></div></div>";
+    const spec = COMPETE_METRICS.find((m) => m.key === ch.metric) || { label: ch.metric, unit: "" };
+    const left = competeDaysLeft(ch.deadline);
+    return "<div class=\"h2h\" id=\"h2hBoard\"><div><b>" + (a ? competeNum(a, ch.metric) : "—") + "</b><div>" + competeEsc(a ? a.name : "") + "</div></div><div class=\"h2h-mid\"><span>HEAD TO HEAD</span><strong>" + competeEsc(spec.label) + "</strong><small>" + left + " DAYS LEFT</small></div><div><b>" + (b ? competeNum(b, ch.metric) : "—") + "</b><div>" + competeEsc(b ? b.name : "") + "</div></div></div>";
   }).join("");
   const options = competeRoster().filter((p) => p.id !== me.id).map((p) => "<option value=\"" + competeEsc(p.id) + "\">" + competeEsc(p.name) + "</option>").join("");
   const metrics = COMPETE_METRICS.map((m) => "<option value=\"" + m.key + "\">" + m.label + "</option>").join("");
-  const card = cotd && typeof cardHTML === "function" ? "<div class=\"mini-card\">" + cardHTML(cotd.player, false) + "</div>" : "";
-  const king = competeKing("exitVelo", competeGroup(me));
-  mount.innerHTML = "<div class=\"compete-grid\">" +
-    "<div class=\"compete-board\"><p class=\"compete-kicker\">CARD OF THE DAY</p><div class=\"cotd\">" + card + "<div><h3>" + competeEsc(cotd ? cotd.player.name : "") + "</h3><p>" + competeEsc(cotd ? cotd.reason : "") + "</p></div></div>" +
+  const card = cotd && typeof cardHTML === "function" ? "<div class=\"mini-card\">" + cardHTML(cotd.player, true) + "</div>" : "";
+  const crowns = competeCrowns("exitVelo", competeGroup(me));
+  const king = crowns.king;
+  const crownRows = crowns.board.map((row) => {
+    const who = competeRoster().find((p) => p.id === row.id);
+    return "<div class=\"lb-row\"><span>" + competeEsc(who ? who.name : "Alumni") + "</span><b>" + row.days + " days</b></div>";
+  }).join("");
+  const rivalLine = me.road.rivalry ? competeRivalLine(rival) : "Rivalries are off. Turn them on if you want the chase.";
+  mount.innerHTML = "<div class=\"compete-stack\">" +
+    "<div class=\"compete-board cotd-board\"><p class=\"compete-kicker\">CARD OF THE DAY</p><div class=\"cotd\">" + card + "<div class=\"cotd-copy\"><h3>" + competeEsc(cotd ? cotd.player.name : "") + "</h3><p>" + competeEsc(cotd ? cotd.reason : "") + "</p></div></div></div>" +
+    "<div class=\"compete-grid\">" +
+    "<div class=\"compete-board\">" +
     "<h3>" + quest.name + "</h3><p>" + quest.detail + "</p><div class=\"road-track\"><span style=\"width:" + Math.min(100, Math.round((quest.progress / quest.target) * 100)) + "%\"></span></div><p>" + quest.progress + " / " + quest.target + "</p>" +
     "<h3>" + month.name + "</h3><p>" + month.detail + " · " + month.progress + " MPH</p>" +
     "<h3>" + event.name + "</h3><p>" + event.blurb + " · " + points + " event points. The event card does not come back.</p>" +
     "<h3>" + team.name + "</h3><p>" + team.detail + " · " + team.team + "</p><div class=\"road-track\"><span style=\"width:" + Math.min(100, Math.round((team.progress / team.target) * 100)) + "%\"></span></div><p>" + team.progress + " / " + team.target + "</p>" +
     "<p>Team chemistry " + chem.pct + "% · " + (chem.perfect ? "PERFECT TEAM WEEK" : chem.glow ? "Chemistry glow is on." : "70% of the team trains and the cards glow.") + "</p>" +
-    (rival ? "<p class=\"coach-line\">" + (rival.gap > 0 ? "RIVAL ALERT · " + rival.gap + " MPH behind " + rival.other.name + " in " + rival.metric + "." : "WATCH YOUR BACK · you lead " + rival.other.name + " by " + Math.abs(rival.gap) + " MPH in " + rival.metric + ".") + "</p>" : "<p>Rivalries are off. Turn them on if you want the chase.</p>") +
+    "<p class=\"coach-line\">" + competeEsc(rivalLine) + "</p>" +
     "<label><input id=\"rivalToggle\" type=\"checkbox\"" + (me.road.rivalry ? " checked" : "") + (roadCanEdit(me) ? "" : " disabled") + "> Opt in to rivalries</label></div>" +
     "<div class=\"compete-board\"><p class=\"compete-kicker\">LEADERBOARD</p><div class=\"trophy-grid\">" + boards + "</div>" +
     "<h3>Most improved this month</h3>" + improved.map((p, i) => "<div class=\"lb-row\"><span>" + (i + 1) + ". " + competeEsc(p.name) + "</span><b>" + (competeExitDelta(p, 30) > 0 ? "+" : "") + (Math.round(competeExitDelta(p, 30) * 10) / 10) + " MPH</b></div>").join("") +
     "<h3>Awards</h3>" + awards +
-    "<p class=\"compete-kicker\">KING OF THE HILL · " + competeEsc(competeGroup(me)) + " EXIT</p><p>" + (king ? "👑 " + competeEsc(king.name) : "—") + "</p>" +
-    "<h3>Challenges</h3>" + (incomingHTML || "") + h2h +
+    "<p class=\"compete-kicker\">KING OF THE HILL · " + competeEsc(competeGroup(me)) + " EXIT</p><p class=\"king-line\">" + (king ? "👑 " + competeEsc(king.name) + " · " + crowns.days + " days on the throne" : "—") + "</p>" +
+    "<h3>Days holding the crown</h3>" + crownRows +
+    "</div></div>" +
+    "<div class=\"compete-board\" id=\"challengeBoard\"><p class=\"compete-kicker\">CHALLENGE A TEAMMATE</p>" +
+    (incomingHTML || "<p>No pending challenges.</p>") +
+    (h2h || "") +
     "<div class=\"road-actions\"><select id=\"chWho\">" + options + "</select><select id=\"chMetric\">" + metrics + "</select><input id=\"chDeadline\" type=\"date\" value=\"" + competeToday() + "\"><button class=\"btn btn-red\" type=\"button\" id=\"chSend\">Challenge</button></div></div></div>";
   const toggle = document.getElementById("rivalToggle");
   if (toggle) toggle.addEventListener("change", () => {
@@ -420,19 +566,27 @@ function competeAnswer(id, status) {
 }
 
 function competeProfileHTML(player) {
-  const awards = competePlayerAwards(player).map((a) => "<div class=\"trophy-card\" title=\"" + competeEsc(a.tip) + "\"><b>" + a.icon + " " + competeEsc(a.name) + "</b><p>" + competeEsc(a.tip) + "</p></div>").join("") || "<p>No hardware yet. The month is still open.</p>";
-  const ach = competeAchievements(player).map((a) => "<div class=\"trophy-card" + (a.on ? "" : " hidden-ach") + "\"><b>" + (a.on ? a.icon + " " + competeEsc(a.name) : "Hidden") + "</b></div>").join("");
+  const awards = competePlayerAwards(player).map((a) => "<div class=\"trophy-card\" tabindex=\"0\"><b>" + a.icon + " " + competeEsc(a.name) + "</b><p>" + competeEsc(a.tip) + "</p><span class=\"award-tip\" role=\"tooltip\">" + competeEsc(a.tip) + "</span></div>").join("") || "<p>No hardware yet. The month is still open.</p>";
+  const defs = competeAchievements(player);
+  const ach = defs.map((a) => "<div class=\"trophy-card" + (a.on ? "" : " locked-ach") + "\"><b>" + (a.on ? a.icon + " " + competeEsc(a.name) : "Locked") + "</b></div>").join("");
+  const hiddenNote = defs.hiddenLeft ? "<p>" + defs.hiddenLeft + " hidden badges stay invisible until they are earned.</p>" : "";
   const reactions = (competeFacility().reactions[player.id] || []).map((r) => r.emoji).join(" ") || "No reactions yet.";
-  const reactBtns = COMPETE_REACTIONS.map((emoji) => "<button class=\"react-btn\" type=\"button\" data-react=\"" + emoji + "\">" + emoji + "</button>").join(" ");
-  const timeline = competeTimeline(player).map((row) => "<div class=\"lb-row\"><span>" + competeEsc(row.at) + "</span><b>" + competeEsc(row.text) + "</b></div>").join("");
-  const records = competeRecords(player);
-  const board = records.board.map((row, i) => "<div class=\"lb-row\"><span>" + (i + 1) + ". " + competeEsc(row.name) + "</span><b>" + row.value + " MPH</b></div>").join("");
+  const viewer = typeof roadSignedIn === "function" ? roadSignedIn() : null;
+  const reactBtns = viewer && viewer.id !== player.id ? COMPETE_REACTIONS.map((emoji) => "<button class=\"react-btn\" type=\"button\" data-react=\"" + emoji + "\">" + emoji + "</button>").join(" ") : "<p>Reactions are for teammates. Switch signed-in player to leave one.</p>";
+  const timeline = competeTimeline(player).map((row) => "<li><b>" + competeEsc(row.at) + "</b><span>" + competeEsc(row.text) + "</span></li>").join("");
+  const records = competeRecords(player, "exitVelo");
+  const board = records.board.map((row, i) => "<div class=\"lb-row\"><span>" + (i + 1) + ". " + competeEsc(row.name) + (row.alumni ? " · alumni" : "") + "</span><b>" + row.value + " " + records.spec.unit + "</b></div>").join("");
+  const ages = ((player.road && player.road.ageCards) || []).map((card) => "<article class=\"age-card\"><b>" + card.overall + "</b><span>AGE " + card.age + "</span><small>" + competeEsc(card.season || "") + "</small></article>").join("");
+  const ageNote = ages ? "<p class=\"coach-line\">A lower overall on an older age card means the standard for that age was different. It does not mean the player got worse.</p>" : "";
   const alumni = COMPETE_ALUMNI.map((a) => "<div class=\"trophy-card\"><b>" + competeEsc(a.name) + " · " + competeEsc(a.pos) + "</b><p>" + competeEsc(a.start) + " → " + competeEsc(a.end) + "</p><p>" + competeEsc(a.college) + " · final card " + a.ovr + "</p></div>").join("");
-  const trophies = ((player.road && player.road.trophies) || []).map((t) => "<div class=\"lb-row\"><span>" + competeEsc(t.at) + "</span><b>" + competeEsc(t.note) + "</b></div>").join("") || "<p>Win a challenge, a quest, or an event and it lands here. Evolutions stay on the Road tab.</p>";
-  const you = records.rank ? "<p>YOU ARE #" + records.rank + " ALL-TIME at age " + records.age + " in exit velo, inside this facility.</p>" : "";
-  return "<div class=\"panel compete-board\" id=\"trophyCase\"><h3>My trophy case</h3><div class=\"trophy-grid\">" + awards + "</div><h3>Achievements</h3><div class=\"trophy-grid\">" + ach + "</div><h3>Quests, events, challenges</h3>" + trophies +
-    "<h3>Reactions</h3><p>" + reactions + "</p><div class=\"road-actions\">" + reactBtns + "</div>" +
-    "<h3>Career timeline</h3>" + timeline +
+  const evos = ((player.road && player.road.evolutions) || []).map((m) => "<button type=\"button\" class=\"btn btn-ghost\" data-replay-evo=\"" + competeEsc(m.id) + "\">Replay " + competeEsc(m.toTier) + "</button>").join(" ") || "<p>No evolution yet. Cross a tier and the replay lands here.</p>";
+  const trophies = ((player.road && player.road.trophies) || []).map((t) => "<div class=\"lb-row\"><span>" + competeEsc(t.at) + "</span><b>" + competeEsc(t.note) + "</b></div>").join("") || "<p>Win a challenge, a quest, or an event and it lands here.</p>";
+  const you = records.rank ? "<p class=\"rank-line\">YOU ARE #" + records.rank + " ALL-TIME</p><p>Age " + records.age + " · " + competeEsc(records.spec.label) + ", inside this facility.</p>" : "";
+  return "<div class=\"panel compete-board\" id=\"trophyCase\"><h3>My trophy case</h3><div class=\"trophy-grid\">" + awards + "</div><h3>Achievements</h3><div class=\"trophy-grid\">" + ach + "</div>" + hiddenNote +
+    "<h3>Evolutions</h3><div class=\"road-actions\">" + evos + "</div><h3>Quests, events, challenges</h3>" + trophies +
+    "<h3>Reactions</h3><p class=\"react-row\">" + reactions + "</p><div class=\"road-actions\">" + reactBtns + "</div>" +
+    "<h3>Career card collection</h3><div class=\"age-row\">" + (ages || "<p>No age cards yet.</p>") + "</div>" + ageNote +
+    "<h3>Career timeline</h3><ol class=\"story\">" + timeline + "</ol>" +
     "<h3>Antonelli records · age " + records.age + "</h3>" + you + board +
     "<h3>Antonelli legends</h3><div class=\"trophy-grid\">" + alumni + "</div></div>";
 }
@@ -444,6 +598,10 @@ function competeWire(player) {
   const box = mount.querySelector("#trophyCase");
   if (!box || box.dataset.wired) return;
   box.dataset.wired = "1";
+  box.querySelectorAll("[data-replay-evo]").forEach((btn) => btn.addEventListener("click", () => {
+    const moment = (player.road.evolutions || []).find((m) => m.id === btn.dataset.replayEvo);
+    if (moment && typeof roadPlayEvolution === "function") roadPlayEvolution(player, moment);
+  }));
   box.querySelectorAll("[data-react]").forEach((btn) => btn.addEventListener("click", () => {
     const me = typeof roadSignedIn === "function" ? roadSignedIn() : null;
     if (!me || me.id === player.id) return;
@@ -468,8 +626,8 @@ function competeBoot() {
   const me = typeof roadSignedIn === "function" ? roadSignedIn() : null;
   if (!me) return;
   const rival = competeRival(me);
-  if (rival && rival.gap > 0) DataLayer.notify(me.id, "rival", "RIVAL ALERT · " + rival.gap + " MPH behind " + rival.other.name + " in exit velo.");
-  if (rival && rival.gap < 0) DataLayer.notify(rival.other.id, "rival-back", "WATCH YOUR BACK · " + me.name.split(" ")[0] + " is " + Math.abs(rival.gap) + " MPH behind you in exit velo.");
+  if (rival && !rival.iLead) DataLayer.notify(me.id, "rival", "RIVAL ALERT · " + rival.abs + " " + rival.spec.unit + " behind " + rival.other.name + " in " + rival.spec.label + ".");
+  if (rival && rival.iLead && rival.other.road && rival.other.road.rivalry) DataLayer.notify(rival.other.id, "rival-back", "WATCH YOUR BACK · " + me.name.split(" ")[0] + " is " + rival.abs + " " + rival.spec.unit + " behind you in " + rival.spec.label + ".");
   const team = competeTeamChallenge(competeTeam(me));
   const left = Math.round((team.target - team.progress) * 10) / 10;
   if (left > 0 && left <= 8) DataLayer.notify(me.id, "team-close", "The team is " + left + " MPH from the power challenge.");

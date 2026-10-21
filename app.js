@@ -576,9 +576,33 @@ const SAMPLE_PLAYERS = [
       scoutingReport: "Bat speed is the tool. The next gain is staying on plane when he sells out for power.",
       links: { perfectGame: "https://www.perfectgame.org/", pbr: "https://www.prepbaseballreport.com/" },
       videos: [{ label: "Cage session", url: "https://www.youtube.com/results?search_query=baseball+hitting+drills" }],
-      timeline: [{ at: "2024-09-01", text: "Joined Antonelli Baseball." }, { at: "2026-10-20", text: "Exit velocity reached 86 mph." }],
+      timeline: [{ at: "2024-09-01", text: "Joined Antonelli Baseball." }, { at: "2025-06-12", text: "First 70 MPH exit velo." }, { at: "2026-10-20", text: "Exit velocity reached 86 mph." }],
+      ageCards: [
+        { age: 14, overall: 71, season: "2024", note: "Age 14 standard" },
+        { age: 15, overall: 74, season: "2025", note: "Age 15 standard" },
+        { age: 16, overall: 78, season: "2026", note: "Current standard" },
+      ],
       evolutions: [],
       trainingLog: [],
+    },
+  },
+  {
+    id: "sample-jake-ellis", name: "Jake Ellis", age: 16, ageGroup: "16U", classYear: "2028",
+    team: "Antonelli 16U", position: "CF", secondaryPosition: "OF", height: "6'0\"", weight: "178 lbs", hometown: "Cambridge, MA", bats: "L", throws: "L", type: "hitter", archetype: "Gap-to-Gap Hitter", photo: "",
+    strengths: ["Barrel is loud when he stays on time", "Closes on the ball in the gaps"],
+    improvements: ["Keep the front side closed on the inner half"],
+    coachQuirks: ["dead-red"],
+    strengthNote: DEFAULT_STRENGTH_NOTE,
+    metrics: {
+      batSpeed: 70, peakHandSpeed: 21.5, attackAngle: 9, verticalBatAngle: -25, timeToContact: 0.16, powerKw: 3.3, rotationalAcceleration: 13.2, onPlaneEfficiency: 75, earlyConnection: 88, connectionAtImpact: 87,
+      tenYard: 1.9, throwVelo: 84, medBall: 20, gripDominant: 100, exitVelo: 87.4, battedDistance: 318, broadJump: 100, vertical: 32, flying10: 1.4,
+    },
+    history: { exitVelo: metricHistory(87.4, [80, 83, 85]), batSpeed: metricHistory(70, [64, 66, 68]) },
+    readingLog: { exitVelo: [{ value: 80, at: "2026-06-02" }, { value: 85, at: "2026-09-20" }, { value: 87.4, at: "2026-10-19" }] },
+    road: {
+      xp: 6400, prs: 2, rivalry: true, signature: "Come get it.",
+      dates: { training: ["2026-10-18", "2026-10-19", "2026-10-20"], checkin: ["2026-10-18", "2026-10-19", "2026-10-20"] },
+      streaks: { training: 3, checkin: 3 },
     },
   },
   {
@@ -628,6 +652,37 @@ const SAMPLE_PLAYERS = [
       pitchCapacity: metricHistory(80, [70, 74, 77]),
     },
     road: { xp: 8200, prs: 2, signature: "Fill it up.", dates: { training: ["2026-10-18", "2026-10-19", "2026-10-20"], checkin: ["2026-10-18", "2026-10-19", "2026-10-20"] } },
+  },
+  {
+    id: "sample-cole-brennan", name: "Cole Brennan", age: 17, ageGroup: "18U", classYear: "2027",
+    team: "Antonelli 17U", position: "RHP", secondaryPosition: "", height: "6'3\"", weight: "195 lbs", hometown: "Quincy, MA", bats: "R", throws: "R", type: "pitcher", archetype: "Ace", photo: "",
+    strengths: ["Fastball lives at the top of the zone", "Repeats the delivery"],
+    improvements: ["Hold the velo into the fifth"],
+    coachQuirks: ["outlier-1"],
+    metrics: { fastballVelo: 93, spinRate: 2500, strikePct: 73, whiffPct: 42, pitchCapacity: 103 },
+    history: { fastballVelo: metricHistory(93, [88, 90, 92]) },
+    readingLog: {
+      fastballVelo: [{ value: 86, at: "2025-10-02" }, { value: 88, at: "2026-04-11" }, { value: 90, at: "2026-07-18" }, { value: 92, at: "2026-09-20" }, { value: 93, at: "2026-10-18" }],
+    },
+    road: { xp: 0, prs: 0, signature: "Fill the zone.", dates: { training: [], checkin: [] } },
+  },
+  {
+    id: "sample-roman-hale", name: "Roman Hale", age: 18, ageGroup: "18U", classYear: "2026",
+    team: "Antonelli 18U", position: "RHP", secondaryPosition: "", height: "6'4\"", weight: "205 lbs", hometown: "Worcester, MA", bats: "R", throws: "R", type: "pitcher", archetype: "Ace", photo: "",
+    strengths: ["Velocity and a swing-and-miss breaker", "Competes deep into an outing"],
+    improvements: ["Steal a strike with the changeup"],
+    coachQuirks: ["pressure-cooker"],
+    metrics: { fastballVelo: 94.5, spinRate: 2550, strikePct: 74, whiffPct: 44, pitchCapacity: 106 },
+    history: { fastballVelo: metricHistory(94.5, [89, 91, 93]) },
+    readingLog: {
+      fastballVelo: [{ value: 88, at: "2025-09-12" }, { value: 89, at: "2026-04-04" }, { value: 91, at: "2026-07-09" }, { value: 93, at: "2026-09-14" }, { value: 94.5, at: "2026-10-16" }],
+    },
+    road: {
+      xp: 4200, prs: 3, signature: "Light it up.",
+      dates: { training: ["2026-10-18", "2026-10-19", "2026-10-20"], checkin: ["2026-10-18", "2026-10-19", "2026-10-20"] },
+      evolutions: [{ id: "roman-legend", at: "2026-10-16T18:00:00.000Z", fromTier: "diamond", toTier: "legend", overall: 95, score: 96.4 }],
+      timeline: [{ at: "2023-09-01", text: "Joined Antonelli Baseball." }, { at: "2026-10-16", text: "Card evolved to Legend." }],
+    },
   },
 ];
 
@@ -3030,6 +3085,7 @@ function cardHTML(player, large, face, opts) {
     <div class="card-visual">${visual}</div>
     <div class="card-foil" aria-hidden="true"></div>
     <div class="card-glare" aria-hidden="true"></div>
+    ${tier.key === "legend" ? `<div class="legend-fx" aria-hidden="true"><i></i><i></i><i></i></div>` : ""}
     ${sparkleHTML(tier.key, phase, quiet)}
     <div class="card-brand"><b>ANTONELLI</b><span>${tier.label}</span></div>
     ${lvlChip}

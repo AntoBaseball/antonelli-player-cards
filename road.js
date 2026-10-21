@@ -327,13 +327,20 @@ function roadChartSVG(series) {
   const hi = Math.max.apply(null, vals);
   const span = hi - lo || 1;
   const w = 320;
-  const h = 110;
-  const pts = series.map((row, i) => {
-    const x = series.length === 1 ? w / 2 : (i / (series.length - 1)) * (w - 16) + 8;
-    const y = h - 12 - ((Number(row.value) - lo) / span) * (h - 24);
-    return x.toFixed(1) + "," + y.toFixed(1);
-  }).join(" ");
-  return "<svg class=\"chart-svg\" viewBox=\"0 0 " + w + " " + h + "\" role=\"img\"><polyline fill=\"none\" stroke=\"#f2d060\" stroke-width=\"3\" points=\"" + pts + "\"/></svg>";
+  const h = 120;
+  const xy = series.map((row, i) => {
+    const x = series.length === 1 ? w / 2 : (i / (series.length - 1)) * (w - 28) + 14;
+    const y = h - 18 - ((Number(row.value) - lo) / span) * (h - 36);
+    return { x: x, y: y };
+  });
+  const pts = xy.map((p) => p.x.toFixed(1) + "," + p.y.toFixed(1)).join(" ");
+  const start = xy[0];
+  const end = xy[xy.length - 1];
+  return "<svg class=\"chart-svg\" viewBox=\"0 0 " + w + " " + h + "\" role=\"img\" aria-label=\"Progress line\">" +
+    "<polyline fill=\"none\" stroke=\"#f2d060\" stroke-width=\"3\" points=\"" + pts + "\"/>" +
+    "<circle cx=\"" + start.x.toFixed(1) + "\" cy=\"" + start.y.toFixed(1) + "\" r=\"4\" fill=\"#fff\"/>" +
+    "<circle cx=\"" + end.x.toFixed(1) + "\" cy=\"" + end.y.toFixed(1) + "\" r=\"5\" fill=\"#f2d060\"/>" +
+    "</svg>";
 }
 
 function roadBenchmarkLine(player) {
@@ -391,14 +398,24 @@ function roadNextUpgrade(player) {
   });
   if (!best) return { text: "Every tracked grade is already at the next step. Keep the streak while the next test window opens.", plan: "Stay on the daily mission list." };
   const shown = best.probe.unit === "s" ? best.abs.toFixed(2) : (Math.round(best.abs * 10) / 10).toFixed(1);
-  const dirWord = best.delta < 0 ? "faster" : "more";
-  const text = "+" + shown + " " + best.probe.unit + " " + best.probe.label + " (" + dirWord + ") will raise " + best.raised.key + " " + best.raised.from + " → " + best.raised.to + ".";
+  const signed = (best.delta < 0 ? "−" : "+") + shown;
+  const gain = signed + " " + best.probe.unit;
+  const text = "NEXT UPGRADE · " + gain + " " + best.probe.label + " → " + best.raised.key + " " + best.raised.from + " → " + best.raised.to;
   const plan = best.probe.key === "batSpeed" || best.probe.key === "exitVelo"
     ? "Tee work and med-ball throws this week."
     : best.probe.key === "tenYard"
       ? "Sprint workout plus the first-step starts."
       : "One focused block on " + best.probe.label + " before the next test.";
-  return { text, plan, overall: base.overall };
+  return { text, plan, gain, probe: best.probe, raised: best.raised, overall: base.overall };
+}
+
+function roadNextMarkup(next) {
+  if (!next) return "";
+  if (!next.gain) return "<p class=\"coach-line\">" + roadEsc(next.text) + "</p>";
+  return "<p class=\"next-kicker\">NEXT UPGRADE</p>" +
+    "<p class=\"next-num\">" + roadEsc(next.gain) + " <span>" + roadEsc(next.probe.label) + "</span></p>" +
+    "<p class=\"next-move\">" + roadEsc(next.raised.key) + " <b>" + next.raised.from + "</b> <i>→</i> <b>" + next.raised.to + "</b></p>" +
+    "<p class=\"coach-line\">" + roadEsc(next.plan || "") + "</p>";
 }
 
 var RoadCoach = {
@@ -646,10 +663,16 @@ function roadChangeList(player) {
   const rows = bits.map(([label, row]) => {
     if (!row) return "<div class=\"chart-row\"><span>" + label + "</span><b>--</b></div>";
     const sign = row.delta > 0 ? "+" : "";
-    return "<div class=\"chart-row\"><span>" + label + "</span><b>" + sign + (Math.round(row.delta * 10) / 10) + " " + unit + "</b></div>";
+    return "<div class=\"chart-row\"><span>" + label + "</span><b>" + sign + (Math.round(row.delta * 10) / 10) + "</b><small>" + unit + "</small></div>";
   }).join("");
-  const banner = year ? "<p class=\"next-num\">" + (year.delta > 0 ? "+" : "") + (Math.round(year.delta * 10) / 10) + " " + unit + " THIS YEAR</p>" : "";
-  return banner + roadChartSVG(series) + rows;
+  const banner = year ? "<p class=\"year-banner\">" + (year.delta > 0 ? "+" : "") + (Math.round(year.delta * 10) / 10) + " " + unit + " THIS YEAR</p>" : "";
+  let compare = "<p class=\"muted\">Log two tests and the line appears.</p>";
+  if (series.length) {
+    const a = series[0];
+    const b = series[series.length - 1];
+    compare = "<div class=\"chart-compare\"><div><span>WHERE I STARTED</span><b>" + a.value + "</b><small>" + roadEsc(String(a.at).slice(0, 10)) + "</small></div><div><span>WHERE I AM</span><b>" + b.value + "</b><small>" + roadEsc(String(b.at).slice(0, 10)) + "</small></div></div>";
+  }
+  return "<div class=\"chart-block\">" + compare + banner + roadChartSVG(series) + "<div class=\"chart-windows\">" + rows + "</div></div>";
 }
 
 function roadProfileHTML(player) {
@@ -677,7 +700,7 @@ function roadProfileHTML(player) {
     "<p class=\"next-num\">" + g.overall + " OVR</p><p>Road to 99: " + (99 - g.overall) + " overall points left. Overall never moves from XP.</p>" +
     edit +
     "<h3>Development coach</h3>" + coach +
-    "<h3>Next upgrade</h3><p class=\"next-num\">" + roadEsc(next && next.text || "") + "</p><p>" + roadEsc(next && next.plan || "") + "</p>" +
+    roadNextMarkup(next) +
     "<h3>Where I started</h3>" + roadChangeList(player) +
     "<h3>Age-group percentiles</h3>" + pct("Exit velo", "exitVelo") + pct("Bat speed", "batSpeed") + pct("10-yard", "tenYard") + pct("Throw", "throwVelo") +
     "<h3>Videos</h3><ul>" + videos + "</ul>" +
@@ -760,9 +783,11 @@ function roadHomeHTML(player) {
     "<div class=\"road-card\"><h3>Today's mission " + done + "/4</h3><ul class=\"mission-list\">" + list + "</ul>" +
     "<div class=\"road-actions\"><button class=\"btn btn-red\" type=\"button\" id=\"roadTrain\"" + (can ? "" : " disabled") + ">Log training session</button></div>" + coachTools + "</div>" +
     "<div class=\"road-card\"><h3>Development coach</h3><p class=\"coach-line\">" + roadEsc(coach) + "</p>" +
-    "<h3>Next upgrade</h3><p class=\"next-num\">" + roadEsc(next && next.text || "") + "</p><p>" + roadEsc(next && next.plan || "") + "</p>" +
+    roadNextMarkup(next) +
     "<p class=\"tier-need\">" + roadEsc(roadTierNeed(g.overall, player)) + "</p>" +
-    "<p>" + roadEsc(roadBenchmarkLine(player)) + "</p></div></div></div>";
+    "<p>" + roadEsc(roadBenchmarkLine(player)) + "</p></div></div>" +
+    "<div class=\"road-card road-chart-card\"><h3>Where I started</h3>" + roadChangeList(player) +
+    "<button class=\"btn btn-ghost\" type=\"button\" id=\"roadTilt\">Enable card tilt</button></div></div>";
 }
 
 let roadPaintLock = false;
@@ -796,6 +821,12 @@ function roadPaint() {
   });
   const train = document.getElementById("roadTrain");
   if (train) train.addEventListener("click", () => roadTrain(player));
+  const tilt = document.getElementById("roadTilt");
+  if (tilt) {
+    const needsPrompt = typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function";
+    tilt.hidden = !needsPrompt;
+    tilt.addEventListener("click", () => { if (typeof askGyro === "function") askGyro(); });
+  }
   const assign = document.getElementById("roadAssign");
   if (assign) assign.addEventListener("click", () => {
     const sel = document.getElementById("roadCoachPlan");
