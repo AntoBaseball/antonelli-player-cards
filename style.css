@@ -1,0 +1,27 @@
+/* Phase 3 — cosmetics. Color and motion only. Grades do not change. */
+.bb-card.skin-spring{box-shadow:inset 0 0 0 3px #86efac, 0 0 18px rgba(134,239,172,.35)}
+.bb-card.skin-opening{box-shadow:inset 0 0 0 3px #f8fafc, 0 0 16px rgba(248,250,252,.4)}
+.bb-card.skin-allstar{box-shadow:inset 0 0 0 3px #38bdf8, 0 0 18px rgba(56,189,248,.45)}
+.bb-card.skin-playoff{box-shadow:inset 0 0 0 3px #fb7185, 0 0 18px rgba(251,113,133,.4)}
+.bb-card.skin-halloween{box-shadow:inset 0 0 0 3px #f97316, 0 0 18px rgba(249,115,22,.45)}
+.bb-card.skin-winter{box-shadow:inset 0 0 0 3px #e2e8f0, 0 0 16px rgba(226,232,240,.35)}
+.bb-card.skin-boston{box-shadow:inset 0 0 0 3px #b91c1c, 0 0 16px rgba(185,28,28,.4)}
+.bb-card.skin-newengland{box-shadow:inset 0 0 0 3px #1d4ed8, 0 0 16px rgba(29,78,216,.4)}
+.bb-card.skin-summer{box-shadow:inset 0 0 0 3px #facc15, 0 0 16px rgba(250,204,21,.35)}
+.bb-card.skin-christmas{box-shadow:inset 0 0 0 3px #ef4444, 0 0 16px rgba(239,68,68,.4)}
+.bb-card.skin-thanksgiving{box-shadow:inset 0 0 0 3px #d97706}
+.bb-card.skin-worldseries{box-shadow:inset 0 0 0 3px #f2d060, 0 0 22px rgba(242,208,96,.55)}
+.card-auto{position:absolute;left:8%;bottom:22%;width:46%;height:auto;z-index:7;pointer-events:none;mix-blend-mode:screen;opacity:.9}
+.style-qr{width:84px;height:84px;background:#fff;border-radius:6px}
+.pack-show{position:fixed;inset:0;z-index:145;display:grid;place-items:center;background:rgba(0,0,0,.82);color:#fff}
+.pack-show[hidden]{display:none}
+.pack-card{width:min(280px,80vw);aspect-ratio:5/7;border-radius:18px;background:linear-gradient(160deg,#041428,#7dd3fc);display:grid;place-items:center;font-family:Impact,"Arial Black",system-ui,sans-serif;font-style:italic;font-size:42px;cursor:pointer}
+.pack-show.is-shake .pack-card{animation:pack-shake .45s linear}
+@keyframes pack-shake{25%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}75%{transform:rotate(-2deg)}}
+.cele-overlay{position:fixed;inset:0;z-index:125;pointer-events:none;display:grid;place-items:center;font-size:72px}
+.game-q{font-size:22px;font-weight:800;margin:8px 0}
+.game-pitch{height:80px;border-radius:12px;margin:8px 0;background:#111;position:relative;overflow:hidden}
+.game-pitch i{position:absolute;width:18px;height:18px;border-radius:50%;left:8px;top:30px}
+@media (prefers-reduced-motion:reduce){
+  .pack-show.is-shake .pack-card{animation:none}
+}

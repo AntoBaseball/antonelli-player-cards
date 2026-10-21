@@ -2993,6 +2993,7 @@ function cardBackHTML(player, face, subs, opts) {
     <div class="back-raws">${hitting}${pitching}</div>
     ${bests}
     ${typeof roadBackExtra === "function" ? roadBackExtra(player) : ""}
+    ${typeof styleBackExtra === "function" ? styleBackExtra(player) : ""}
     </div>
     ${profileBtn}
   </div>`;
@@ -3025,7 +3026,7 @@ function cardHTML(player, large, face, opts) {
   const phrase = liveRoad && player.road.signature ? `<span class="card-phrase">${celeb}${esc(player.road.signature)}</span>` : "";
   const meta = `<span class="card-meta-mini">${esc(player.age)} · ${esc(player.classYear || "—")} · ${esc(teamBit)}${streakN ? " · " + streakN + "🔥" : ""}</span>`;
   const front = `
-  <div class="bb-card is-front tier-${tier.key} ${large ? "large" : ""} ${quiet ? "foil-dim" : ""} ${hot ? "is-hot" : ""} ${player.photo ? "" : "logo-placeholder"} ${!face && typeof competeCardClass === "function" ? competeCardClass(player) : ""}" style="--foil-delay:${phase.toFixed(2)}s">
+  <div class="bb-card is-front tier-${tier.key} ${large ? "large" : ""} ${quiet ? "foil-dim" : ""} ${hot ? "is-hot" : ""} ${player.photo ? "" : "logo-placeholder"} ${!face && typeof competeCardClass === "function" ? competeCardClass(player) : ""} ${!face && typeof styleCardClass === "function" ? styleCardClass(player) : ""}" style="--foil-delay:${phase.toFixed(2)}s">
     <div class="card-visual">${visual}</div>
     <div class="card-foil" aria-hidden="true"></div>
     <div class="card-glare" aria-hidden="true"></div>
@@ -3042,6 +3043,7 @@ function cardHTML(player, large, face, opts) {
         <span class="pos-bar">${esc(positionLine(player))} - ${esc(player.bats)}/${esc(player.throws)}</span>
         ${meta}
         ${phrase}
+        ${!face && player.road && player.road.autograph && String(player.road.autograph).indexOf("data:image") === 0 ? `<img class="card-auto" alt="Signature" src="${player.road.autograph}">` : ""}
       </div>
       <div class="subgrades${shownSubs.length > 5 ? " is-legacy" : ""}">${shownSubs.map((x) => `<div class="subgrade"><b>${x.grade ?? "—"}</b><span>${x.key}</span></div>`).join("")}</div>
     </div>
