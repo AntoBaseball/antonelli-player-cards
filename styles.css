@@ -101,23 +101,26 @@ input:focus,select:focus,textarea:focus{outline:2px solid rgba(201,162,39,.45);b
 .bb-card.tier-diamond .card-name h2,.bb-card.tier-diamond .card-name h3{color:#fff;text-shadow:0 0 1px #000,0 1px 0 #d4af37,0 -1px 0 #d4af37,1px 0 0 #d4af37,-1px 0 0 #d4af37,0 2px 8px rgba(0,0,0,.55)}
 .card-visual{position:absolute;inset:0;z-index:2;display:flex;align-items:flex-start;justify-content:center}
 .card-photo{width:100%;height:100%;object-fit:cover;object-position:center 22%;display:block}
-.card-logo{width:40%;height:auto;margin-top:30%;margin-right:8%;object-fit:contain;display:block;filter:drop-shadow(0 2px 5px rgba(0,0,0,.55));pointer-events:none}
+.card-logo{width:57.9%;height:auto;aspect-ratio:512/500;margin-top:39%;margin-right:0;object-fit:contain;display:block;filter:drop-shadow(0 2px 5px rgba(0,0,0,.55));pointer-events:none}
 .card-brand{position:absolute;top:14px;left:14px;z-index:7;line-height:1}
 .card-brand b{display:block;font-size:11px;letter-spacing:1.6px;text-shadow:0 1px 6px rgba(0,0,0,.45)}
 .card-brand span{display:inline-block;margin-top:6px;background:rgba(6,18,42,.55);border:1px solid rgba(255,255,255,.45);padding:4px 7px;border-radius:999px;font-size:10px;font-weight:900;letter-spacing:1.2px}
 /* Diamond-shaped overall badge, top-right */
 .overall-diamond{position:absolute;top:12px;right:12px;z-index:8;width:73px;height:73px;display:grid;place-items:center;text-align:center;
   clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);
-  background:linear-gradient(145deg,#38e1ff,#0077ff);color:#fff;
-  filter:drop-shadow(0 6px 10px rgba(0,0,0,.35));}
-.overall-diamond::before{content:"";position:absolute;inset:7px;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);background:rgba(255,255,255,.18)}
-.overall-diamond b{position:relative;display:block;font-size:25px;line-height:.9;text-shadow:0 2px 5px rgba(0,0,0,.4)}
-.overall-diamond span{position:relative;display:block;font-size:8px;font-weight:900;letter-spacing:1.4px;margin-top:3px}
-.tier-bronze .overall-diamond{background:linear-gradient(145deg,#d99a4e,#7c4a16)}
-.tier-silver .overall-diamond{background:linear-gradient(145deg,#111,#4b5563);color:var(--gold-bright);box-shadow:inset 0 0 0 2px rgba(212,175,55,.6)}
-.tier-gold .overall-diamond{background:linear-gradient(145deg,#111,#2b2108);color:var(--gold-bright);box-shadow:inset 0 0 0 2px rgba(242,208,96,.75)}
-.tier-diamond .overall-diamond{background:linear-gradient(145deg,#a5f3fc,#06b6d4 55%,#2563eb);color:#fff;box-shadow:0 0 22px rgba(34,211,238,.75), inset 0 0 0 2px rgba(255,255,255,.55)}
-.card-bottom{position:absolute;left:0;right:0;bottom:0;z-index:7;background:linear-gradient(180deg,transparent 0,rgba(4,12,30,.62) 28%,rgba(4,12,30,.92) 100%);padding:34px 10px 8px}
+  background:conic-gradient(from var(--run, 0deg), transparent 0 68%, var(--stat-glow, #f2d060) 82%, #fff 90%, transparent 100%);color:#fff;
+  filter:drop-shadow(0 6px 10px rgba(0,0,0,.35)) drop-shadow(0 0 var(--stat-bloom, 2px) var(--stat-glow, #f2d060));}
+.overall-diamond > div{position:absolute;inset:3px;z-index:1;display:grid;place-items:center;text-align:center;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);background:linear-gradient(145deg,#38e1ff,#0077ff)}
+.overall-diamond > div::before{content:"";position:absolute;inset:4px;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);background:rgba(255,255,255,.18);pointer-events:none}
+.overall-diamond b{position:relative;z-index:1;display:block;font-size:25px;line-height:.9;text-shadow:0 2px 5px rgba(0,0,0,.4)}
+.overall-diamond span{position:relative;z-index:1;display:block;font-size:8px;font-weight:900;letter-spacing:1.4px;margin-top:3px}
+.tier-bronze .overall-diamond > div{background:linear-gradient(145deg,#d99a4e,#7c4a16)}
+.tier-silver .overall-diamond > div{background:linear-gradient(145deg,#111,#4b5563)}
+.tier-silver .overall-diamond{color:var(--gold-bright)}
+.tier-gold .overall-diamond > div{background:linear-gradient(145deg,#111,#2b2108)}
+.tier-gold .overall-diamond{color:var(--gold-bright)}
+.tier-diamond .overall-diamond > div{background:linear-gradient(145deg,#a5f3fc,#06b6d4 55%,#2563eb)}
+.card-bottom{position:absolute;left:0;right:0;bottom:0;z-index:7;background:linear-gradient(180deg,transparent 0,rgba(4,12,30,.62) 28%,rgba(4,12,30,.92) 100%);padding:34px 10px 4px}
 .card-meta-row{display:flex;justify-content:space-between;align-items:flex-end;gap:10px}
 .team-mark{position:relative;width:76px;flex:none;text-align:center}
 .card-star{width:68px;height:68px;display:block;margin:0 auto;filter:drop-shadow(0 4px 8px rgba(0,0,0,.45))}
@@ -126,8 +129,8 @@ input:focus,select:focus,textarea:focus{outline:2px solid rgba(201,162,39,.45);b
 .logo-placeholder .card-star{width:48px;height:48px;opacity:.8}
 .bb-card.large.logo-placeholder .card-star{width:62px;height:62px}
 .card-name{text-align:right;min-width:0}
-.card-name .archetype{display:block;font-size:10px;font-weight:900;letter-spacing:1.5px;color:var(--gold-bright);text-transform:uppercase;text-shadow:0 1px 5px rgba(0,0,0,.6)}
-.card-name h3,.card-name h2{margin:3px 0 5px;text-transform:uppercase;line-height:.98;letter-spacing:.3px;text-shadow:0 2px 8px rgba(0,0,0,.65);overflow-wrap:anywhere}
+.card-name .archetype{display:block;font-size:10px;font-weight:900;letter-spacing:1.5px;color:var(--gold-bright);text-transform:uppercase;text-shadow:0 1px 5px rgba(0,0,0,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-name h3,.card-name h2{margin:3px 0 0;text-transform:uppercase;line-height:.98;letter-spacing:.3px;text-shadow:0 2px 8px rgba(0,0,0,.65);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .card-name h3{font-size:23px}.card-name h2{font-size:31px}
 .pos-bar{display:inline-block;background:linear-gradient(180deg,var(--gold-bright),var(--gold));color:#111;border:1px solid rgba(255,255,255,.65);padding:4px 8px;border-radius:5px;font-size:11px;font-weight:900;letter-spacing:1px;box-shadow:0 3px 8px rgba(0,0,0,.3)}
 .card-teamline{display:block;margin-top:5px;font-size:11px;font-weight:700;opacity:.9;text-shadow:0 1px 5px rgba(0,0,0,.7)}
@@ -156,13 +159,10 @@ input:focus,select:focus,textarea:focus{outline:2px solid rgba(201,162,39,.45);b
   .pos-bar{font-size:9px;padding:3px 5px}
 }
 .bb-card.large .overall-diamond{width:92px;height:92px;top:14px;right:14px}
-.bb-card.large .overall-diamond::before{inset:6px}
+.bb-card.large .overall-diamond > div{inset:3.5px}
 .bb-card.large .overall-diamond b{font-size:32px}
 .bb-card.large .team-mark{width:96px}.bb-card.large .card-star{width:88px;height:88px}.bb-card.large .team-code{font-size:18px}
-.bb-card.large .card-logo{width:34%;margin-top:43%;margin-right:0}
-@container (min-width:300px){
-  .bb-card.large .card-logo{width:34%;margin-top:43%}
-}
+.bb-card.large .card-logo{width:57.9%;margin-top:39%;margin-right:0}
 .tier-badge{display:inline-block;margin-top:6px;background:rgba(0,0,0,.28);padding:4px 8px;border-radius:999px;font-size:11px;font-weight:900;letter-spacing:1px;color:#fff}
 .tier-badge.tier-diamond{background:linear-gradient(180deg,#06284d,#1d6fe0 58%,#7dd3fc);border:1px solid #d4af37;color:#fff}
 .tier-word.tier-diamond{color:#0b4f9c;font-weight:900;letter-spacing:.4px}
@@ -423,13 +423,13 @@ th{font-size:11px;letter-spacing:.7px;text-transform:uppercase;color:var(--muted
 .card-shell.is-aim .card-glare,.card-shell.is-gyro .card-glare,.bb-card.is-aim .card-glare,.bb-card.is-gyro .card-glare{animation:none;opacity:.9;transform:translate3d(var(--gx, 0%),var(--gy, 0%),0) rotate(21deg)}
 .card-shell.is-burst .card-glare,.bb-card.is-burst .card-glare{animation:glare-burst .7s ease-out both}
 @media (prefers-reduced-motion:no-preference){
-  .subgrades{animation:stat-run 3.6s linear infinite}
+  .subgrades,.overall-diamond{animation:stat-run 3.6s linear infinite}
+  .bb-card.card-live.tier-gold .overall-diamond{animation:stat-run 3.6s linear infinite,gold-glow 3.2s ease-in-out infinite}
+  .bb-card.card-live.tier-diamond .overall-diamond{animation:stat-run 3.6s linear infinite,diamond-glow 2.4s ease-in-out infinite}
   .bb-card.card-live .card-foil{animation:foil-drift var(--foil-time, 7s) ease-in-out infinite alternate;animation-delay:calc(var(--foil-delay, 0s) * -1)}
   .bb-card.card-live .card-glare{animation:glare-pass var(--glare-time, 6s) ease-in-out infinite;animation-delay:calc(var(--foil-delay, 0s) * -1)}
   .bb-card.card-live .card-sparks i,.bb-card.card-live .badge-spark{animation:spark-twinkle var(--sp-t, 2.2s) ease-in-out infinite;animation-delay:var(--sp-d, 0s)}
   .bb-card.card-live .badge-spark{--sp-t:1.7s;--sp-d:.4s}
-  .bb-card.card-live.tier-gold .overall-diamond{animation:gold-glow 3.2s ease-in-out infinite}
-  .bb-card.card-live.tier-diamond .overall-diamond{animation:diamond-glow 2.4s ease-in-out infinite}
 }
 @keyframes foil-drift{from{transform:translate3d(-12%,-8%,0)}to{transform:translate3d(12%,10%,0)}}
 @keyframes glare-pass{
@@ -451,8 +451,9 @@ th{font-size:11px;letter-spacing:.7px;text-transform:uppercase;color:var(--muted
 @keyframes gold-glow{0%,100%{box-shadow:inset 0 0 0 2px rgba(242,208,96,.75),0 0 0 rgba(242,208,96,0)}50%{box-shadow:inset 0 0 0 2px rgba(242,208,96,1),0 0 16px rgba(242,208,96,.55)}}
 @keyframes diamond-glow{0%,100%{box-shadow:0 0 12px rgba(34,211,238,.45),inset 0 0 0 2px rgba(255,255,255,.55)}50%{box-shadow:0 0 26px rgba(34,211,238,.9),inset 0 0 0 2px #fff}}
 @media (prefers-reduced-motion:reduce){
-  .subgrades{animation:none}
+  .subgrades,.overall-diamond{animation:none}
   .subgrade::after{background:var(--stat-glow, #f2d060);opacity:.9}
+  .overall-diamond{background:var(--stat-glow, #f2d060) !important}
   .card-foil,.card-glare,.card-sparks i,.badge-spark,.overall-diamond,.perk-pack-shine,.perk-pack-top,.perk-pack,.perk-burst,.quirk-flip,.quirk-flip-inner{animation:none !important;transition:none !important}
   .card-glare,.card-sparks i{opacity:0}
   .badge-spark{opacity:.9}
