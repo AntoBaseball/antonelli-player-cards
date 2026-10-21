@@ -3123,7 +3123,7 @@ function cardHTML(player, large, face, opts) {
       ${quirkHTML}
     </div>
     ${!face && typeof competeMarks === "function" ? competeMarks(player) : ""}
-    <div class="overall-diamond"><div><b>${overall}</b><span>OVR</span></div>${badgeSpark}</div>
+    <div class="overall-diamond"><div><div class="ovr-lock"><b>${overall}</b><span>OVR</span></div></div>${badgeSpark}</div>
     <div class="card-bottom">
       <div class="card-name">
         <span class="archetype">${esc(player.archetype)}</span>

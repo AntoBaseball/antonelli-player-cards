@@ -20,7 +20,7 @@
 .award-pin:hover .award-tip,.award-pin:focus .award-tip,.award-pin:focus-within .award-tip,
 .award-row:hover .award-tip,.award-row:focus .award-tip,.award-row:focus-within .award-tip,
 .trophy-card:hover .award-tip,.trophy-card:focus .award-tip,.trophy-card:focus-within .award-tip{opacity:1}
-.bb-card .subgrade > .react-mark{position:absolute;top:-11px;right:0;z-index:5;display:inline-flex;align-items:center;justify-content:center;max-width:calc(100% + 4px);margin:0;padding:1px 3px;border-radius:7px;background:rgba(7,7,10,.92);border:1px solid rgba(242,208,96,.85);font-size:10px;font-weight:400;line-height:1;letter-spacing:0;opacity:1;text-shadow:none;white-space:nowrap;pointer-events:none}
+.bb-card .subgrade > .react-mark{position:absolute;top:0;right:1px;z-index:6;transform:translateY(-50%);display:inline-flex;align-items:center;justify-content:center;max-width:calc(100% + 4px);margin:0;padding:1px 3px;border-radius:7px;background:rgba(7,7,10,.92);border:1px solid rgba(242,208,96,.85);font-size:10px;font-weight:400;line-height:1;letter-spacing:0;opacity:1;text-shadow:none;white-space:nowrap;pointer-events:none}
 .king-line{font-family:Impact,"Arial Black",system-ui,sans-serif;font-style:italic;font-size:28px;margin:4px 0}
 .h2h{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;text-align:center;padding:14px 8px;margin:8px 0;border:1px solid rgba(212,175,55,.55);border-radius:18px;background:radial-gradient(120% 90% at 50% 0%, rgba(225,29,72,.2), rgba(0,0,0,.5))}
 .h2h-side b{display:block;font-size:clamp(34px,8vw,52px);font-family:Impact,"Arial Black",system-ui,sans-serif;font-style:italic;line-height:.85;color:#fff}
