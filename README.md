@@ -13,9 +13,11 @@ Two numbers on every live card:
 
 **Card Evolution** is what picks the tier. With no development bonus, Evolution equals overall, so a quiet card keeps Bronze / Silver / Gold / Diamond where it was. Bonus (level, training streak, personal bests, challenges, hot streak) is capped at 24 and blended 70% overall / 30% (overall + bonus). Bands: Bronze under 70, Silver 70–79, Gold 80–89, Diamond 90–94, Legend 95+. **Legend also requires overall 90+**, so app activity alone cannot make a Legend. The profile states the points still needed.
 
-Legend is a crimson chrome card with gold brand accents. Hot streak (exit velocity up in three straight tests) adds a fire border for seven days and extends while the run continues.
+Hot streak (exit velocity up in three straight tests) adds a fire border for seven days and extends while the run continues.
 
-The home screen is time-aware, shows the road to 99, the XP bar, today's four missions (chosen from the equipment library, or assigned in coach mode), and a rule-based development coach. `RoadCoach.compose` is the seam for a real model later. Trajectory copy uses Antonelli Good / Great bands only. It does not make recruiting predictions.
+The whole page is a dark glass shell: black field, gold line, light type. The home screen is time-aware and shows the road to 99, the XP bar, today's four missions (chosen from the equipment library, or assigned in coach mode), and a rule-based development coach. `RoadCoach.compose` is the seam for a real model later. The next upgrade is one line with the gain and the grade it moves, for example `NEXT UPGRADE · +0.5 MPH Exit Velo → POW 76 → 77`. Progress on the home screen and the profile shows where the player started, where they are, and the 30-day, 90-day, 1-year, and career change. Trajectory copy uses Antonelli Good / Great bands only. It does not make recruiting predictions.
+
+Legend is crimson chrome with flame, lightning, and smoke on the card. Effects step up with the tier: Bronze is quiet, Silver shimmers, Gold pulses, Diamond carries ice foil, Legend is the loudest. Phones can tilt a live card. iOS asks for motion permission from Enable card tilt. Desktop follows the pointer. `prefers-reduced-motion` turns the motion off. Cole Brennan is the sample Diamond arm. Roman Hale is the sample Legend arm, and his evolution can be replayed from the profile.
 
 **Signed in as** switches the sample player. Player mode edits only that card. Coach mode edits everyone and can assign the day's four missions. Everyone else's card and profile are read-only. The inbox is rate-limited to one note of each kind per player per day. Short clips can be stored in IndexedDB (1.2 MB) or saved as a YouTube, Instagram, or Hudl link.
 
@@ -26,7 +28,7 @@ Sounds are synthesized in the browser and start muted. Unmute is a tap, so nothi
 Works today on one browser, saved in `localStorage` (`antonelli-player-cards-v2`, `antonelli-road-session-v1`, `antonelli-road-inbox-v1`) and IndexedDB (`antonelli-road-videos`):
 
 - The roster, grades, seasons, personal bests, XP, missions, streaks, evolution replays, and the inbox.
-- Read-only browsing of every sample card, including the extra 12U / 14U / 16U / 17U players.
+- Read-only browsing of every sample card, including the extra 12U / 14U / 16U / 17U / 18U players. Cole Brennan is Diamond. Roman Hale is Legend.
 - Coach vs player is a switcher, not an account.
 
 Needs a real backend before it is actually multi-user:
