@@ -3087,10 +3087,12 @@ function cardHTML(player, large, face, opts) {
     <div class="card-glare" aria-hidden="true"></div>
     ${tier.key === "legend" ? `<div class="legend-fx" aria-hidden="true"><i></i><i></i><i></i></div>` : ""}
     ${sparkleHTML(tier.key, phase, quiet)}
-    <div class="card-brand"><b>ANTONELLI</b><span>${tier.label}</span></div>
-    ${lvlChip}
+    <div class="card-stack">
+      <div class="card-brand"><b>ANTONELLI</b><span>${tier.label}</span></div>
+      ${lvlChip}
+      ${quirkHTML}
+    </div>
     ${!face && typeof competeMarks === "function" ? competeMarks(player) : ""}
-    ${quirkHTML}
     <div class="overall-diamond"><div><b>${overall}</b><span>OVR</span></div>${badgeSpark}</div>
     <div class="card-bottom">
       <div class="card-name">
@@ -4066,6 +4068,10 @@ function collectionPanel(player) {
 function openProfile(id, opts) {
   const p = players.find((x) => x.id === id);
   if (!p) return;
+  if (document.body) {
+    document.body.dataset.app = opts && opts.focus === "trophyCase" ? "trophies" : "card";
+    if (typeof roadSyncTabs === "function") roadSyncTabs();
+  }
   selectedId = id;
   const { subs, overall } = gradesFor(p);
   const tier = tierFor(overall, p);
@@ -4197,7 +4203,9 @@ function openProfile(id, opts) {
     const tabBtn = document.querySelector(`.show-tab[data-tab="${opts.tab}"]`);
     if (tabBtn) tabBtn.click();
   }
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  const focus = opts && opts.focus ? (document.getElementById(opts.focus) || (opts.focus === "trophyCase" ? document.getElementById("roadTrophies") : null)) : null;
+  if (focus) focus.scrollIntoView({ block: "start" });
+  else window.scrollTo(0, 0);
 }
 
 function openRetired(id, index) {
@@ -5034,7 +5042,12 @@ function bindApp() {
     $(id).addEventListener("input", renderRoster);
     $(id).addEventListener("change", renderRoster);
   });
-  $("backBtn").addEventListener("click", () => { closeProfile(); renderRoster(); });
+  $("backBtn").addEventListener("click", () => {
+    closeProfile();
+    document.body.dataset.app = "home";
+    if (typeof roadSyncTabs === "function") roadSyncTabs();
+    renderRoster();
+  });
   $("addPlayerBtn").addEventListener("click", () => openModal(null));
   $("closeModalBtn").addEventListener("click", closeModal);
   $("cancelBtn").addEventListener("click", closeModal);

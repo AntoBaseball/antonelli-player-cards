@@ -253,7 +253,7 @@ function styleWire(player) {
     "<button class=\"btn btn-ghost\" type=\"button\" data-game=\"count\">Count leverage</button>" +
     "<button class=\"btn btn-ghost\" type=\"button\" data-game=\"tunnel\">Tunnel</button>" +
     "<button class=\"btn btn-ghost\" type=\"button\" data-game=\"zone\">Zone discipline</button></div>" +
-    "<div id=\"styleGame\"></div><h3>Game board</h3><div id=\"styleBoard\">" + styleGameBoard() + "</div></div>");
+    "<div data-game-host id=\"styleGame\"></div><h3>Game board</h3><div id=\"styleBoard\">" + styleGameBoard() + "</div></div>");
   const skin = document.getElementById("styleSkin");
   if (skin) skin.addEventListener("change", () => { player.road.skin = skin.value; savePlayers(); if (typeof renderRoster === "function") renderRoster(); stylePlayCele(player); });
   const cele = document.getElementById("styleCele");
@@ -373,8 +373,34 @@ function styleOpenPack(player) {
   });
 }
 
+function styleGameHost() {
+  const nodes = [...document.querySelectorAll("[data-game-host]")];
+  return nodes.find((node) => node.getClientRects().length) || nodes[0] || null;
+}
+
+function styleTrainMount() {
+  const mount = document.getElementById("trainGames");
+  if (!mount || typeof roadSignedIn !== "function") return;
+  const player = roadSignedIn();
+  if (!player) { mount.innerHTML = ""; return; }
+  if (mount.dataset.player === player.id && mount.querySelector("[data-game-host]")) return;
+  mount.dataset.player = player.id;
+  const games = [
+    ["pitch", "Pitch recognition"],
+    ["react", "Reaction"],
+    ["iq", "Baseball IQ"],
+    ["count", "Count leverage"],
+    ["tunnel", "Tunnel"],
+    ["zone", "Zone discipline"],
+  ];
+  mount.innerHTML = "<div class=\"road-card game-card\"><p class=\"road-kicker\">GAMES</p><ul class=\"mission-list\">" +
+    games.map((row) => "<li class=\"mission-row\"><button class=\"mission-hit\" type=\"button\" data-game=\"" + row[0] + "\"><span class=\"check-circle\" aria-hidden=\"true\"></span><span class=\"mission-copy\"><b>" + row[1] + "</b><small>Play</small></span></button></li>").join("") +
+    "</ul><div data-game-host id=\"styleGameTrain\"></div></div>";
+  mount.querySelectorAll("[data-game]").forEach((btn) => btn.addEventListener("click", () => styleStartGame(player, btn.dataset.game)));
+}
+
 function styleStartGame(player, id) {
-  const host = document.getElementById("styleGame");
+  const host = styleGameHost();
   if (!host) return;
   if (id === "pitch") return stylePitch(player, host);
   if (id === "react") return styleReact(player, host);
@@ -407,7 +433,7 @@ function styleQuiz(player, host, cards, name) {
       if (i >= cards.length) {
         host.innerHTML = "<p>Score " + score + " / " + cards.length + "</p>";
         styleRecordScore(name, player, score);
-        document.getElementById("styleBoard").innerHTML = styleGameBoard();
+        const board = document.getElementById("styleBoard"); if (board) board.innerHTML = styleGameBoard();
         return;
       }
       draw();
@@ -428,7 +454,7 @@ function stylePitch(player, host) {
     if (left === 0) {
       host.innerHTML = "<p>Score " + score + " / 4</p>";
       styleRecordScore("pitch", player, score);
-      document.getElementById("styleBoard").innerHTML = styleGameBoard();
+      const board = document.getElementById("styleBoard"); if (board) board.innerHTML = styleGameBoard();
       return;
     }
     const pick = kinds[Math.floor(Math.random() * kinds.length)];
@@ -454,7 +480,7 @@ function styleReact(player, host) {
       const ms = Math.round(performance.now() - start);
       host.innerHTML = "<p>" + ms + " ms</p>";
       styleRecordScore("react", player, Math.max(0, 40 - Math.round(ms / 25)));
-      document.getElementById("styleBoard").innerHTML = styleGameBoard();
+      const board = document.getElementById("styleBoard"); if (board) board.innerHTML = styleGameBoard();
     });
   }, wait);
 }
@@ -466,7 +492,7 @@ function styleZone(player, host) {
     if (!left) {
       host.innerHTML = "<p>Score " + score + " / 4</p>";
       styleRecordScore("zone", player, score);
-      document.getElementById("styleBoard").innerHTML = styleGameBoard();
+      const board = document.getElementById("styleBoard"); if (board) board.innerHTML = styleGameBoard();
       return;
     }
     const strike = Math.random() > 0.5;
@@ -496,3 +522,4 @@ globalThis.styleBackExtra = styleBackExtra;
 globalThis.styleWire = styleWire;
 globalThis.styleDrawQrs = styleDrawQrs;
 globalThis.styleBoot = styleBoot;
+globalThis.styleTrainMount = styleTrainMount;

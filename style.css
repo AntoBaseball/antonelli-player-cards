@@ -33,9 +33,10 @@
 .pack-show.is-shake .pack-card{animation:pack-shake .45s linear}
 @keyframes pack-shake{25%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}75%{transform:rotate(-2deg)}}
 .cele-overlay{position:fixed;inset:0;z-index:125;pointer-events:none;display:grid;place-items:center;font-size:72px}
-.game-q{font-size:22px;font-weight:800;margin:8px 0}
-.game-pitch{height:80px;border-radius:12px;margin:8px 0;background:#111;position:relative;overflow:hidden}
-.game-pitch i{position:absolute;width:18px;height:18px;border-radius:50%;left:8px;top:30px}
+.game-q{font-family:Impact,"Arial Black",system-ui,sans-serif;font-style:italic;font-size:clamp(26px,6vw,40px);line-height:.95;margin:8px 0;color:#fff}
+.game-pitch{height:140px;border-radius:16px;margin:8px 0;background:radial-gradient(circle at 50% 40%, #1a1c22, #07080c);border:1px solid rgba(212,175,55,.35);position:relative;overflow:hidden}
+.game-pitch i{position:absolute;width:28px;height:28px;border-radius:50%;left:12px;top:56px;box-shadow:0 0 16px currentColor}
+[data-game-host] .btn{display:block;width:100%;margin-top:8px;text-align:center}
 @media (prefers-reduced-motion:reduce){
   .pack-show.is-shake .pack-card{animation:none}
 }

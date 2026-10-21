@@ -485,7 +485,7 @@ function competePaint() {
     const b = competeRoster().find((p) => p.id === ch.to);
     const spec = COMPETE_METRICS.find((m) => m.key === ch.metric) || { label: ch.metric, unit: "" };
     const left = competeDaysLeft(ch.deadline);
-    return "<div class=\"h2h\" id=\"h2hBoard\"><div><b>" + (a ? competeNum(a, ch.metric) : "—") + "</b><div>" + competeEsc(a ? a.name : "") + "</div></div><div class=\"h2h-mid\"><span>HEAD TO HEAD</span><strong>" + competeEsc(spec.label) + "</strong><small>" + left + " DAYS LEFT</small></div><div><b>" + (b ? competeNum(b, ch.metric) : "—") + "</b><div>" + competeEsc(b ? b.name : "") + "</div></div></div>";
+    return "<div class=\"h2h\"><div><b>" + (a ? competeNum(a, ch.metric) : "—") + "</b><div>" + competeEsc(a ? a.name : "") + "</div></div><div class=\"h2h-mid\"><span>HEAD TO HEAD</span><strong>" + competeEsc(spec.label) + "</strong><small>" + left + " DAYS LEFT</small></div><div><b>" + (b ? competeNum(b, ch.metric) : "—") + "</b><div>" + competeEsc(b ? b.name : "") + "</div></div></div>";
   }).join("");
   const options = competeRoster().filter((p) => p.id !== me.id).map((p) => "<option value=\"" + competeEsc(p.id) + "\">" + competeEsc(p.name) + "</option>").join("");
   const metrics = COMPETE_METRICS.map((m) => "<option value=\"" + m.key + "\">" + m.label + "</option>").join("");
@@ -497,27 +497,26 @@ function competePaint() {
     return "<div class=\"lb-row\"><span>" + competeEsc(who ? who.name : "Alumni") + "</span><b>" + row.days + " days</b></div>";
   }).join("");
   const rivalLine = me.road.rivalry ? competeRivalLine(rival) : "Rivalries are off. Turn them on if you want the chase.";
+  const h2hBlock = h2h || "<div class=\"h2h\"><div><b>—</b><div>You</div></div><div class=\"h2h-mid\"><span>HEAD TO HEAD</span><strong>No live challenge</strong></div><div><b>—</b><div>Teammate</div></div></div>";
   mount.innerHTML = "<div class=\"compete-stack\">" +
+    "<div class=\"compete-board\" id=\"challengeBoard\"><p class=\"compete-kicker\">HEAD TO HEAD</p><div id=\"h2hBoard\">" + h2hBlock + "</div>" +
+    (incomingHTML ? "<p class=\"compete-kicker\">INCOMING</p>" + incomingHTML : "<p>No pending challenges.</p>") +
+    "<div class=\"road-actions\"><select id=\"chWho\">" + options + "</select><select id=\"chMetric\">" + metrics + "</select><input id=\"chDeadline\" type=\"date\" value=\"" + competeToday() + "\"><button class=\"btn btn-red\" type=\"button\" id=\"chSend\">Challenge</button></div></div>" +
+    "<div class=\"compete-board lb-board\"><p class=\"compete-kicker\">LEADERBOARD</p><div class=\"trophy-grid\">" + boards + "</div>" +
+    "<h3>Most improved this month</h3>" + improved.map((p, i) => "<div class=\"lb-row\"><span>" + (i + 1) + ". " + competeEsc(p.name) + "</span><b>" + (competeExitDelta(p, 30) > 0 ? "+" : "") + (Math.round(competeExitDelta(p, 30) * 10) / 10) + " MPH</b></div>").join("") +
+    "<h3>Awards</h3>" + awards +
+    "<p class=\"compete-kicker\">KING OF THE HILL · " + competeEsc(competeGroup(me)) + " EXIT</p><p class=\"king-line\">" + (king ? "👑 " + competeEsc(king.name) + " · " + crowns.days + " days on the throne" : "—") + "</p>" +
+    "<h3>Days holding the crown</h3>" + crownRows +
+    "</div>" +
     "<div class=\"compete-board cotd-board\"><p class=\"compete-kicker\">CARD OF THE DAY</p><div class=\"cotd\">" + card + "<div class=\"cotd-copy\"><h3>" + competeEsc(cotd ? cotd.player.name : "") + "</h3><p>" + competeEsc(cotd ? cotd.reason : "") + "</p></div></div></div>" +
-    "<div class=\"compete-grid\">" +
-    "<div class=\"compete-board\">" +
+    "<div class=\"compete-board quest-board\">" +
     "<h3>" + quest.name + "</h3><p>" + quest.detail + "</p><div class=\"road-track\"><span style=\"width:" + Math.min(100, Math.round((quest.progress / quest.target) * 100)) + "%\"></span></div><p>" + quest.progress + " / " + quest.target + "</p>" +
     "<h3>" + month.name + "</h3><p>" + month.detail + " · " + month.progress + " MPH</p>" +
     "<h3>" + event.name + "</h3><p>" + event.blurb + " · " + points + " event points. The event card does not come back.</p>" +
     "<h3>" + team.name + "</h3><p>" + team.detail + " · " + team.team + "</p><div class=\"road-track\"><span style=\"width:" + Math.min(100, Math.round((team.progress / team.target) * 100)) + "%\"></span></div><p>" + team.progress + " / " + team.target + "</p>" +
     "<p>Team chemistry " + chem.pct + "% · " + (chem.perfect ? "PERFECT TEAM WEEK" : chem.glow ? "Chemistry glow is on." : "70% of the team trains and the cards glow.") + "</p>" +
     "<p class=\"coach-line\">" + competeEsc(rivalLine) + "</p>" +
-    "<label><input id=\"rivalToggle\" type=\"checkbox\"" + (me.road.rivalry ? " checked" : "") + (roadCanEdit(me) ? "" : " disabled") + "> Opt in to rivalries</label></div>" +
-    "<div class=\"compete-board\"><p class=\"compete-kicker\">LEADERBOARD</p><div class=\"trophy-grid\">" + boards + "</div>" +
-    "<h3>Most improved this month</h3>" + improved.map((p, i) => "<div class=\"lb-row\"><span>" + (i + 1) + ". " + competeEsc(p.name) + "</span><b>" + (competeExitDelta(p, 30) > 0 ? "+" : "") + (Math.round(competeExitDelta(p, 30) * 10) / 10) + " MPH</b></div>").join("") +
-    "<h3>Awards</h3>" + awards +
-    "<p class=\"compete-kicker\">KING OF THE HILL · " + competeEsc(competeGroup(me)) + " EXIT</p><p class=\"king-line\">" + (king ? "👑 " + competeEsc(king.name) + " · " + crowns.days + " days on the throne" : "—") + "</p>" +
-    "<h3>Days holding the crown</h3>" + crownRows +
-    "</div></div>" +
-    "<div class=\"compete-board\" id=\"challengeBoard\"><p class=\"compete-kicker\">CHALLENGE A TEAMMATE</p>" +
-    (incomingHTML || "<p>No pending challenges.</p>") +
-    (h2h || "") +
-    "<div class=\"road-actions\"><select id=\"chWho\">" + options + "</select><select id=\"chMetric\">" + metrics + "</select><input id=\"chDeadline\" type=\"date\" value=\"" + competeToday() + "\"><button class=\"btn btn-red\" type=\"button\" id=\"chSend\">Challenge</button></div></div></div>";
+    "<label><input id=\"rivalToggle\" type=\"checkbox\"" + (me.road.rivalry ? " checked" : "") + (roadCanEdit(me) ? "" : " disabled") + "> Opt in to rivalries</label></div></div>";
   const toggle = document.getElementById("rivalToggle");
   if (toggle) toggle.addEventListener("change", () => {
     me.road.rivalry = toggle.checked;
