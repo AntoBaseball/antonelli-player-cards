@@ -214,37 +214,178 @@ function visionMakePitch(profile) {
   };
 }
 
-function visionField(ctx, w, h) {
-  const sky = ctx.createLinearGradient(0, 0, 0, h);
-  sky.addColorStop(0, "#07080c");
-  sky.addColorStop(0.45, "#14110c");
-  sky.addColorStop(1, "#1a1208");
-  ctx.fillStyle = sky;
-  ctx.fillRect(0, 0, w, h);
-  ctx.strokeStyle = "rgba(242,208,96,.4)";
-  ctx.lineWidth = 2;
+function visionPaintStadium(g, w, h) {
+  const sky = g.createLinearGradient(0, 0, 0, h);
+  sky.addColorStop(0, "#071018");
+  sky.addColorStop(0.38, "#122033");
+  sky.addColorStop(0.62, "#1a140e");
+  sky.addColorStop(1, "#24180f");
+  g.fillStyle = sky;
+  g.fillRect(0, 0, w, h);
+  const glow = g.createRadialGradient(w * 0.5, h * 0.02, 10, w * 0.5, h * 0.28, w * 0.7);
+  glow.addColorStop(0, "rgba(242,208,96,.18)");
+  glow.addColorStop(1, "rgba(242,208,96,0)");
+  g.fillStyle = glow;
+  g.fillRect(0, 0, w, h);
+  g.fillStyle = "#0b121c";
+  g.beginPath();
+  g.moveTo(0, h * 0.36);
+  g.lineTo(w * 0.14, h * 0.2);
+  g.lineTo(w * 0.86, h * 0.2);
+  g.lineTo(w, h * 0.36);
+  g.lineTo(w, h * 0.5);
+  g.lineTo(0, h * 0.5);
+  g.closePath();
+  g.fill();
+  for (let row = 0; row < 6; row++) {
+    const y = h * (0.24 + row * 0.034);
+    const inset = w * (0.12 + row * 0.018);
+    for (let i = 0; i < 22; i++) {
+      if ((i + row * 2) % 3) continue;
+      const x = inset + (w - inset * 2) * (i / 21);
+      g.fillStyle = (i + row) % 2 ? "rgba(242,208,96,.45)" : "rgba(255,255,255,.28)";
+      g.fillRect(x, y, 2, 2);
+    }
+  }
+  g.fillStyle = "#124628";
+  g.beginPath();
+  g.moveTo(w * 0.3, h * 0.42);
+  g.lineTo(w * 0.7, h * 0.42);
+  g.lineTo(w * 0.94, h * 0.86);
+  g.lineTo(w * 0.06, h * 0.86);
+  g.closePath();
+  g.fill();
+  g.fillStyle = "#6d4c2b";
+  g.beginPath();
+  g.moveTo(w * 0.4, h * 0.5);
+  g.lineTo(w * 0.6, h * 0.5);
+  g.lineTo(w * 0.82, h * 0.94);
+  g.lineTo(w * 0.18, h * 0.94);
+  g.closePath();
+  g.fill();
+  const mound = visionProject(w, h, 0, 0.12, 0.06);
+  g.fillStyle = "#8d6840";
+  g.beginPath();
+  g.ellipse(mound.x, mound.y + h * 0.012, w * 0.085, Math.max(6, h * 0.02), 0, 0, Math.PI * 2);
+  g.fill();
+  const s = Math.min(w, h) * 0.042;
+  const px = mound.x;
+  const py = mound.y;
+  g.fillStyle = "#07080c";
+  g.beginPath();
+  g.arc(px, py - s * 2.35, s * 0.52, 0, Math.PI * 2);
+  g.fill();
+  g.fillRect(px - s * 0.42, py - s * 1.85, s * 0.84, s * 1.55);
+  g.fillRect(px - s * 0.1, py - s * 2.82, s * 0.95, s * 0.16);
+  g.beginPath();
+  g.moveTo(px + s * 0.2, py - s * 1.35);
+  g.lineTo(px + s * 1.45, py - s * 0.25);
+  g.lineTo(px + s * 1.15, py);
+  g.lineTo(px + s * 0.05, py - s * 1.0);
+  g.closePath();
+  g.fill();
+  g.fillRect(px - s * 0.36, py - s * 0.32, s * 0.26, s * 1.05);
+  g.fillRect(px + s * 0.08, py - s * 0.32, s * 0.26, s * 1.05);
+  const plate = [[-0.18, 0.06], [0.18, 0.06], [0.18, 0.2], [0, 0.32], [-0.18, 0.2]].map((pair) => visionProject(w, h, pair[0], pair[1], 1));
+  g.fillStyle = "#f7f4ee";
+  g.beginPath();
+  plate.forEach((p, i) => (i ? g.lineTo(p.x, p.y) : g.moveTo(p.x, p.y)));
+  g.closePath();
+  g.fill();
+  g.strokeStyle = "rgba(20,16,12,.45)";
+  g.lineWidth = 1;
+  g.stroke();
   const zone = [
     visionProject(w, h, -0.42, 0.7, 1),
     visionProject(w, h, 0.42, 0.7, 1),
     visionProject(w, h, 0.42, 0.36, 1),
     visionProject(w, h, -0.42, 0.36, 1),
   ];
-  ctx.beginPath();
-  zone.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
-  ctx.closePath();
-  ctx.stroke();
+  g.strokeStyle = "rgba(242,208,96,.9)";
+  g.lineWidth = Math.max(2, w * 0.004);
+  g.beginPath();
+  zone.forEach((p, i) => (i ? g.lineTo(p.x, p.y) : g.moveTo(p.x, p.y)));
+  g.closePath();
+  g.stroke();
+  g.strokeStyle = "rgba(242,208,96,.28)";
+  g.lineWidth = 1;
+  for (let i = 1; i <= 2; i++) {
+    const y = 0.36 + (0.34 * i) / 3;
+    const a = visionProject(w, h, -0.42, y, 1);
+    const b = visionProject(w, h, 0.42, y, 1);
+    g.beginPath();
+    g.moveTo(a.x, a.y);
+    g.lineTo(b.x, b.y);
+    g.stroke();
+    const x = -0.42 + (0.84 * i) / 3;
+    const c = visionProject(w, h, x, 0.7, 1);
+    const d = visionProject(w, h, x, 0.36, 1);
+    g.beginPath();
+    g.moveTo(c.x, c.y);
+    g.lineTo(d.x, d.y);
+    g.stroke();
+  }
 }
 
-function visionBall(ctx, p, fill, seam) {
-  ctx.fillStyle = fill || "#f7f4ee";
+function visionField(ctx, w, h) {
+  const key = w + "x" + h;
+  if (!visionField.layer || visionField.key !== key) {
+    const layer = document.createElement("canvas");
+    layer.width = w;
+    layer.height = h;
+    visionPaintStadium(layer.getContext("2d"), w, h);
+    visionField.layer = layer;
+    visionField.key = key;
+  }
+  ctx.drawImage(visionField.layer, 0, 0);
+}
+
+function visionDim(ctx, w, h, alpha) {
+  visionField(ctx, w, h);
+  ctx.fillStyle = "rgba(5,6,10," + alpha + ")";
+  ctx.fillRect(0, 0, w, h);
+}
+
+function visionTrailReset() {
+  visionBall.trails = {};
+}
+
+function visionBall(ctx, p, fill, seam, trailId) {
+  const id = trailId || "main";
+  if (!visionBall.trails) visionBall.trails = {};
+  const trail = visionBall.trails[id] || (visionBall.trails[id] = []);
+  if (!visionReduce()) {
+    for (let i = 0; i < trail.length; i++) {
+      const t = trail[i];
+      ctx.globalAlpha = ((i + 1) / (trail.length + 1)) * 0.32;
+      ctx.fillStyle = fill || "#f7f4ee";
+      ctx.beginPath();
+      ctx.arc(t.x, t.y, Math.max(1, t.r * 0.8), 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    trail.push({ x: p.x, y: p.y, r: p.r });
+    if (trail.length > 5) trail.shift();
+  }
+  ctx.save();
   ctx.beginPath();
   ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+  ctx.fillStyle = fill || "#f7f4ee";
   ctx.fill();
+  ctx.clip();
   ctx.strokeStyle = seam || "#c4121a";
-  ctx.lineWidth = Math.max(1.2, p.r * 0.16);
+  ctx.lineWidth = Math.max(1, p.r * 0.18);
   ctx.beginPath();
-  ctx.ellipse(p.x, p.y, p.r * 0.7, p.r * 0.28, 0.5, 0, Math.PI * 2);
+  ctx.arc(p.x - p.r * 0.22, p.y, p.r * 0.95, -1.05, 1.05);
   ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(p.x + p.r * 0.22, p.y, p.r * 0.95, Math.PI - 1.05, Math.PI + 1.05);
+  ctx.stroke();
+  ctx.restore();
+  ctx.fillStyle = "rgba(255,255,255,.4)";
+  ctx.beginPath();
+  ctx.arc(p.x - p.r * 0.28, p.y - p.r * 0.3, Math.max(1, p.r * 0.26), 0, Math.PI * 2);
+  ctx.fill();
 }
 
 function visionSymbol(ctx, id, x, y, s, color) {
@@ -320,7 +461,7 @@ function visionFrechet(a, b) {
 
 function visionIqList() {
   if (visionIqList.cache) return Promise.resolve(visionIqList.cache);
-  return fetch("vision-iq.json?v=20261022g").then((res) => {
+  return fetch("vision-iq.json?v=20261022h").then((res) => {
     if (!res.ok) throw new Error("iq");
     return res.json();
   }).then((rows) => {
@@ -368,16 +509,20 @@ function visionKeyMap(kind, code, key) {
   return four[idx] ? four[idx].id : "";
 }
 
+function visionExitHTML() {
+  return "<button type=\"button\" class=\"vision-exit\" id=\"visionExit\">✕ All games</button>";
+}
+
 function visionStageHTML(game, mode) {
   const choices = visionChoices(game.kind);
   const cols = choices.length === 1 ? " is-one" : choices.length === 3 ? " is-3" : choices.length >= 4 ? " is-4" : "";
   const pads = choices.map((c) => "<button type=\"button\" data-pick=\"" + c.id + "\">" + visionEsc(c.name) + "</button>").join("");
   if (mode === "intro") {
-    return "<div class=\"vision-stage\" data-kind=\"" + game.kind + "\"><p class=\"vision-kicker\">PITCH RECOGNITION</p><h2>" + visionEsc(game.name) + "</h2><p class=\"vision-copy\">" + visionEsc(game.benefit) + "</p><p class=\"vision-controls-note\">" + visionEsc(game.controls) + "</p>" +
+    return "<div class=\"vision-stage\" data-kind=\"" + game.kind + "\"><div class=\"vision-hud\"><span class=\"vision-kicker\">PITCH RECOGNITION</span>" + visionExitHTML() + "</div><h2>" + visionEsc(game.name) + "</h2><p class=\"vision-copy\">" + visionEsc(game.benefit) + "</p><p class=\"vision-controls-note\">" + visionEsc(game.controls) + "</p>" +
       (game.kind === "rhythm" ? "<p class=\"vision-sound\" id=\"visionSound\">Tap Start to turn sound on.</p>" : "") +
       "<div class=\"vision-actions\"><button class=\"btn btn-red\" type=\"button\" id=\"visionStart\">Start</button><button class=\"btn btn-ghost\" type=\"button\" id=\"visionBack\">All games</button></div></div>";
   }
-  return "<div class=\"vision-stage\" data-kind=\"" + game.kind + "\"><div class=\"vision-hud\"><span id=\"visionCount\">1 / " + game.rounds + "</span><span id=\"visionLiveScore\">0</span><span id=\"visionStreak\">Streak 0</span></div>" +
+  return "<div class=\"vision-stage\" data-kind=\"" + game.kind + "\"><div class=\"vision-hud\"><span id=\"visionCount\">1 / " + game.rounds + "</span><span id=\"visionLiveScore\">0</span><span id=\"visionStreak\">Streak 0</span>" + visionExitHTML() + "</div>" +
     (game.kind === "rhythm" ? "<p class=\"vision-sound\" id=\"visionSound\">" + (visionSoundOn ? "Sound on" : "Tap to turn sound on") + "</p>" : "") +
     "<p class=\"vision-call\" id=\"visionCall\"></p>" +
     "<canvas class=\"vision-canvas\" id=\"visionCanvas\" width=\"640\" height=\"480\"></canvas>" +
@@ -386,11 +531,31 @@ function visionStageHTML(game, mode) {
 }
 
 function visionResultsHTML(game, result, pay) {
-  return "<div class=\"vision-stage vision-results\" data-kind=\"" + game.kind + "\"><p class=\"vision-kicker\">RESULTS · " + visionEsc(game.name) + "</p><h2>Score</h2><p class=\"vision-score\">" + result.score + "</p>" +
+  return "<div class=\"vision-stage vision-results\" data-kind=\"" + game.kind + "\"><div class=\"vision-hud\"><span class=\"vision-kicker\">RESULTS · " + visionEsc(game.name) + "</span>" + visionExitHTML() + "</div><h2>Score</h2><p class=\"vision-score\">" + result.score + "</p>" +
     "<div class=\"vision-stats\"><div><b>" + Math.round(result.accuracy * 100) + "%</b><span>Accuracy</span></div><div><b>" + result.streak + "</b><span>Best streak</span></div><div><b>" + visionEsc(result.statText) + "</b><span>" + visionEsc(game.stat) + "</span></div></div>" +
     "<p class=\"vision-copy\">" + visionEsc(pay.note) + " Overall did not change. This is a benchmark, not a recruiting read.</p>" +
     "<p class=\"vision-pb\">Personal best " + result.score + "</p>" +
     "<div class=\"vision-actions\"><button class=\"btn btn-red\" type=\"button\" id=\"visionAgain\">Play again</button><button class=\"btn btn-ghost\" type=\"button\" id=\"visionBack\">All games</button></div></div>";
+}
+
+function visionShell(on) {
+  document.documentElement.classList.toggle("vision-playing", !!on);
+  if (document.body) document.body.classList.toggle("vision-playing", !!on);
+}
+
+function visionLeave() {
+  visionStop();
+  visionShell(false);
+  const hub = document.getElementById("visionHub");
+  if (hub) hub.dataset.live = "";
+  visionMount(true);
+}
+
+function visionBindLeave() {
+  const exit = document.getElementById("visionExit");
+  if (exit) exit.addEventListener("click", visionLeave);
+  const back = document.getElementById("visionBack");
+  if (back) back.addEventListener("click", visionLeave);
 }
 
 let visionRun = null;
@@ -413,7 +578,8 @@ function visionPlay(player, game) {
   if (!hub) return;
   hub.dataset.live = "1";
   hub.innerHTML = visionStageHTML(game, "play");
-  if (hub.scrollIntoView) hub.scrollIntoView({ block: "start" });
+  visionShell(true);
+  visionBindLeave();
   const canvas = document.getElementById("visionCanvas");
   const ctx = canvas.getContext("2d");
   const fit = () => {
@@ -496,12 +662,12 @@ function visionPlay(player, game) {
     const live = document.getElementById("visionHub") || hub;
     live.dataset.live = "1";
     live.innerHTML = visionResultsHTML(game, result, pay);
+    visionShell(true);
+    visionBindLeave();
     const best = live.querySelector(".vision-pb");
     if (best) best.textContent = "Personal best " + (visionBest(player, game.id) || result.score);
     const again = live.querySelector("#visionAgain");
-    const back = live.querySelector("#visionBack");
     if (again) again.addEventListener("click", () => visionShowIntro(player, game.id));
-    if (back) back.addEventListener("click", () => { live.dataset.live = ""; visionMount(true); });
   };
   const next = () => {
     run.index += 1;
@@ -731,8 +897,7 @@ function visionPlay(player, game) {
     loop(gen, (now) => {
       const w = canvas.width;
       const h = canvas.height;
-      ctx.fillStyle = "#07080c";
-      ctx.fillRect(0, 0, w, h);
+      visionField(ctx, w, h);
       const u = Math.min(1, (now - run.t0) / run.dur);
       const scale = 0.1 + u * 1.9;
       const base = Math.min(w, h) * 0.08;
@@ -788,7 +953,7 @@ function visionPlay(player, game) {
       visionField(ctx, canvas.width, canvas.height);
       ghostBalls(Math.min(1.05, t)).forEach((ball) => {
         const p = visionProject(canvas.width, canvas.height, ball.spot.x, ball.spot.y, ball.spot.z);
-        visionBall(ctx, p);
+        visionBall(ctx, p, null, null, ball.id);
         ball.px = p;
       });
       run.ghost = ghostBalls(Math.min(1, Math.max(0.5, t)));
@@ -849,9 +1014,8 @@ function visionPlay(player, game) {
     loop(gen, (now) => {
       const w = canvas.width;
       const h = canvas.height;
-      ctx.fillStyle = "#05060a";
-      ctx.fillRect(0, 0, w, h);
-      ctx.strokeStyle = "rgba(242,208,96,.25)";
+      visionDim(ctx, w, h, 0.78);
+      ctx.strokeStyle = "rgba(242,208,96,.7)";
       ctx.strokeRect(w * 0.28, h * 0.34, w * 0.44, h * 0.28);
       if (run.popAt && now - run.popAt < 280) visionBall(ctx, { x: w * 0.5, y: h * 0.48, r: Math.min(w, h) * 0.07 }, "#f2d060", "#111");
       if (run.popAt && now - run.popAt > 900 && !run.locked) gradeRhythm(false);
@@ -898,9 +1062,8 @@ function visionPlay(player, game) {
         if (t >= 0 && t <= 1) run.truePath.push({ x: p.x / w, y: p.y / h });
         if (t >= 1.05) { run.phase = "draw"; say("Draw the path, then Done"); }
       } else {
-        ctx.fillStyle = "#07080c";
-        ctx.fillRect(0, 0, w, h);
-        ctx.strokeStyle = "rgba(242,208,96,.35)";
+        visionDim(ctx, w, h, 0.4);
+        ctx.strokeStyle = "rgba(242,208,96,.55)";
         ctx.strokeRect(w * 0.08, h * 0.08, w * 0.84, h * 0.84);
         ctx.strokeStyle = "#fff";
         ctx.lineWidth = 3;
@@ -985,8 +1148,7 @@ function visionPlay(player, game) {
     loop(gen, (now) => {
       const w = canvas.width;
       const h = canvas.height;
-      ctx.fillStyle = "#07080c";
-      ctx.fillRect(0, 0, w, h);
+      visionDim(ctx, w, h, 0.62);
       const pad = 16;
       const gw = w - pad * 2;
       const gh = h - pad * 2 - 18;
@@ -1036,6 +1198,7 @@ function visionPlay(player, game) {
 
   const begin = () => {
     paintHud();
+    visionTrailReset();
     run.gen += 1;
     if (run.raf) cancelAnimationFrame(run.raf);
     if (run.timer) clearTimeout(run.timer);
@@ -1180,7 +1343,8 @@ function visionShowIntro(player, gameId) {
   if (!hub) return;
   hub.dataset.live = "1";
   hub.innerHTML = visionStageHTML(game, "intro");
-  if (hub.scrollIntoView) hub.scrollIntoView({ block: "start" });
+  visionShell(true);
+  visionBindLeave();
   const start = document.getElementById("visionStart");
   if (start) start.addEventListener("click", () => {
     if (game.kind === "rhythm") {
@@ -1190,8 +1354,6 @@ function visionShowIntro(player, gameId) {
     }
     visionPlay(player, game);
   });
-  const back = document.getElementById("visionBack");
-  if (back) back.addEventListener("click", () => { hub.dataset.live = ""; visionMount(true); });
 }
 
 function visionHubHTML(player) {
@@ -1225,7 +1387,7 @@ function visionMount(force) {
   mount.prepend(hub);
   hub.querySelectorAll("[data-vision-play]").forEach((btn) => btn.addEventListener("click", () => visionShowIntro(player, btn.dataset.visionPlay)));
   const home = document.getElementById("visionHome");
-  if (home) home.addEventListener("click", () => { if (typeof roadSetApp === "function") roadSetApp("home"); });
+  if (home) home.addEventListener("click", () => { visionShell(false); if (typeof roadSetApp === "function") roadSetApp("home"); });
 }
 
 function visionOpen(player, opts) {
