@@ -550,14 +550,14 @@ function competeQuestCards(me, quest, month, event, points, team, chem, rival) {
     };
   }
   const chemNote = chem.perfect ? "Perfect team week." : (chem.glow ? "Chemistry glow is on." : chem.done + " of " + chem.size + " trained this week.");
-  return [
+  return "<div class=\"quest-grid\">" + [
     competeQuestCard({ title: week[0], sub: week[1], num: quest.progress, unit: " / " + quest.target, progress: quest.progress, target: quest.target, bar: true, note: quest.progress >= quest.target ? "Goal reached." : "" }),
     competeQuestCard({ title: "POWER SURGE", sub: "Add 2 MPH of exit velo this month.", num: (month.progress > 0 ? "+" : "") + month.progress, unit: " MPH", progress: month.progress, target: month.target, bar: true, note: month.done ? "Goal reached." : "" }),
     competeQuestCard({ title: competeEsc(event.name).toUpperCase(), sub: "This month's event: " + competeEsc(event.blurb.replace(/\.$/, "")) + ".", num: points, unit: " PTS", note: "The event card is a one-time reward." }),
     competeQuestCard({ title: "TEAM POWER", sub: competeEsc(team.team) + " goal: gain " + team.target + " MPH of exit velo this month.", num: team.progress, unit: " MPH", progress: team.progress, target: team.target, bar: true }),
     competeQuestCard({ title: "TEAM CHEMISTRY", sub: "Cards glow when 70% of the team trains this week.", num: chem.pct, unit: "%", progress: chem.pct, target: 100, bar: true, note: chemNote }),
     competeQuestCard(rivalCard),
-  ].join("");
+  ].join("") + "</div>";
 }
 
 function competeQuestCard(card) {
