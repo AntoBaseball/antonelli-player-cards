@@ -8,8 +8,11 @@
 .lb-row b{color:#f2d060}
 .lb-board,.pr-board .trophy-card{text-align:center}
 .lb-board h3,.lb-board .compete-kicker,.lb-board .king-line,.pr-board .trophy-card h3{text-align:center}
-.lb-board .lb-row,.lb-board .award-row,.pr-board .lb-row{width:fit-content;max-width:min(460px,100%);margin-left:auto;margin-right:auto;justify-content:center;gap:16px;text-align:left}
-.lb-board .lb-row > span,.lb-board .award-row > span:first-child,.pr-board .lb-row > span{min-width:0}
+.lb-board .lb-row,.lb-board .award-row,.pr-board .lb-row{width:fit-content;max-width:min(520px,100%);margin-left:auto;margin-right:auto;justify-content:center;text-align:left}
+.lb-board .lb-row,.lb-board .award-row{gap:40px}
+.pr-board .lb-row{gap:24px}
+.lb-board .compete-kicker{margin-top:18px}
+.lb-board .lb-row > span,.lb-board .award-row > span:first-child,.pr-board .lb-row > span{min-width:0;white-space:nowrap}
 .lb-board .lb-row b,.lb-board .award-row b,.pr-board .lb-row b{flex:none;white-space:nowrap}
 .compete-stack{display:flex;flex-direction:column;gap:14px;width:100%}
 .cards-day{margin:0 0 18px}
