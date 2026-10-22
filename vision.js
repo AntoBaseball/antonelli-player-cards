@@ -1,32 +1,25 @@
-/* Pitch Recognition drills for Road to 99.
-   Ten games, one featured on a 3-day rotation. XP only — overall never moves.
-   Game 7 is the mitt-pop audio drill. Canvas 2D, pitcher-to-plate. */
-
-const VISION_TYPES = [
-  { id: "FB", name: "Fastball", velo: 93, rpm: 2250, breakX: 0.04, breakY: 0.06, band: "90+" },
-  { id: "SL", name: "Slider", velo: 84, rpm: 2550, breakX: 0.42, breakY: -0.05, band: "80s" },
-  { id: "CB", name: "Curve", velo: 74, rpm: 2750, breakX: 0.16, breakY: -0.48, band: "70s" },
-  { id: "CH", name: "Change", velo: 81, rpm: 1550, breakX: -0.1, breakY: -0.2, band: "80s" },
-];
+/* Pitch Recognition — Matt's ten drills.
+   One featured game every 3 days. XP only. Overall never moves.
+   Situations for game 9 are in vision-iq.json. */
 
 const VISION_GAMES = [
-  { id: "id", name: "Pitch ID", benefit: "Naming the pitch in flight is the same read you use to stay on the fastball and spoil the breaker.", controls: "Tap the pitch, or press 1–4. A W D S match the four buttons.", stat: "ID %", kind: "type" },
-  { id: "zone", name: "Strike or Ball", benefit: "Calling strike or ball before it arrives is the benchmark for swinging at strikes and taking balls.", controls: "STRIKE is Space, D, or the right arrow. TAKE is A, S, or the left arrow.", stat: "Zone %", kind: "zone" },
-  { id: "location", name: "Location", benefit: "Seeing where the ball finishes trains the barrel to the spot, not just the pitch type.", controls: "Tap a quadrant or the picture. Arrows and W A S D match the four buttons.", stat: "Location %", kind: "quad" },
-  { id: "velo", name: "Velocity Read", benefit: "Reading speed is how you time the fastball and stay back on the change.", controls: "Tap the mph band, or press 1–4. A W D S match the buttons.", stat: "MPH off", kind: "velo" },
-  { id: "spin", name: "Spin Read", benefit: "Spin separates a riding fastball from a tumbling curve. This is a benchmark, not a projection.", controls: "Tap the RPM band, or press 1–4. A W D S match the buttons.", stat: "RPM off", kind: "spin" },
-  { id: "release", name: "Release Point", benefit: "Lock the release window: soft focus on the windup, hard focus at the hand.", controls: "Tap the window that flashes. W up, A arm side, D glove side, S low. Arrows match.", stat: "Reaction ms", kind: "release" },
-  { id: "pop", name: "Mitt Pop", benefit: "The catcher's pop is a timing benchmark. Ears and eyes together, you are earlier to the pitch.", controls: "Tap or press Space the instant you hear the pop. Early taps count as a miss.", stat: "Reaction ms", kind: "pop" },
-  { id: "tunnel", name: "Tunnel", benefit: "Pitches share a tunnel early. Predicting the finish from the first move is the occlusion benchmark.", controls: "The ball hides. Then tap the finish quadrant. Arrows and W A S D match.", stat: "Location %", kind: "tunnel" },
-  { id: "chase", name: "Chase", benefit: "Chase rate is swings at balls. Lower is the better benchmark. It does not predict a roster spot.", controls: "SWING is Space, D, or the right arrow. TAKE is A, S, or the left arrow.", stat: "Chase Rate %", kind: "chase" },
-  { id: "sequence", name: "Sequence", benefit: "Holding a sequence is the same skill as sitting on a pitch in a count.", controls: "Watch three pitches, then tap them back in order. 1–4 and A W D S match the buttons.", stat: "Sequence %", kind: "sequence" },
+  { id: "vanish", name: "The Vanishing Point", benefit: "The ball vanishes at the hitter's decision point. Naming it, then finding the plate, is the occlusion benchmark.", controls: "Tap Fastball, Curve, or Changeup. Then tap the plate where it would cross. 1–3 match the buttons.", stat: "Location", kind: "vanish", rounds: 8 },
+  { id: "flash", name: "Flash-Seam Recognition", benefit: "A 150–200ms color at release is the same early cue as a seam. Red fastball, yellow slider, blue curve.", controls: "Tap the pitch the instant the color flashes. 1–3 match the buttons. A wrong early guess costs more.", stat: "Reaction ms", kind: "flash", rounds: 8 },
+  { id: "gauntlet", name: "The Take/Swing Gauntlet", benefit: "Twenty pitches, no time to think. Swing at strikes. Do nothing on balls. Chase rate is the benchmark, not a roster spot.", controls: "SWING is the button, Space, D, or the right arrow. Balls are takes — do not tap.", stat: "Chase Rate %", kind: "gauntlet", rounds: 20 },
+  { id: "matrix", name: "Peripheral Matrix", benefit: "The barrel stays on the middle pitch while the edges still get a read. A missed flash breaks the combo.", controls: "Swing the center pitch in the window. Tap the edge panel that matches the cue. W A S D and the arrows match the four buttons.", stat: "Dual %", kind: "matrix", rounds: 8 },
+  { id: "depth", name: "Depth Perception Countdown", benefit: "The ball grows into the hitting window. Matching the ring is a timing benchmark for the front of the plate.", controls: "Tap, or press Space, when the ball fills the ring. Perfect is within 20ms. Good is within 50ms.", stat: "Timing", kind: "depth", rounds: 8 },
+  { id: "ghost", name: "The Ghost Splitter", benefit: "One pitch stays true and two peel off. Tracking the real ball is the tunnel benchmark.", controls: "After the split, tap the true ball, or Left / Middle / Right. A decoy is a strikeout.", stat: "True %", kind: "ghost", rounds: 8 },
+  { id: "rhythm", name: "Audio-Visual Rhythm Swing", benefit: "The mitt pop and the flash arrive together. Ears and eyes on the same beat is the timing benchmark.", controls: "Tap or press Space when you hear the pop and the ball flashes. Early taps miss. Sound turns on at Start.", stat: "Reaction ms", kind: "rhythm", rounds: 8 },
+  { id: "tracer", name: "Trajectory Tracer", benefit: "A curve, a sweeper, and a cutter each have a shape. Drawing it back is the path benchmark.", controls: "Watch the pitch. Then draw its path with a finger or the mouse. Done locks the trace.", stat: "Path %", kind: "tracer", rounds: 4 },
+  { id: "iq", name: "Situational Hitting IQ Grid", benefit: "The situation comes first. Pull, middle, oppo, or take is the plan. This is a benchmark, not a projection.", controls: "Read the situation, then tap Pull, Middle, Oppo, or Take. 1–4 and A W D S match the buttons.", stat: "IQ %", kind: "iq", rounds: 8 },
+  { id: "reflex", name: "The Reflex Grid", benefit: "The zone shrinks the window as the round gets faster. Hits, misses, and the speed tier become a hand-eye score.", controls: "Tap each ball before its bar expires. The window starts at 0.8s and tightens toward 0.2s.", stat: "RPM", kind: "reflex", rounds: 16 },
 ];
 
-const VISION_QUADS = [
-  { id: "up-in", name: "Up / in", key: "w" },
-  { id: "up-away", name: "Up / away", key: "d" },
-  { id: "down-in", name: "Down / in", key: "a" },
-  { id: "down-away", name: "Down / away", key: "s" },
+const VISION_SYMBOLS = [
+  { id: "circle", name: "Circle" },
+  { id: "square", name: "Square" },
+  { id: "triangle", name: "Triangle" },
+  { id: "diamond", name: "Diamond" },
 ];
 
 function visionEsc(value) {
@@ -143,23 +136,23 @@ function visionPopSound() {
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
   osc.type = "triangle";
-  osc.frequency.setValueAtTime(480, t);
-  osc.frequency.exponentialRampToValueAtTime(120, t + 0.09);
+  osc.frequency.setValueAtTime(520, t);
+  osc.frequency.exponentialRampToValueAtTime(140, t + 0.08);
   gain.gain.setValueAtTime(0.0001, t);
-  gain.gain.exponentialRampToValueAtTime(0.85, t + 0.008);
-  gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
+  gain.gain.exponentialRampToValueAtTime(0.8, t + 0.008);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.11);
   osc.connect(gain);
   gain.connect(ctx.destination);
   osc.start(t);
-  osc.stop(t + 0.14);
-  const len = Math.max(1, Math.floor(ctx.sampleRate * 0.045));
+  osc.stop(t + 0.12);
+  const len = Math.max(1, Math.floor(ctx.sampleRate * 0.04));
   const buf = ctx.createBuffer(1, len, ctx.sampleRate);
   const data = buf.getChannelData(0);
   for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / len);
   const src = ctx.createBufferSource();
   const ng = ctx.createGain();
   src.buffer = buf;
-  ng.gain.value = 0.45;
+  ng.gain.value = 0.4;
   src.connect(ng);
   ng.connect(ctx.destination);
   src.start(t);
@@ -167,37 +160,6 @@ function visionPopSound() {
 
 function visionRand(list) {
   return list[Math.floor(Math.random() * list.length)];
-}
-
-function visionMakePitch() {
-  const type = visionRand(VISION_TYPES);
-  const x1 = (Math.random() * 1.5 - 0.75);
-  const y1 = 0.22 + Math.random() * 0.62;
-  const strike = Math.abs(x1) < 0.46 && y1 > 0.34 && y1 < 0.7;
-  const quad = (y1 >= 0.52 ? "up" : "down") + "-" + (x1 < 0 ? "in" : "away");
-  const windows = ["up", "arm", "glove", "low"];
-  return {
-    type,
-    x0: -0.22,
-    y0: 0.8,
-    x1: Math.max(-0.85, Math.min(0.85, x1)),
-    y1: Math.max(0.18, Math.min(0.86, y1)),
-    strike,
-    quad,
-    release: visionRand(windows),
-    flight: type.id === "FB" ? 640 : type.id === "CB" ? 920 : 780,
-  };
-}
-
-function visionSpot(pitch, t) {
-  const aimX = pitch.x1 - pitch.type.breakX;
-  const aimY = pitch.y1 - pitch.type.breakY;
-  const bend = t * t;
-  return {
-    x: pitch.x0 + (aimX - pitch.x0) * t + pitch.type.breakX * bend,
-    y: pitch.y0 + (aimY - pitch.y0) * t + pitch.type.breakY * bend,
-    z: t,
-  };
 }
 
 function visionProject(w, h, x, y, z) {
@@ -209,164 +171,240 @@ function visionProject(w, h, x, y, z) {
   };
 }
 
-function visionDraw(ctx, w, h, pitch, t, opts) {
-  const reduce = visionReduce();
-  ctx.clearRect(0, 0, w, h);
+function visionPlateFromPx(w, h, px, py) {
+  const x = ((px / w) - 0.5) / 0.384;
+  const y = (0.82 - (py / h)) / 0.344;
+  return { x, y };
+}
+
+function visionSpot(pitch, t, extra) {
+  const br = pitch.breaks;
+  const bend = t * t;
+  const add = extra || { x: 0, y: 0 };
+  const aimX = pitch.x1 - br.x;
+  const aimY = pitch.y1 - br.y;
+  return {
+    x: pitch.x0 + (aimX - pitch.x0) * t + (br.x + add.x) * bend,
+    y: pitch.y0 + (aimY - pitch.y0) * t + (br.y + add.y) * bend,
+    z: Math.max(0, Math.min(1, t)),
+  };
+}
+
+function visionMakePitch(profile) {
+  const book = {
+    FB: { x: 0.03, y: 0.05 },
+    CB: { x: 0.1, y: -0.52 },
+    CH: { x: -0.26, y: -0.16 },
+    SL: { x: 0.5, y: -0.06 },
+    CUT: { x: 0.22, y: 0.04 },
+    SWEEP: { x: 0.62, y: -0.12 },
+  };
+  const id = profile || visionRand(["FB", "CB", "CH"]);
+  const x1 = (Math.random() * 1.35 - 0.68);
+  const y1 = 0.28 + Math.random() * 0.5;
+  return {
+    id,
+    breaks: book[id] || book.FB,
+    x0: -0.18,
+    y0: 0.78,
+    x1: Math.max(-0.9, Math.min(0.9, x1)),
+    y1: Math.max(0.2, Math.min(0.84, y1)),
+    strike: Math.abs(x1) < 0.42 && y1 > 0.36 && y1 < 0.7,
+    flight: id === "FB" || id === "CUT" ? 640 : id === "CB" ? 900 : 760,
+  };
+}
+
+function visionField(ctx, w, h) {
   const sky = ctx.createLinearGradient(0, 0, 0, h);
   sky.addColorStop(0, "#07080c");
   sky.addColorStop(0.45, "#14110c");
   sky.addColorStop(1, "#1a1208");
   ctx.fillStyle = sky;
   ctx.fillRect(0, 0, w, h);
-  ctx.strokeStyle = "rgba(242,208,96,.35)";
+  ctx.strokeStyle = "rgba(242,208,96,.4)";
   ctx.lineWidth = 2;
   const zone = [
-    visionProject(w, h, -0.46, 0.7, 1),
-    visionProject(w, h, 0.46, 0.7, 1),
-    visionProject(w, h, 0.46, 0.34, 1),
-    visionProject(w, h, -0.46, 0.34, 1),
+    visionProject(w, h, -0.42, 0.7, 1),
+    visionProject(w, h, 0.42, 0.7, 1),
+    visionProject(w, h, 0.42, 0.36, 1),
+    visionProject(w, h, -0.42, 0.36, 1),
   ];
   ctx.beginPath();
   zone.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
   ctx.closePath();
   ctx.stroke();
-  const rubber = visionProject(w, h, 0, 0.62, 0.08);
-  ctx.strokeStyle = "rgba(255,255,255,.45)";
-  ctx.strokeRect(rubber.x - 18, rubber.y - 3, 36, 6);
-  if (opts && opts.windows && pitch) {
-    const spots = {
-      up: visionProject(w, h, -0.22, 0.92, 0.12),
-      arm: visionProject(w, h, -0.38, 0.74, 0.12),
-      glove: visionProject(w, h, 0.02, 0.74, 0.12),
-      low: visionProject(w, h, -0.22, 0.56, 0.12),
-    };
-    Object.keys(spots).forEach((key) => {
-      const p = spots[key];
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, 14, 0, Math.PI * 2);
-      ctx.strokeStyle = opts.flash === key ? "#f2d060" : "rgba(255,255,255,.25)";
-      ctx.lineWidth = opts.flash === key ? 4 : 1.5;
-      ctx.stroke();
-    });
-  }
-  if (opts && opts.mitt) {
-    const mitt = visionProject(w, h, 0.05, 0.42, 0.92);
-    ctx.strokeStyle = "#f2d060";
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.arc(mitt.x, mitt.y, 22, 0, Math.PI * 2);
-    ctx.stroke();
-  }
-  if (!pitch || (opts && opts.hideBall)) return;
-  const spot = visionSpot(pitch, Math.max(0, Math.min(1, t)));
-  const p = visionProject(w, h, spot.x, spot.y, spot.z);
-  if (!reduce && t > 0.05) {
-    ctx.strokeStyle = "rgba(255,255,255,.18)";
-    ctx.beginPath();
-    const back = visionProject(w, h, visionSpot(pitch, Math.max(0, t - 0.12)).x, visionSpot(pitch, Math.max(0, t - 0.12)).y, Math.max(0, t - 0.12));
-    ctx.moveTo(back.x, back.y);
-    ctx.lineTo(p.x, p.y);
-    ctx.stroke();
-  }
-  ctx.fillStyle = "#f7f4ee";
+}
+
+function visionBall(ctx, p, fill, seam) {
+  ctx.fillStyle = fill || "#f7f4ee";
   ctx.beginPath();
   ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
   ctx.fill();
-  ctx.strokeStyle = "#c4121a";
-  ctx.lineWidth = Math.max(1.2, p.r * 0.14);
-  const spin = reduce ? 0.4 : (pitch.type.rpm / 2400) * t * 5;
+  ctx.strokeStyle = seam || "#c4121a";
+  ctx.lineWidth = Math.max(1.2, p.r * 0.16);
   ctx.beginPath();
-  ctx.ellipse(p.x, p.y, p.r * 0.72, p.r * 0.28, spin, 0, Math.PI * 2);
+  ctx.ellipse(p.x, p.y, p.r * 0.7, p.r * 0.28, 0.5, 0, Math.PI * 2);
   ctx.stroke();
 }
 
-let visionRun = null;
+function visionSymbol(ctx, id, x, y, s, color) {
+  ctx.strokeStyle = color || "#f2d060";
+  ctx.fillStyle = color || "#f2d060";
+  ctx.lineWidth = 3;
+  if (id === "circle") {
+    ctx.beginPath();
+    ctx.arc(x, y, s * 0.38, 0, Math.PI * 2);
+    ctx.stroke();
+  } else if (id === "square") {
+    ctx.strokeRect(x - s * 0.32, y - s * 0.32, s * 0.64, s * 0.64);
+  } else if (id === "triangle") {
+    ctx.beginPath();
+    ctx.moveTo(x, y - s * 0.38);
+    ctx.lineTo(x + s * 0.36, y + s * 0.3);
+    ctx.lineTo(x - s * 0.36, y + s * 0.3);
+    ctx.closePath();
+    ctx.stroke();
+  } else {
+    ctx.beginPath();
+    ctx.moveTo(x, y - s * 0.4);
+    ctx.lineTo(x + s * 0.32, y);
+    ctx.lineTo(x, y + s * 0.4);
+    ctx.lineTo(x - s * 0.32, y);
+    ctx.closePath();
+    ctx.stroke();
+  }
+}
 
-function visionStop() {
-  if (!visionRun) return;
-  if (visionRun.raf) cancelAnimationFrame(visionRun.raf);
-  if (visionRun.key) window.removeEventListener("keydown", visionRun.key);
-  if (visionRun.timer) clearTimeout(visionRun.timer);
-  visionRun = null;
-  const hub = document.getElementById("visionHub");
-  if (hub) hub.dataset.live = "";
+function visionResample(points, n) {
+  if (!points.length) return [];
+  if (points.length === 1) return Array.from({ length: n }, () => ({ x: points[0].x, y: points[0].y }));
+  const seg = [];
+  let total = 0;
+  for (let i = 1; i < points.length; i++) {
+    const d = Math.hypot(points[i].x - points[i - 1].x, points[i].y - points[i - 1].y);
+    seg.push(d);
+    total += d;
+  }
+  if (total < 0.0001) return Array.from({ length: n }, () => ({ x: points[0].x, y: points[0].y }));
+  const out = [];
+  for (let k = 0; k < n; k++) {
+    let need = (total * k) / (n - 1);
+    let i = 0;
+    while (i < seg.length - 1 && need > seg[i]) { need -= seg[i]; i += 1; }
+    const d = seg[i] || 1;
+    const t = d ? need / d : 0;
+    out.push({
+      x: points[i].x + (points[i + 1].x - points[i].x) * t,
+      y: points[i].y + (points[i + 1].y - points[i].y) * t,
+    });
+  }
+  return out;
+}
+
+function visionFrechet(a, b) {
+  const n = a.length;
+  const m = b.length;
+  if (!n || !m) return 1;
+  const ca = Array.from({ length: n }, () => Array(m).fill(0));
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j < m; j++) {
+      const d = Math.hypot(a[i].x - b[j].x, a[i].y - b[j].y);
+      if (i === 0 && j === 0) ca[i][j] = d;
+      else if (i === 0) ca[i][j] = Math.max(ca[0][j - 1], d);
+      else if (j === 0) ca[i][j] = Math.max(ca[i - 1][0], d);
+      else ca[i][j] = Math.max(Math.min(ca[i - 1][j], ca[i - 1][j - 1], ca[i][j - 1]), d);
+    }
+  }
+  return ca[n - 1][m - 1];
+}
+
+function visionIqList() {
+  if (visionIqList.cache) return Promise.resolve(visionIqList.cache);
+  return fetch("vision-iq.json?v=20261022g").then((res) => {
+    if (!res.ok) throw new Error("iq");
+    return res.json();
+  }).then((rows) => {
+    visionIqList.cache = Array.isArray(rows) ? rows : [];
+    return visionIqList.cache;
+  }).catch(() => {
+    visionIqList.cache = [];
+    return visionIqList.cache;
+  });
 }
 
 function visionChoices(kind) {
-  if (kind === "type" || kind === "sequence") return VISION_TYPES.map((t) => ({ id: t.id, name: t.name }));
-  if (kind === "zone") return [{ id: "strike", name: "Strike" }, { id: "ball", name: "Take" }];
-  if (kind === "quad" || kind === "tunnel") return VISION_QUADS.map((q) => ({ id: q.id, name: q.name }));
-  if (kind === "velo") return [{ id: "70s", name: "70s" }, { id: "80s", name: "80s" }, { id: "90+", name: "90+" }, { id: "slow", name: "Under 70" }];
-  if (kind === "spin") return [{ id: "1500", name: "1,500" }, { id: "1800", name: "1,800" }, { id: "2200", name: "2,200" }, { id: "2600", name: "2,600" }];
-  if (kind === "release") return [{ id: "up", name: "Up" }, { id: "arm", name: "Arm side" }, { id: "glove", name: "Glove side" }, { id: "low", name: "Low" }];
-  if (kind === "chase") return [{ id: "swing", name: "Swing" }, { id: "take", name: "Take" }];
-  return [{ id: "tap", name: "Tap" }];
-}
-
-function visionExpect(kind, pitch) {
-  if (kind === "type") return pitch.type.id;
-  if (kind === "zone") return pitch.strike ? "strike" : "ball";
-  if (kind === "quad" || kind === "tunnel") return pitch.quad;
-  if (kind === "velo") return pitch.type.velo >= 90 ? "90+" : pitch.type.velo >= 80 ? "80s" : "70s";
-  if (kind === "spin") {
-    const rpm = pitch.type.rpm;
-    if (rpm < 1700) return "1500";
-    if (rpm < 2100) return "1800";
-    if (rpm < 2500) return "2200";
-    return "2600";
-  }
-  if (kind === "release") return pitch.release;
-  if (kind === "chase") return pitch.strike ? "swing" : "take";
-  return "tap";
+  if (kind === "vanish") return [{ id: "FB", name: "Fastball" }, { id: "CB", name: "Curve" }, { id: "CH", name: "Changeup" }];
+  if (kind === "flash") return [{ id: "FB", name: "Fastball" }, { id: "SL", name: "Slider" }, { id: "CB", name: "Curve" }];
+  if (kind === "gauntlet" || kind === "depth" || kind === "rhythm") return [{ id: "go", name: kind === "gauntlet" ? "Swing" : "Tap" }];
+  if (kind === "matrix") return [{ id: "w", name: "Up" }, { id: "a", name: "Left" }, { id: "s", name: "Down" }, { id: "d", name: "Right" }];
+  if (kind === "ghost") return [{ id: "left", name: "Left" }, { id: "mid", name: "Middle" }, { id: "right", name: "Right" }];
+  if (kind === "tracer") return [{ id: "clear", name: "Clear" }, { id: "done", name: "Done" }];
+  if (kind === "iq") return [{ id: "pull", name: "Pull" }, { id: "middle", name: "Middle" }, { id: "oppo", name: "Oppo" }, { id: "take", name: "Take" }];
+  return [];
 }
 
 function visionKeyMap(kind, code, key) {
   const k = String(key || "").toLowerCase();
   const arrows = { arrowup: "w", arrowleft: "a", arrowdown: "s", arrowright: "d" };
   const wasd = arrows[k] || k;
-  if (kind === "pop") return code === "Space" || k === " " ? "tap" : "";
-  if (kind === "zone" || kind === "chase") {
-    if (code === "Space" || wasd === "d" || k === "arrowright") return kind === "zone" ? "strike" : "swing";
-    if (wasd === "a" || wasd === "s" || k === "arrowleft" || k === "arrowdown") return kind === "zone" ? "ball" : "take";
-    return "";
+  if (kind === "gauntlet") return (code === "Space" || wasd === "d") ? "go" : "";
+  if (kind === "depth" || kind === "rhythm") return (code === "Space" || k === " ") ? "go" : "";
+  if (kind === "matrix") {
+    if (code === "Space") return "go";
+    return ["w", "a", "s", "d"].includes(wasd) ? wasd : "";
   }
+  if (kind === "tracer") return (code === "Enter") ? "done" : "";
   const four = visionChoices(kind);
+  if (!four.length) return "";
+  if (kind === "vanish" && (code === "Space" || ["arrowup", "arrowdown", "arrowleft", "arrowright"].includes(k))) return "aim:" + k;
   const order = { a: 0, w: 1, d: 2, s: 3, "1": 0, "2": 1, "3": 2, "4": 3 };
-  if (kind === "release") {
-    const map = { w: "up", arrowup: "up", a: "arm", arrowleft: "arm", d: "glove", arrowright: "glove", s: "low", arrowdown: "low" };
-    return map[k] || "";
-  }
-  if (kind === "quad" || kind === "tunnel") {
-    const map = { w: 0, d: 1, a: 2, s: 3, arrowup: 0, arrowright: 1, arrowleft: 2, arrowdown: 3 };
+  if (kind === "flash") {
+    const map = { r: 0, "1": 0, y: 1, "2": 1, b: 2, "3": 2, a: 0, w: 1, d: 2 };
     const idx = map[k];
     return idx == null ? "" : four[idx].id;
   }
-  if (order[wasd] == null && order[k] == null) return "";
+  if (order[k] == null && order[wasd] == null) return "";
   const idx = order[k] != null ? order[k] : order[wasd];
   return four[idx] ? four[idx].id : "";
 }
 
 function visionStageHTML(game, mode) {
   const choices = visionChoices(game.kind);
-  const one = choices.length === 1;
+  const cols = choices.length === 1 ? " is-one" : choices.length === 3 ? " is-3" : choices.length >= 4 ? " is-4" : "";
   const pads = choices.map((c) => "<button type=\"button\" data-pick=\"" + c.id + "\">" + visionEsc(c.name) + "</button>").join("");
   if (mode === "intro") {
-    return "<div class=\"vision-stage\"><p class=\"vision-kicker\">PITCH RECOGNITION</p><h2>" + visionEsc(game.name) + "</h2><p class=\"vision-copy\">" + visionEsc(game.benefit) + "</p><p class=\"vision-controls-note\">" + visionEsc(game.controls) + "</p>" +
-      (game.kind === "pop" ? "<p class=\"vision-sound\" id=\"visionSound\">Tap Start to turn sound on.</p>" : "") +
+    return "<div class=\"vision-stage\" data-kind=\"" + game.kind + "\"><p class=\"vision-kicker\">PITCH RECOGNITION</p><h2>" + visionEsc(game.name) + "</h2><p class=\"vision-copy\">" + visionEsc(game.benefit) + "</p><p class=\"vision-controls-note\">" + visionEsc(game.controls) + "</p>" +
+      (game.kind === "rhythm" ? "<p class=\"vision-sound\" id=\"visionSound\">Tap Start to turn sound on.</p>" : "") +
       "<div class=\"vision-actions\"><button class=\"btn btn-red\" type=\"button\" id=\"visionStart\">Start</button><button class=\"btn btn-ghost\" type=\"button\" id=\"visionBack\">All games</button></div></div>";
   }
-  return "<div class=\"vision-stage\"><div class=\"vision-hud\"><span id=\"visionCount\">1 / 8</span><span id=\"visionLiveScore\">0</span><span id=\"visionStreak\">Streak 0</span></div>" +
-    (game.kind === "pop" ? "<p class=\"vision-sound\" id=\"visionSound\">" + (visionSoundOn ? "Sound on" : "Tap to turn sound on") + "</p>" : "") +
+  return "<div class=\"vision-stage\" data-kind=\"" + game.kind + "\"><div class=\"vision-hud\"><span id=\"visionCount\">1 / " + game.rounds + "</span><span id=\"visionLiveScore\">0</span><span id=\"visionStreak\">Streak 0</span></div>" +
+    (game.kind === "rhythm" ? "<p class=\"vision-sound\" id=\"visionSound\">" + (visionSoundOn ? "Sound on" : "Tap to turn sound on") + "</p>" : "") +
+    "<p class=\"vision-call\" id=\"visionCall\"></p>" +
     "<canvas class=\"vision-canvas\" id=\"visionCanvas\" width=\"640\" height=\"480\"></canvas>" +
-    "<div class=\"vision-pad" + (one ? " is-one" : "") + "\" id=\"visionPad\">" + pads + "</div></div>";
+    (choices.length ? "<div class=\"vision-pad" + cols + "\" id=\"visionPad\">" + pads + (game.kind === "matrix" ? "<button type=\"button\" data-pick=\"go\">Swing</button>" : "") + "</div>" : "<p class=\"vision-controls-note\">Tap the ball.</p>") +
+    "</div>";
 }
 
 function visionResultsHTML(game, result, pay) {
-  return "<div class=\"vision-stage vision-results\"><p class=\"vision-kicker\">RESULTS · " + visionEsc(game.name) + "</p><h2>Score</h2><p class=\"vision-score\">" + result.score + "</p>" +
+  return "<div class=\"vision-stage vision-results\" data-kind=\"" + game.kind + "\"><p class=\"vision-kicker\">RESULTS · " + visionEsc(game.name) + "</p><h2>Score</h2><p class=\"vision-score\">" + result.score + "</p>" +
     "<div class=\"vision-stats\"><div><b>" + Math.round(result.accuracy * 100) + "%</b><span>Accuracy</span></div><div><b>" + result.streak + "</b><span>Best streak</span></div><div><b>" + visionEsc(result.statText) + "</b><span>" + visionEsc(game.stat) + "</span></div></div>" +
     "<p class=\"vision-copy\">" + visionEsc(pay.note) + " Overall did not change. This is a benchmark, not a recruiting read.</p>" +
-    "<p class=\"vision-pb\">Personal best " + (visionBest(result.player, game.id) || result.score) + "</p>" +
+    "<p class=\"vision-pb\">Personal best " + result.score + "</p>" +
     "<div class=\"vision-actions\"><button class=\"btn btn-red\" type=\"button\" id=\"visionAgain\">Play again</button><button class=\"btn btn-ghost\" type=\"button\" id=\"visionBack\">All games</button></div></div>";
+}
+
+let visionRun = null;
+
+function visionStop() {
+  if (!visionRun) return;
+  visionRun.gen += 1;
+  visionRun.alive = false;
+  if (visionRun.raf) cancelAnimationFrame(visionRun.raf);
+  if (visionRun.key) window.removeEventListener("keydown", visionRun.key);
+  if (visionRun.timer) clearTimeout(visionRun.timer);
+  visionRun = null;
+  const hub = document.getElementById("visionHub");
+  if (hub) hub.dataset.live = "";
 }
 
 function visionPlay(player, game) {
@@ -381,48 +419,77 @@ function visionPlay(player, game) {
   const fit = () => {
     const rect = canvas.getBoundingClientRect();
     const dpr = Math.min(2, window.devicePixelRatio || 1);
-    canvas.width = Math.max(320, Math.round(rect.width * dpr));
-    canvas.height = Math.max(240, Math.round(rect.height * dpr));
+    const w = Math.max(320, Math.round(rect.width * dpr));
+    const h = Math.max(240, Math.round(rect.height * dpr));
+    if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
   };
-  fit();
   const run = {
-    player, game, pitches: [], index: 0, score: 0, right: 0, asked: 0, streak: 0, bestStreak: 0,
-    errors: [], chases: { swings: 0, balls: 0 }, reactions: [], answered: false, t0: 0, popAt: 0, phase: "pitch",
-    raf: 0, timer: 0, key: null, seq: [], seqNeed: [], seqGot: [], gen: 0,
+    player, game, gen: 1, alive: true, index: 0, score: 0, right: 0, asked: 0, streak: 0, bestStreak: 0,
+    phase: "boot", t0: 0, pitch: null, call: "", raf: 0, timer: 0, key: null,
+    reactions: [], chases: { swings: 0, balls: 0 }, pathScores: [], words: [],
+    hits: 0, misses: 0, speedSum: 0, dualFlash: 0, dualSwing: 0,
+    aim: { x: 0, y: 0.5 }, stroke: [], truePath: [], drawing: false,
+    bang: "", iq: [],
   };
-  if (game.kind === "sequence") {
-    for (let i = 0; i < 4; i++) run.seq.push([visionMakePitch(), visionMakePitch(), visionMakePitch()]);
-  } else {
-    for (let i = 0; i < 8; i++) run.pitches.push(visionMakePitch());
-  }
   visionRun = run;
+  const say = (text) => {
+    run.call = text;
+    const el = document.getElementById("visionCall");
+    if (el) el.textContent = text;
+  };
   const paintHud = () => {
     const count = document.getElementById("visionCount");
     const score = document.getElementById("visionLiveScore");
     const streak = document.getElementById("visionStreak");
-    const total = game.kind === "sequence" ? run.seq.length : run.pitches.length;
-    if (count) count.textContent = Math.min(total, run.index + 1) + " / " + total;
+    if (count) count.textContent = Math.min(game.rounds, run.index + 1) + " / " + game.rounds;
     if (score) score.textContent = String(run.score);
     if (streak) streak.textContent = "Streak " + run.streak;
   };
-  const finish = () => {
-    const asked = Math.max(1, run.asked);
-    let statText = Math.round((run.right / asked) * 100) + "%";
-    if (game.kind === "velo") statText = (run.errors.length ? Math.round(run.errors.reduce((a, b) => a + b, 0) / run.errors.length) : 0) + "";
-    if (game.kind === "spin") statText = (run.errors.length ? Math.round(run.errors.reduce((a, b) => a + b, 0) / run.errors.length) : 0) + "";
-    if (game.kind === "release" || game.kind === "pop") statText = (run.reactions.length ? Math.round(run.reactions.reduce((a, b) => a + b, 0) / run.reactions.length) : 0) + "";
-    if (game.kind === "chase") statText = (run.chases.balls ? Math.round((run.chases.swings / run.chases.balls) * 100) : 0) + "%";
-    const result = {
-      player,
-      score: run.score,
-      accuracy: run.right / asked,
-      streak: run.bestStreak,
-      statText,
+  const later = (ms, fn) => {
+    if (run.timer) clearTimeout(run.timer);
+    const gen = run.gen;
+    run.timer = setTimeout(() => { if (visionRun === run && run.gen === gen) fn(); }, ms);
+  };
+  const loop = (gen, frame) => {
+    const step = (now) => {
+      if (visionRun !== run || run.gen !== gen || !run.alive) return;
+      fit();
+      frame(now);
+      if (visionRun === run && run.gen === gen && run.alive) run.raf = requestAnimationFrame(step);
     };
-    run.gen = (run.gen || 0) + 1;
+    if (run.raf) cancelAnimationFrame(run.raf);
+    run.raf = requestAnimationFrame(step);
+  };
+  const mult = () => 1 + 0.15 * Math.min(run.streak, 6);
+  const bumpStreak = (ok) => {
+    if (ok) { run.streak += 1; run.bestStreak = Math.max(run.bestStreak, run.streak); }
+    else run.streak = 0;
+  };
+  const finish = () => {
+    run.alive = false;
+    run.gen += 1;
     if (run.raf) cancelAnimationFrame(run.raf);
     if (run.timer) clearTimeout(run.timer);
     if (run.key) window.removeEventListener("keydown", run.key);
+    const asked = Math.max(1, run.asked);
+    let statText = Math.round((run.right / asked) * 100) + "%";
+    let accuracy = run.right / asked;
+    if (game.kind === "flash" || game.kind === "rhythm") statText = (run.reactions.length ? Math.round(run.reactions.reduce((a, b) => a + b, 0) / run.reactions.length) : 0) + "";
+    if (game.kind === "gauntlet") statText = (run.chases.balls ? Math.round((run.chases.swings / run.chases.balls) * 100) : 0) + "%";
+    if (game.kind === "depth") statText = run.words.filter((w) => w === "Perfect").length + " Perfect";
+    if (game.kind === "tracer") {
+      const avg = run.pathScores.length ? run.pathScores.reduce((a, b) => a + b, 0) / run.pathScores.length : 0;
+      statText = Math.round(avg) + "%";
+      accuracy = avg / 100;
+    }
+    if (game.kind === "matrix") accuracy = (run.dualFlash + run.dualSwing) / Math.max(1, run.asked * 2);
+    if (game.kind === "reflex") {
+      const rpm = Math.max(0, Math.round(1100 + run.hits * 55 + run.speedSum - run.misses * 40));
+      statText = String(rpm);
+      accuracy = run.hits / Math.max(1, run.hits + run.misses);
+      run.right = run.hits;
+    }
+    const result = { player, score: run.score, accuracy, streak: run.bestStreak, statText };
     visionRun = null;
     visionSaveScore(player, game, result);
     const pay = visionPay(player, game, result);
@@ -436,137 +503,674 @@ function visionPlay(player, game) {
     if (again) again.addEventListener("click", () => visionShowIntro(player, game.id));
     if (back) back.addEventListener("click", () => { live.dataset.live = ""; visionMount(true); });
   };
-  const grade = (pick, reaction) => {
-    if (run.answered) return;
-    run.answered = true;
-    const pitch = run.pitches[run.index];
-    const expect = visionExpect(game.kind, pitch);
-    const correct = pick === expect;
-    run.asked += 1;
-    if (game.kind === "chase") {
-      if (!pitch.strike) {
-        run.chases.balls += 1;
-        if (pick === "swing") run.chases.swings += 1;
-      }
-    }
-    if (game.kind === "velo") run.errors.push(Math.abs(pitch.type.velo - (pick === "90+" ? 93 : pick === "80s" ? 84 : pick === "70s" ? 74 : 66)));
-    if (game.kind === "spin") run.errors.push(Math.abs(pitch.type.rpm - Number(pick || 0)));
-    if (game.kind === "release" || game.kind === "pop") run.reactions.push(Math.max(0, Math.round(reaction)));
-    if (correct) {
-      run.right += 1;
-      run.streak += 1;
-      run.bestStreak = Math.max(run.bestStreak, run.streak);
-      const flight = game.kind === "pop" ? 500 : pitch.flight;
-      const speed = Math.max(0, Math.min(1, 1 - reaction / flight));
-      run.score += Math.round(100 + speed * 80 + Math.min(run.streak, 6) * 12);
-    } else run.streak = 0;
-    paintHud();
-    if (run.timer) clearTimeout(run.timer);
-    run.timer = setTimeout(() => { run.index += 1; run.answered = false; begin(); }, visionReduce() ? 180 : 420);
+  const next = () => {
+    run.index += 1;
+    if (run.index >= game.rounds) finish();
+    else begin();
   };
-  const begin = () => {
+
+  const beginVanish = () => {
+    run.pitch = visionMakePitch(visionRand(["FB", "CB", "CH"]));
+    run.phase = "show";
+    run.t0 = performance.now();
+    run.aim = { x: run.pitch.x1, y: run.pitch.y1 };
+    say("Name it before it vanishes");
+    const gen = run.gen;
+    loop(gen, (now) => {
+      const t = (now - run.t0) / run.pitch.flight;
+      visionField(ctx, canvas.width, canvas.height);
+      if (t < 0.5) {
+        const s = visionSpot(run.pitch, t);
+        visionBall(ctx, visionProject(canvas.width, canvas.height, s.x, s.y, s.z));
+      } else if (run.phase === "show") {
+        run.phase = "type";
+        say("Fastball, curve, or changeup");
+      }
+      if (run.phase === "locate") {
+        const mark = visionProject(canvas.width, canvas.height, run.aim.x, run.aim.y, 1);
+        ctx.strokeStyle = "#f2d060";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(mark.x, mark.y, 16, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      if (!run.locked && run.phase === "type" && t > 2.2) gradeVanish("", null);
+      if (!run.locked && run.phase === "locate" && t > 3.5) gradeVanish(run.typePick, null);
+    });
+  };
+  const gradeVanish = (typeId, plate) => {
+    if ((run.phase === "type" || run.phase === "show") && typeId && plate == null && typeId.indexOf("aim:") !== 0) {
+      run.phase = "locate";
+      run.typePick = typeId;
+      say("Tap where it crosses the plate");
+      return;
+    }
+    if (run.phase === "type" && !typeId) {
+      run.locked = true;
+      run.alive = false;
+      run.asked += 1;
+      bumpStreak(false);
+      say("Late");
+      paintHud();
+      later(280, () => { run.locked = false; run.alive = true; next(); });
+      return;
+    }
+    if (run.phase !== "locate" || run.locked) return;
+    run.locked = true;
+    run.alive = false;
+    run.asked += 1;
+    const typeOk = run.typePick === run.pitch.id;
+    let loc = 0;
+    if (plate) {
+      const dist = Math.hypot(plate.x - run.pitch.x1, (plate.y - run.pitch.y1) * 0.85);
+      const prox = 1 - Math.min(1, dist / 1.1);
+      loc = Math.round(50 + prox * 150);
+    }
+    if (typeOk) run.right += 1;
+    const typePts = typeOk ? 100 : 0;
+    bumpStreak(typeOk);
+    run.score += Math.round((typePts + loc) * mult());
+    say(typeOk ? "Type +" + typePts + " · location +" + loc : "Missed the type · location +" + loc);
     paintHud();
-    const gen = ++run.gen;
-    if (run.raf) cancelAnimationFrame(run.raf);
-    if (run.timer) clearTimeout(run.timer);
-    if (game.kind === "sequence") { beginSeq(gen); return; }
-    if (run.index >= run.pitches.length) { finish(); return; }
-    const pitch = run.pitches[run.index];
+    run.phase = "wait";
+    later(visionReduce() ? 220 : 480, () => { run.locked = false; run.alive = true; next(); });
+  };
+
+  const beginFlash = () => {
+    const ids = ["FB", "SL", "CB"];
+    run.pitch = visionMakePitch(visionRand(ids));
+    run.phase = "arm";
+    run.t0 = performance.now();
+    run.flashAt = 0;
+    run.flashFor = 150 + Math.random() * 50;
+    run.locked = false;
+    const colors = { FB: "#e10600", SL: "#f2d060", CB: "#3ec4ff" };
+    say("Wait for the color");
+    const gen = run.gen;
+    loop(gen, (now) => {
+      const elapsed = now - run.t0;
+      visionField(ctx, canvas.width, canvas.height);
+      const show = elapsed > 80 && elapsed < 80 + run.flashFor;
+      if (show && !run.flashAt) run.flashAt = now;
+      const s = visionSpot(run.pitch, 0.12);
+      const p = visionProject(canvas.width, canvas.height, s.x, s.y, s.z);
+      visionBall(ctx, p, show ? colors[run.pitch.id] : "#f7f4ee", show ? "#111" : "#c4121a");
+      if (run.flashAt && now - run.flashAt > 1500 && !run.locked) gradeFlash("");
+    });
+  };
+  const gradeFlash = (id) => {
+    if (run.locked) return;
+    if (!run.flashAt) {
+      run.locked = true;
+      run.alive = false;
+      run.asked += 1;
+      bumpStreak(false);
+      run.score -= 70;
+      say("Early −70");
+      paintHud();
+      later(visionReduce() ? 200 : 420, () => { run.alive = true; next(); });
+      return;
+    }
+    run.locked = true;
+    run.asked += 1;
+    const reaction = performance.now() - run.flashAt;
+    run.reactions.push(reaction);
+    const ok = id === run.pitch.id;
+    const factor = 1 / Math.max(0.12, reaction / 1000);
+    if (ok) { run.right += 1; bumpStreak(true); run.score += Math.round(100 * factor); say("+" + Math.round(100 * factor)); }
+    else { bumpStreak(false); run.score += Math.round(-70 * factor); say("Wrong " + Math.round(-70 * factor)); }
+    paintHud();
+    later(visionReduce() ? 200 : 420, next);
+  };
+
+  const beginGauntlet = () => {
+    run.pitch = visionMakePitch(visionRand(["FB", "FB", "SL", "CB", "CH"]));
+    run.phase = "live";
+    run.t0 = performance.now();
+    run.swung = false;
+    run.locked = false;
+    say(run.pitch.strike ? "" : "");
+    say("Swing strikes. Take balls.");
+    const gen = run.gen;
+    loop(gen, (now) => {
+      const t = (now - run.t0) / run.pitch.flight;
+      visionField(ctx, canvas.width, canvas.height);
+      const s = visionSpot(run.pitch, Math.min(1, t));
+      visionBall(ctx, visionProject(canvas.width, canvas.height, s.x, s.y, s.z));
+      if (t >= 1 && !run.locked) gradeGauntlet(false);
+    });
+  };
+  const gradeGauntlet = (swung) => {
+    if (run.locked) return;
+    if (swung && (performance.now() - run.t0) < run.pitch.flight) { run.swung = true; say("Swing"); return; }
+    if (!swung && !run.swung && (performance.now() - run.t0) < run.pitch.flight) return;
+    run.locked = true;
+    run.alive = false;
+    run.asked += 1;
+    const swing = run.swung;
+    const strike = run.pitch.strike;
+    if (!strike) { run.chases.balls += 1; if (swing) run.chases.swings += 1; }
+    const ok = swing === strike;
+    if (ok) { run.right += 1; bumpStreak(true); run.score += 100; say("+100"); }
+    else { bumpStreak(false); run.score -= 200; say(swing ? "Chase −200" : "Frozen −200"); }
+    paintHud();
+    later(visionReduce() ? 120 : 240, () => { run.alive = true; next(); });
+  };
+
+  const beginMatrix = () => {
+    run.pitch = visionMakePitch("FB");
+    run.pitch.x1 = (Math.random() * 0.16 - 0.08);
+    run.pitch.y1 = 0.52;
+    run.phase = "live";
+    run.t0 = performance.now();
+    run.locked = false;
+    run.swung = false;
+    run.swingAt = 0;
+    run.flashPick = "";
+    const cue = visionRand(VISION_SYMBOLS).id;
+    const panels = ["w", "a", "s", "d"];
+    const match = visionRand(panels);
+    const used = VISION_SYMBOLS.map((s) => s.id);
+    const assigned = {};
+    panels.forEach((p) => {
+      assigned[p] = p === match ? cue : used.find((id) => id !== cue && !Object.values(assigned).includes(id)) || cue;
+    });
+    run.matrix = { cue, match, assigned };
+    say("Cue " + cue + " · swing the middle");
+    const gen = run.gen;
+    loop(gen, (now) => {
+      const t = (now - run.t0) / 980;
+      const w = canvas.width;
+      const h = canvas.height;
+      visionField(ctx, w, h);
+      const spots = {
+        w: { x: w * 0.5, y: h * 0.16 },
+        a: { x: w * 0.14, y: h * 0.48 },
+        s: { x: w * 0.5, y: h * 0.84 },
+        d: { x: w * 0.86, y: h * 0.48 },
+      };
+      const flashing = t < 0.8;
+      Object.keys(spots).forEach((key) => {
+        const p = spots[key];
+        ctx.strokeStyle = "rgba(242,208,96,.45)";
+        ctx.strokeRect(p.x - 28, p.y - 28, 56, 56);
+        if (flashing) visionSymbol(ctx, run.matrix.assigned[key], p.x, p.y, 54, "#fff");
+      });
+      visionSymbol(ctx, run.matrix.cue, w * 0.5, h * 0.08, 28, "#f2d060");
+      const s = visionSpot(run.pitch, Math.min(1, t));
+      visionBall(ctx, visionProject(w, h, s.x, s.y, s.z));
+      if (t >= 1.35 && !run.locked) gradeMatrix();
+    });
+  };
+  const gradeMatrix = () => {
+    if (run.locked || run.phase !== "live") return;
+    run.locked = true;
+    run.alive = false;
+    run.asked += 1;
+    const flashOk = run.flashPick === run.matrix.match;
+    const swingOk = run.swung && run.swingAt > 700 && run.swingAt < 1100;
+    if (flashOk) run.dualFlash += 1;
+    if (swingOk) run.dualSwing += 1;
+    if (flashOk && swingOk) run.right += 1;
+    bumpStreak(flashOk);
+    let pts = (flashOk ? 120 : 0) + (swingOk ? 80 : 0);
+    if (flashOk) pts = Math.round(pts * mult());
+    run.score += pts;
+    say(flashOk ? "Flash held · " + pts : "Flash missed · combo broken");
+    paintHud();
+    later(visionReduce() ? 200 : 420, () => { run.alive = true; next(); });
+  };
+
+  const beginDepth = () => {
+    run.phase = "grow";
+    run.t0 = performance.now();
+    run.dur = 500 + Math.random() * 700;
+    run.locked = false;
+    say("Tap when the ball fills the ring");
+    const gen = run.gen;
+    loop(gen, (now) => {
+      const w = canvas.width;
+      const h = canvas.height;
+      ctx.fillStyle = "#07080c";
+      ctx.fillRect(0, 0, w, h);
+      const u = Math.min(1, (now - run.t0) / run.dur);
+      const scale = 0.1 + u * 1.9;
+      const base = Math.min(w, h) * 0.08;
+      ctx.strokeStyle = "rgba(242,208,96,.85)";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(w * 0.5, h * 0.48, base * 1.5, 0, Math.PI * 2);
+      ctx.stroke();
+      visionBall(ctx, { x: w * 0.5, y: h * 0.48, r: base * scale });
+      if (u >= 1 && !run.locked) gradeDepth(run.dur + 80);
+    });
+  };
+  const gradeDepth = (when) => {
+    if (run.locked || run.phase !== "grow") return;
+    run.locked = true;
+    run.alive = false;
+    run.asked += 1;
+    const target = run.dur * ((1.5 - 0.1) / 1.9);
+    const dt = (when == null ? performance.now() - run.t0 : when) - target;
+    const abs = Math.abs(dt);
+    let word = "Late";
+    let pts = 0;
+    if (abs <= 20) { word = "Perfect"; pts = 220; run.right += 1; }
+    else if (abs <= 50) { word = "Good"; pts = 130; run.right += 1; }
+    else word = dt < 0 ? "Early" : "Late";
+    run.words.push(word);
+    bumpStreak(word === "Perfect" || word === "Good");
+    run.score += Math.round(pts * (pts ? mult() : 1));
+    say(word + (pts ? " +" + pts : ""));
+    paintHud();
+    later(visionReduce() ? 200 : 460, () => { run.alive = true; next(); });
+  };
+
+  const ghostBalls = (t) => {
+    const pitch = run.pitch;
+    if (t < 0.5) return [{ id: "true", spot: visionSpot(pitch, t) }];
+    const u = Math.min(1, t);
+    return [
+      { id: "true", spot: visionSpot(pitch, u) },
+      { id: "decoy-a", spot: visionSpot(pitch, u, { x: -0.7, y: 0.05 }) },
+      { id: "decoy-b", spot: visionSpot(pitch, u, { x: 0.45, y: -0.55 }) },
+    ];
+  };
+  const beginGhost = () => {
+    run.pitch = visionMakePitch(visionRand(["SL", "CH", "CB"]));
+    run.phase = "live";
+    run.t0 = performance.now();
+    run.locked = false;
+    say("Track the true ball");
+    const gen = run.gen;
+    loop(gen, (now) => {
+      const t = (now - run.t0) / 1100;
+      visionField(ctx, canvas.width, canvas.height);
+      ghostBalls(Math.min(1.05, t)).forEach((ball) => {
+        const p = visionProject(canvas.width, canvas.height, ball.spot.x, ball.spot.y, ball.spot.z);
+        visionBall(ctx, p);
+        ball.px = p;
+      });
+      run.ghost = ghostBalls(Math.min(1, Math.max(0.5, t)));
+      if (run.bang) {
+        ctx.fillStyle = "rgba(0,0,0,.55)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#fff";
+        ctx.textAlign = "center";
+        ctx.font = "700 42px Impact, sans-serif";
+        ctx.fillText("STRIKEOUT", canvas.width / 2, canvas.height * 0.42);
+        ctx.fillStyle = "#f2d060";
+        ctx.font = "700 28px Impact, sans-serif";
+        ctx.fillText("BROKEN BAT", canvas.width / 2, canvas.height * 0.56);
+      }
+      if (t > 1.15 && !run.locked) gradeGhost("miss");
+    });
+  };
+  const gradeGhost = (which) => {
+    if (run.locked || run.phase !== "live") return;
+    const t = (performance.now() - run.t0) / 1100;
+    if (t < 0.5) return;
+    run.locked = true;
+    run.asked += 1;
+    const ok = which === "true";
+    if (ok) {
+      run.right += 1;
+      bumpStreak(true);
+      const pts = Math.round(160 * mult());
+      run.score += pts;
+      say("True ball +" + pts);
+      paintHud();
+      run.alive = false;
+      later(280, () => { run.alive = true; next(); });
+    } else {
+      bumpStreak(false);
+      run.bang = "out";
+      say("Strikeout");
+      paintHud();
+      later(visionReduce() ? 280 : 720, () => { run.bang = ""; run.alive = false; later(40, () => { run.alive = true; next(); }); });
+    }
+  };
+
+  const beginRhythm = () => {
+    run.phase = "wait";
     run.t0 = performance.now();
     run.popAt = 0;
-    run.phase = "live";
-    if (game.kind === "pop") {
-      const wait = 500 + Math.random() * 900;
-      run.timer = setTimeout(() => {
-        if (!visionRun || visionRun !== run || run.gen !== gen || run.answered) return;
-        visionPopSound();
-        run.popAt = performance.now();
-        run.phase = "popped";
-      }, wait);
-    }
-    const frame = (now) => {
-      if (visionRun !== run || run.gen !== gen) return;
-      fit();
-      const elapsed = now - run.t0;
-      let t = game.kind === "pop" ? 0.15 : elapsed / pitch.flight;
-      const hide = game.kind === "tunnel" && t > 0.28 && t < 0.92;
-      const flash = game.kind === "release" && elapsed < 180 ? pitch.release : "";
-      visionDraw(ctx, canvas.width, canvas.height, pitch, Math.min(1, t), { hideBall: hide || (game.kind === "pop" && run.phase !== "popped"), windows: game.kind === "release", flash, mitt: game.kind === "pop" });
-      if (game.kind !== "pop" && t >= 1 && !run.answered) { grade("", pitch.flight + 200); return; }
-      if (game.kind === "pop" && run.popAt && now - run.popAt > 850 && !run.answered) { grade("", 900); return; }
-      run.raf = requestAnimationFrame(frame);
-    };
-    run.raf = requestAnimationFrame(frame);
+    run.locked = false;
+    run.wait = 1500 + Math.random() * 1500;
+    say(visionSoundOn ? "Sound on · wait for the pop" : "Sound on");
+    later(run.wait, () => {
+      if (run.phase !== "wait" || run.locked) return;
+      visionPopSound();
+      run.popAt = performance.now();
+      run.phase = "go";
+      say("Swing");
+    });
+    const gen = run.gen;
+    loop(gen, (now) => {
+      const w = canvas.width;
+      const h = canvas.height;
+      ctx.fillStyle = "#05060a";
+      ctx.fillRect(0, 0, w, h);
+      ctx.strokeStyle = "rgba(242,208,96,.25)";
+      ctx.strokeRect(w * 0.28, h * 0.34, w * 0.44, h * 0.28);
+      if (run.popAt && now - run.popAt < 280) visionBall(ctx, { x: w * 0.5, y: h * 0.48, r: Math.min(w, h) * 0.07 }, "#f2d060", "#111");
+      if (run.popAt && now - run.popAt > 900 && !run.locked) gradeRhythm(false);
+    });
   };
-  const beginSeq = (gen) => {
-    if (run.index >= run.seq.length) { finish(); return; }
-    run.seqNeed = run.seq[run.index].map((p) => p.type.id);
-    run.seqGot = [];
+  const gradeRhythm = (tapped) => {
+    if (run.locked) return;
+    if (!run.popAt) { run.locked = true; run.asked += 1; bumpStreak(false); say("Too early"); paintHud(); run.alive = false; later(300, () => { run.alive = true; next(); }); return; }
+    if (!tapped) { run.locked = true; run.asked += 1; bumpStreak(false); say("Late"); paintHud(); run.alive = false; later(280, () => { run.alive = true; next(); }); return; }
+    run.locked = true;
+    run.alive = false;
+    run.asked += 1;
+    const reaction = performance.now() - run.popAt;
+    run.reactions.push(reaction);
+    run.right += 1;
+    bumpStreak(true);
+    const pts = Math.round(180 / Math.max(0.1, reaction / 1000));
+    run.score += pts;
+    say("+" + pts);
+    paintHud();
+    later(visionReduce() ? 200 : 400, () => { run.alive = true; next(); });
+  };
+
+  const tracerShapes = ["CB", "SWEEP", "CUT"];
+  const beginTracer = () => {
+    run.pitch = visionMakePitch(tracerShapes[run.index % 3]);
     run.phase = "show";
-    let step = 0;
-    const show = () => {
-      if (visionRun !== run || run.gen !== gen) return;
-      if (step >= 3) { run.phase = "recall"; run.t0 = performance.now(); return; }
-      const pitch = run.seq[run.index][step];
-      const started = performance.now();
-      const frame = (now) => {
-        if (visionRun !== run || run.gen !== gen) return;
-        fit();
-        const t = (now - started) / 520;
-        visionDraw(ctx, canvas.width, canvas.height, pitch, Math.min(1, t), {});
-        if (t < 1) run.raf = requestAnimationFrame(frame);
-        else { step += 1; run.timer = setTimeout(show, 120); }
-      };
-      run.raf = requestAnimationFrame(frame);
-    };
-    show();
+    run.t0 = performance.now();
+    run.truePath = [];
+    run.stroke = [];
+    run.locked = false;
+    const names = { CB: "12–6 curve", SWEEP: "Sweeping slider", CUT: "Cutter" };
+    say(names[run.pitch.id] || "Watch");
+    const gen = run.gen;
+    loop(gen, (now) => {
+      const w = canvas.width;
+      const h = canvas.height;
+      if (run.phase === "show") {
+        const t = (now - run.t0) / 980;
+        visionField(ctx, w, h);
+        const s = visionSpot(run.pitch, Math.min(1, Math.max(0, t)));
+        const p = visionProject(w, h, s.x, s.y, s.z);
+        visionBall(ctx, p);
+        if (t >= 0 && t <= 1) run.truePath.push({ x: p.x / w, y: p.y / h });
+        if (t >= 1.05) { run.phase = "draw"; say("Draw the path, then Done"); }
+      } else {
+        ctx.fillStyle = "#07080c";
+        ctx.fillRect(0, 0, w, h);
+        ctx.strokeStyle = "rgba(242,208,96,.35)";
+        ctx.strokeRect(w * 0.08, h * 0.08, w * 0.84, h * 0.84);
+        ctx.strokeStyle = "#fff";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        run.stroke.forEach((p, i) => (i ? ctx.lineTo(p.x * w, p.y * h) : ctx.moveTo(p.x * w, p.y * h)));
+        ctx.stroke();
+      }
+    });
   };
+  const gradeTracer = () => {
+    if (run.locked || run.phase !== "draw") return;
+    run.locked = true;
+    run.alive = false;
+    run.asked += 1;
+    const truth = visionResample(run.truePath, 24);
+    const drawn = visionResample(run.stroke, 24);
+    let pct = 0;
+    if (truth.length && drawn.length) {
+      const dist = visionFrechet(truth, drawn);
+      pct = Math.round(Math.max(0, Math.min(100, 100 * (1 - dist / 0.42))));
+    }
+    run.pathScores.push(pct);
+    if (pct >= 60) { run.right += 1; bumpStreak(true); }
+    else bumpStreak(false);
+    run.score += Math.round(pct * (pct >= 60 ? mult() : 1));
+    say("Path " + pct + "%");
+    paintHud();
+    later(420, () => { run.alive = true; next(); });
+  };
+
+  const beginIq = () => {
+    const row = run.iq[run.index];
+    if (!row) { finish(); return; }
+    run.row = row;
+    run.phase = "read";
+    run.locked = false;
+    say(row.text);
+    run.pitch = visionMakePitch(row.zone === "pull" ? "FB" : row.zone === "oppo" ? "CH" : "SL");
+    if (row.zone === "pull") run.pitch.x1 = -0.35;
+    if (row.zone === "oppo") run.pitch.x1 = 0.38;
+    if (row.zone === "middle") run.pitch.x1 = 0.02;
+    if (row.zone === "ball") { run.pitch.x1 = 0.72; run.pitch.y1 = 0.3; }
+    run.t0 = performance.now();
+    const gen = run.gen;
+    loop(gen, (now) => {
+      const t = Math.min(1, (now - run.t0) / 700);
+      visionField(ctx, canvas.width, canvas.height);
+      if (run.phase === "choose") {
+        const s = visionSpot(run.pitch, t);
+        visionBall(ctx, visionProject(canvas.width, canvas.height, s.x, s.y, s.z));
+      }
+      if (run.phase === "read" && now - run.t0 > (visionReduce() ? 700 : 1200)) { run.phase = "choose"; say("Pull, middle, oppo, or take"); }
+    });
+  };
+  const gradeIq = (pick) => {
+    if (run.locked || run.phase !== "choose") return;
+    run.locked = true;
+    run.alive = false;
+    run.asked += 1;
+    const contextual = pick === run.row.correct;
+    const execution = pick === run.row.zone || (run.row.correct === "take" && pick === "take");
+    if (contextual) run.right += 1;
+    bumpStreak(contextual);
+    let pts = (contextual ? 140 : 0) + (execution ? 50 : 0);
+    if (contextual) pts = Math.round(pts * mult());
+    run.score += pts;
+    say((contextual ? "Plan +" : "Off the plan") + (execution ? " · executed" : "") + " " + pts);
+    paintHud();
+    later(420, () => { run.alive = true; next(); });
+  };
+
+  const reflexWindow = () => Math.max(200, 800 - run.level * 100);
+  const beginReflex = () => {
+    if (run.index === 0) run.level = 0;
+    run.phase = "hot";
+    run.cell = Math.floor(Math.random() * 16);
+    run.t0 = performance.now();
+    run.locked = false;
+    run.window = reflexWindow();
+    say("Level " + (run.level + 1));
+    const gen = run.gen;
+    loop(gen, (now) => {
+      const w = canvas.width;
+      const h = canvas.height;
+      ctx.fillStyle = "#07080c";
+      ctx.fillRect(0, 0, w, h);
+      const pad = 16;
+      const gw = w - pad * 2;
+      const gh = h - pad * 2 - 18;
+      const cw = gw / 4;
+      const ch = gh / 4;
+      for (let i = 0; i < 16; i++) {
+        const c = i % 4;
+        const r = Math.floor(i / 4);
+        ctx.strokeStyle = "rgba(242,208,96,.28)";
+        ctx.strokeRect(pad + c * cw + 4, 18 + pad + r * ch + 4, cw - 8, ch - 8);
+      }
+      const left = (1 - Math.min(1, (now - run.t0) / run.window));
+      ctx.fillStyle = "#1c1c1c";
+      ctx.fillRect(pad, 8, gw, 8);
+      ctx.fillStyle = left < 0.28 ? "#e10600" : "#f2d060";
+      ctx.fillRect(pad, 8, gw * left, 8);
+      const c = run.cell % 4;
+      const r = Math.floor(run.cell / 4);
+      visionBall(ctx, { x: pad + c * cw + cw / 2, y: 18 + pad + r * ch + ch / 2, r: Math.min(cw, ch) * 0.22 });
+      if (now - run.t0 > run.window && !run.locked) gradeReflex(-1);
+    });
+  };
+  const gradeReflex = (cell) => {
+    if (run.locked || run.phase !== "hot") return;
+    run.locked = true;
+    run.alive = false;
+    run.asked += 1;
+    const ok = cell === run.cell;
+    if (ok) {
+      run.hits += 1;
+      run.right += 1;
+      bumpStreak(true);
+      const tier = run.window <= 250 ? 40 : run.window <= 450 ? 25 : 12;
+      run.speedSum += tier;
+      run.score += 10 + tier + run.streak * 4;
+      if (run.hits % 3 === 0) run.level = Math.min(6, run.level + 1);
+      say("+" + (10 + tier));
+    } else {
+      run.misses += 1;
+      bumpStreak(false);
+      run.score -= 10;
+      say("Miss");
+    }
+    paintHud();
+    later(visionReduce() ? 90 : 160, () => { run.alive = true; next(); });
+  };
+
+  const begin = () => {
+    paintHud();
+    run.gen += 1;
+    if (run.raf) cancelAnimationFrame(run.raf);
+    if (run.timer) clearTimeout(run.timer);
+    run.alive = true;
+    if (game.kind === "vanish") return beginVanish();
+    if (game.kind === "flash") return beginFlash();
+    if (game.kind === "gauntlet") return beginGauntlet();
+    if (game.kind === "matrix") return beginMatrix();
+    if (game.kind === "depth") return beginDepth();
+    if (game.kind === "ghost") return beginGhost();
+    if (game.kind === "rhythm") return beginRhythm();
+    if (game.kind === "tracer") return beginTracer();
+    if (game.kind === "iq") return beginIq();
+    if (game.kind === "reflex") return beginReflex();
+    finish();
+  };
+
   const pick = (id) => {
     if (!visionRun || visionRun !== run) return;
-    if (game.kind === "sequence") {
-      if (run.phase !== "recall") return;
-      run.seqGot.push(id);
-      if (run.seqGot.length < 3) return;
-      const correct = run.seqGot.every((g, i) => g === run.seqNeed[i]);
-      run.asked += 1;
-      if (correct) {
-        run.right += 1;
-        run.streak += 1;
-        run.bestStreak = Math.max(run.bestStreak, run.streak);
-        run.score += 180 + run.streak * 12;
-      } else run.streak = 0;
-      paintHud();
-      run.phase = "wait";
-      run.index += 1;
-      run.timer = setTimeout(begin, 360);
+    if (game.kind === "vanish") {
+      if (id && id.indexOf("aim:") === 0) {
+        const k = id.slice(4);
+        if (run.phase !== "locate") return;
+        if (k === "arrowleft" || k === "a") run.aim.x -= 0.06;
+        if (k === "arrowright" || k === "d") run.aim.x += 0.06;
+        if (k === "arrowup" || k === "w") run.aim.y += 0.05;
+        if (k === "arrowdown" || k === "s") run.aim.y -= 0.05;
+        return;
+      }
+      if (run.phase === "locate") return;
+      if (run.phase === "type" || run.phase === "show") gradeVanish(id, null);
       return;
     }
-    if (run.answered || run.phase === "wait") return;
-    const pitch = run.pitches[run.index];
-    if (game.kind === "pop") {
-      if (!run.popAt) { grade("early", 0); return; }
-      grade("tap", performance.now() - run.popAt);
+    if (game.kind === "flash") return gradeFlash(id);
+    if (game.kind === "gauntlet") return gradeGauntlet(true);
+    if (game.kind === "matrix") {
+      if (id === "go") {
+        if (!run.swingAt) run.swingAt = performance.now() - run.t0;
+        run.swung = true;
+        return;
+      }
+      run.flashPick = id;
       return;
     }
-    grade(id, performance.now() - run.t0);
+    if (game.kind === "depth") return gradeDepth(performance.now() - run.t0);
+    if (game.kind === "ghost") {
+      const balls = (run.ghost || []).slice().sort((a, b) => a.spot.x - b.spot.x);
+      const map = { left: balls[0], mid: balls[1], right: balls[2] };
+      const ball = map[id];
+      if (ball) gradeGhost(ball.id);
+      return;
+    }
+    if (game.kind === "rhythm") return gradeRhythm(true);
+    if (game.kind === "tracer") {
+      if (id === "clear") { run.stroke = []; return; }
+      if (id === "done") gradeTracer();
+      return;
+    }
+    if (game.kind === "iq") return gradeIq(id);
   };
+
   hub.querySelectorAll("[data-pick]").forEach((btn) => btn.addEventListener("click", () => pick(btn.dataset.pick)));
-  if (canvas) canvas.addEventListener("pointerdown", (e) => {
-    if (game.kind !== "quad" && game.kind !== "tunnel") return;
+  canvas.addEventListener("pointerdown", (e) => {
     const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width;
-    const y = (e.clientY - rect.top) / rect.height;
-    const id = (y < 0.55 ? "up" : "down") + "-" + (x < 0.5 ? "in" : "away");
-    pick(id);
+    const px = (e.clientX - rect.left) * (canvas.width / rect.width);
+    const py = (e.clientY - rect.top) * (canvas.height / rect.height);
+    if (game.kind === "vanish" && run.phase === "locate") {
+      gradeVanish(run.typePick, visionPlateFromPx(canvas.width, canvas.height, px, py));
+    } else if (game.kind === "ghost" && run.ghost) {
+      let best = null;
+      run.ghost.forEach((ball) => {
+        const p = visionProject(canvas.width, canvas.height, ball.spot.x, ball.spot.y, ball.spot.z);
+        const d = Math.hypot(p.x - px, p.y - py);
+        if (!best || d < best.d) best = { d, id: ball.id };
+      });
+      if (best && best.d < 80) gradeGhost(best.id);
+    } else if (game.kind === "depth") gradeDepth(performance.now() - run.t0);
+    else if (game.kind === "rhythm") gradeRhythm(true);
+    else if (game.kind === "matrix") {
+      const w = canvas.width;
+      const h = canvas.height;
+      if (Math.hypot(px - w * 0.5, py - h * 0.5) < Math.min(w, h) * 0.16) {
+        if (!run.swingAt) run.swingAt = performance.now() - run.t0;
+        run.swung = true;
+      }
+      const spots = { w: [0.5, 0.16], a: [0.14, 0.48], s: [0.5, 0.84], d: [0.86, 0.48] };
+      Object.keys(spots).forEach((key) => {
+        const sx = spots[key][0] * w;
+        const sy = spots[key][1] * h;
+        if (Math.abs(px - sx) < 40 && Math.abs(py - sy) < 40) run.flashPick = key;
+      });
+    } else if (game.kind === "tracer" && run.phase === "draw") {
+      run.drawing = true;
+      run.stroke.push({ x: px / canvas.width, y: py / canvas.height });
+    } else if (game.kind === "reflex") {
+      const pad = 16;
+      const gw = canvas.width - pad * 2;
+      const gh = canvas.height - pad * 2 - 18;
+      const c = Math.floor((px - pad) / (gw / 4));
+      const r = Math.floor((py - 18 - pad) / (gh / 4));
+      if (c >= 0 && c < 4 && r >= 0 && r < 4) gradeReflex(r * 4 + c);
+    } else if (game.kind === "gauntlet") gradeGauntlet(true);
   });
+  canvas.addEventListener("pointermove", (e) => {
+    if (game.kind !== "tracer" || !run.drawing || run.phase !== "draw") return;
+    const rect = canvas.getBoundingClientRect();
+    const px = (e.clientX - rect.left) * (canvas.width / rect.width);
+    const py = (e.clientY - rect.top) * (canvas.height / rect.height);
+    run.stroke.push({ x: px / canvas.width, y: py / canvas.height });
+  });
+  const up = () => { run.drawing = false; };
+  canvas.addEventListener("pointerup", up);
+  canvas.addEventListener("pointerleave", up);
   run.key = (e) => {
     const id = visionKeyMap(game.kind, e.code, e.key);
     if (!id) return;
     e.preventDefault();
-    pick(id);
+    if (id.indexOf("aim:") === 0 && e.code === "Space") { if (run.phase === "locate") gradeVanish(run.typePick, run.aim); }
+    else pick(id);
   };
   window.addEventListener("keydown", run.key);
-  begin();
+  if (game.kind === "iq") {
+    say("Loading situations");
+    visionIqList().then((rows) => {
+      if (visionRun !== run) return;
+      const bag = rows.slice();
+      run.iq = [];
+      while (run.iq.length < game.rounds && bag.length) {
+        const i = Math.floor(Math.random() * bag.length);
+        run.iq.push(bag.splice(i, 1)[0]);
+      }
+      if (!run.iq.length) { say("Situations did not load"); return; }
+      begin();
+    });
+  } else begin();
 }
 
 function visionShowIntro(player, gameId) {
@@ -579,10 +1183,10 @@ function visionShowIntro(player, gameId) {
   if (hub.scrollIntoView) hub.scrollIntoView({ block: "start" });
   const start = document.getElementById("visionStart");
   if (start) start.addEventListener("click", () => {
-    if (game.kind === "pop") {
+    if (game.kind === "rhythm") {
       visionUnlock();
       const note = document.getElementById("visionSound");
-      if (note) note.textContent = visionSoundOn ? "Sound on" : "Sound unavailable — the mitt still flashes.";
+      if (note) note.textContent = visionSoundOn ? "Sound on" : "Sound unavailable — the ball still flashes.";
     }
     visionPlay(player, game);
   });
@@ -638,4 +1242,5 @@ function visionOpen(player, opts) {
 
 globalThis.visionMount = visionMount;
 globalThis.visionOpen = visionOpen;
+globalThis.visionStop = visionStop;
 globalThis.VISION_GAMES = VISION_GAMES;

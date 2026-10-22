@@ -1,0 +1,20 @@
+[
+  { "id": "r3-air", "text": "Runner on 3rd, less than 2 outs: drive it in the air.", "correct": "pull", "zone": "pull" },
+  { "id": "0-2-protect", "text": "0-2: protect the plate.", "correct": "middle", "zone": "middle" },
+  { "id": "3-1-r2", "text": "3-1, runner on 2nd: take or look fastball.", "correct": "take", "zone": "ball" },
+  { "id": "r1-move", "text": "Runner on 1st, no outs: move him over.", "correct": "oppo", "zone": "oppo" },
+  { "id": "two-out-gap", "text": "Two outs, runner on 2nd: drive the gap.", "correct": "middle", "zone": "middle" },
+  { "id": "2-0-pull", "text": "2-0, nobody on: sit fastball and pull it.", "correct": "pull", "zone": "pull" },
+  { "id": "full-win", "text": "Full count, winning run on 3rd: put the ball in play.", "correct": "middle", "zone": "middle" },
+  { "id": "r13-right", "text": "Runners on 1st and 3rd, one out: ground ball to the right side.", "correct": "oppo", "zone": "oppo" },
+  { "id": "0-2-r3", "text": "0-2, runner on 3rd: spoil it up the middle.", "correct": "middle", "zone": "middle" },
+  { "id": "bases-fly", "text": "Bases loaded, one out: a fly ball scores.", "correct": "pull", "zone": "pull" },
+  { "id": "3-0-take", "text": "3-0: take the strike.", "correct": "take", "zone": "ball" },
+  { "id": "hit-run", "text": "Hit and run, runner going: swing through the middle.", "correct": "middle", "zone": "middle" },
+  { "id": "1-1-pull", "text": "1-1, leadoff inning: look for one you can drive to the pull side.", "correct": "pull", "zone": "pull" },
+  { "id": "chase-take", "text": "Two strikes, chase pitch off the plate: take.", "correct": "take", "zone": "ball" },
+  { "id": "sac-fly", "text": "Sacrifice fly, runner on 3rd, less than 2 outs.", "correct": "pull", "zone": "pull" },
+  { "id": "away-oppo", "text": "2-1, pitch is away: drive it the other way.", "correct": "oppo", "zone": "oppo" },
+  { "id": "first-strike", "text": "First pitch of the at-bat, middle-in: let it travel and pull it.", "correct": "pull", "zone": "pull" },
+  { "id": "two-k-foul", "text": "Two strikes, runner on 1st: fight it off up the middle.", "correct": "middle", "zone": "middle" }
+]

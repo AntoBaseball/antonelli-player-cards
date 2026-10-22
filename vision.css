@@ -20,9 +20,13 @@
 .vision-copy{margin:0;text-align:center;color:#f7ecc8;line-height:1.5}
 .vision-controls-note{margin:0;text-align:center;color:#f2d060;font-size:13px;font-weight:800;letter-spacing:.2px}
 .vision-hud{display:flex;justify-content:space-between;gap:8px;font-size:12px;font-weight:800;letter-spacing:.4px;color:#f2d060}
-.vision-canvas{width:100%;height:min(52vh,420px);border-radius:16px;background:#07080c;border:1px solid rgba(212,175,55,.4);touch-action:none;display:block}
+.vision-canvas{width:100%;height:min(46vh,380px);border-radius:16px;background:#07080c;border:1px solid rgba(212,175,55,.4);touch-action:none;display:block}
+.vision-call{margin:0;min-height:1.2em;text-align:center;color:#fff;font-size:13px;font-weight:800}
 .vision-pad{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .vision-pad.is-one{grid-template-columns:1fr}
+.vision-pad.is-3{grid-template-columns:1fr 1fr 1fr}
+.vision-pad.is-4{grid-template-columns:1fr 1fr}
+.vision-pad.is-4 button[data-pick="go"]{grid-column:1 / -1;min-height:64px;background:linear-gradient(180deg,#8f6f0e,#f2d060);color:#111}
 .vision-pad button{min-height:56px;border-radius:14px;border:1px solid rgba(212,175,55,.55);background:rgba(255,255,255,.06);color:#fff;font-weight:900;letter-spacing:.4px;font-size:16px;cursor:pointer}
 .vision-pad.is-one button{min-height:76px;font-size:20px;background:linear-gradient(180deg,#8f6f0e,#f2d060);color:#111}
 .vision-pad button:active{transform:translateY(1px)}
