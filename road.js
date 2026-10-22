@@ -1026,7 +1026,7 @@ function roadHomeHTML(player) {
     "<div class=\"road-grid\">" +
     "<div class=\"road-card road-missions\"><h3>Today's mission <b>" + done + "/4</b></h3><ul class=\"mission-list\">" + list + "</ul>" +
     "<div class=\"road-actions\"><button class=\"btn btn-red\" type=\"button\" id=\"roadTrain\"" + (can ? "" : " disabled") + ">Log training</button></div>" + coachTools + "</div>" +
-    "<div class=\"road-card road-coach\"><h3>Development coach</h3><p class=\"coach-line\">" + roadEsc(coach) + "</p>" +
+    "<div class=\"road-card road-coach\"><h2 class=\"day-title\">DEVELOPMENT COACH</h2><p class=\"coach-line\">" + roadEsc(coach) + "</p>" +
     roadNextMarkup(next) +
     "<p class=\"tier-need\">" + roadEsc(roadTierNeed(g.overall, player)) + "</p>" +
     "<p class=\"road-bench\">" + roadEsc(roadBenchmarkLine(player)) + "</p></div></div>" +

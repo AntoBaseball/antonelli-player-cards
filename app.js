@@ -686,6 +686,167 @@ const SAMPLE_PLAYERS = [
   },
 ];
 
+/* SAMPLE DATA — Antonelli 12U.
+   Invented placeholder stats for 12-year-olds, not real tests.
+   Edit a position (or secondaryPosition) in SAMPLE_12U_ROSTER.
+   The card, the signed-in switcher, coach mode, and the team filter all read that field.
+   Reset Sample Data rebuilds the roster from SAMPLE_PLAYERS, which includes this list. */
+const SAMPLE_12U_ROSTER = [
+  { id: "sample-giovanni-coffin", name: "Giovanni Coffin", position: "C", secondaryPosition: "", bats: "R", throws: "R", type: "hitter", archetype: "Contact / Leadoff", height: "5'0\"", weight: "102 lbs", hometown: "Medford, MA", exit: 57, bat: 46, sprint: 2.14, throwV: 51, chest: 12.4, grip: 52, broad: 62, vert: 16, fly: 1.58, distance: 165 },
+  { id: "sample-matty-antonelli", name: "Matty Antonelli", position: "SS", secondaryPosition: "2B", bats: "R", throws: "R", type: "hitter", archetype: "Speed / Table-Setter", height: "5'3\"", weight: "112 lbs", hometown: "Boston, MA", exit: 65, bat: 54, sprint: 1.97, throwV: 61, chest: 15.2, grip: 66, broad: 74, vert: 21, fly: 1.42, distance: 195 },
+  { id: "sample-dominik-cacciola", name: "Dominik Cacciola", position: "2B", secondaryPosition: "SS", bats: "R", throws: "R", type: "hitter", archetype: "Gap-to-Gap Hitter", height: "5'1\"", weight: "100 lbs", hometown: "Revere, MA", exit: 55, bat: 47, sprint: 2.08, throwV: 49, chest: 12.8, grip: 54, broad: 64, vert: 17, fly: 1.54, distance: 160 },
+  { id: "sample-grady-currier", name: "Grady Currier", position: "3B", secondaryPosition: "1B", bats: "R", throws: "R", type: "hitter", archetype: "Power Hitter", height: "5'4\"", weight: "125 lbs", hometown: "Quincy, MA", exit: 62, bat: 52, sprint: 2.18, throwV: 58, chest: 14.6, grip: 63, broad: 68, vert: 18, fly: 1.60, distance: 188 },
+  { id: "sample-liam-tainsh", name: "Liam Tainsh", position: "1B", secondaryPosition: "OF", bats: "L", throws: "L", type: "hitter", archetype: "Power Hitter", height: "5'5\"", weight: "128 lbs", hometown: "Somerville, MA", exit: 63, bat: 51, sprint: 2.20, throwV: 47, chest: 13.5, grip: 58, broad: 66, vert: 17, fly: 1.62, distance: 184 },
+  { id: "sample-nico-cavallo", name: "Nico Cavallo", position: "CF", secondaryPosition: "OF", bats: "L", throws: "L", type: "hitter", archetype: "Speed / Table-Setter", height: "5'2\"", weight: "98 lbs", hometown: "Cambridge, MA", exit: 54, bat: 48, sprint: 1.96, throwV: 53, chest: 13.0, grip: 55, broad: 76, vert: 22, fly: 1.40, distance: 155 },
+  { id: "sample-brendan-foley", name: "Brendan Foley", position: "LF", secondaryPosition: "OF", bats: "R", throws: "R", type: "hitter", archetype: "Gap-to-Gap Hitter", height: "5'2\"", weight: "108 lbs", hometown: "Everett, MA", exit: 60, bat: 50, sprint: 2.11, throwV: 56, chest: 14.2, grip: 60, broad: 70, vert: 19, fly: 1.52, distance: 176 },
+  { id: "sample-zach-sorgini", name: "Zach Sorgini", position: "RF", secondaryPosition: "OF", bats: "R", throws: "R", type: "hitter", archetype: "Power Hitter", height: "5'3\"", weight: "118 lbs", hometown: "Malden, MA", exit: 59, bat: 49, sprint: 2.15, throwV: 57, chest: 13.8, grip: 61, broad: 67, vert: 18, fly: 1.56, distance: 172 },
+  { id: "sample-sebastian-white", name: "Sebastian White", position: "RHP", secondaryPosition: "", bats: "R", throws: "R", type: "pitcher", archetype: "Workhorse Starter", height: "5'4\"", weight: "120 lbs", hometown: "Winthrop, MA", fb: 61, spin: 1620, strike: 56, whiff: 20, cap: 48 },
+  { id: "sample-anthony-contilli", name: "Anthony Contilli", position: "LHP", secondaryPosition: "", bats: "L", throws: "L", type: "pitcher", archetype: "Pitch-to-Contact Starter", height: "5'1\"", weight: "105 lbs", hometown: "East Boston, MA", fb: 56, spin: 1480, strike: 62, whiff: 16, cap: 44 },
+  { id: "sample-noah-bernazzani", name: "Noah Bernazzani", position: "RHP", secondaryPosition: "", bats: "R", throws: "R", type: "pitcher", archetype: "Closer", height: "5'6\"", weight: "130 lbs", hometown: "Braintree, MA", fb: 64, spin: 1740, strike: 52, whiff: 26, cap: 42 },
+  { id: "sample-vincent-merullo", name: "Vincent Merullo", position: "OF", secondaryPosition: "RHP", bats: "R", throws: "R", type: "two-way", archetype: "Two-Way Player", height: "5'3\"", weight: "115 lbs", hometown: "Newton, MA", exit: 58, bat: 49, sprint: 2.06, throwV: 55, chest: 13.2, grip: 57, broad: 65, vert: 17, fly: 1.50, distance: 168, fb: 59, spin: 1560, strike: 55, whiff: 18, cap: 40 },
+  { id: "sample-robbie-stanziani", name: "Robbie Stanziani", position: "UT", secondaryPosition: "3B", bats: "R", throws: "R", type: "hitter", archetype: "Contact / Leadoff", height: "4'11\"", weight: "92 lbs", hometown: "Waltham, MA", exit: 52, bat: 45, sprint: 2.17, throwV: 46, chest: 11.6, grip: 48, broad: 60, vert: 15, fly: 1.64, distance: 148 },
+];
+
+function sample12uPlayer(row, index) {
+  const hitter = row.type !== "pitcher";
+  const metrics = {};
+  if (hitter) {
+    metrics.batSpeed = row.bat;
+    metrics.peakHandSpeed = Math.round((16.2 + (index % 4) * 0.7) * 10) / 10;
+    metrics.attackAngle = 6 + (index % 3);
+    metrics.verticalBatAngle = -22 - (index % 4);
+    metrics.timeToContact = Math.round((0.21 - (index % 5) * 0.005) * 1000) / 1000;
+    metrics.powerKw = Math.round((1.15 + (index % 6) * 0.12) * 10) / 10;
+    metrics.rotationalAcceleration = 9 + (index % 5);
+    metrics.onPlaneEfficiency = 66 + (index % 6);
+    metrics.earlyConnection = 84 + (index % 5);
+    metrics.connectionAtImpact = 84 + (index % 4);
+    metrics.tenYard = row.sprint;
+    metrics.throwVelo = row.throwV;
+    metrics.medBall = row.chest;
+    metrics.gripDominant = row.grip;
+    metrics.gripOther = Math.max(30, row.grip - 4);
+    metrics.exitVelo = row.exit;
+    metrics.battedDistance = row.distance;
+    metrics.broadJump = row.broad;
+    metrics.vertical = row.vert;
+    metrics.flying10 = row.fly;
+  }
+  if (row.type !== "hitter") {
+    metrics.fastballVelo = row.fb;
+    metrics.spinRate = row.spin;
+    metrics.strikePct = row.strike;
+    metrics.whiffPct = row.whiff;
+    metrics.pitchCapacity = row.cap;
+  }
+  return {
+    id: row.id,
+    name: row.name,
+    age: 12,
+    ageGroup: "12U",
+    classYear: "2032",
+    team: "Antonelli 12U",
+    position: row.position,
+    secondaryPosition: row.secondaryPosition,
+    height: row.height,
+    weight: row.weight,
+    hometown: row.hometown,
+    bats: row.bats,
+    throws: row.throws,
+    type: row.type,
+    archetype: row.archetype,
+    photo: "",
+    strengths: ["Shows up and competes on every rep"],
+    improvements: ["Strength and bat speed come with time"],
+    coachQuirks: [index % 2 ? "first-pitch" : "table-setter"],
+    strengthNote: DEFAULT_STRENGTH_NOTE,
+    metrics: metrics,
+    history: {},
+    readingLog: {},
+    road: {
+      xp: 280 + index * 90,
+      signature: "Sample 12U card.",
+      dates: { training: ["2026-10-20"], checkin: ["2026-10-20"] },
+      streaks: { training: 1, checkin: 1 },
+    },
+  };
+}
+
+SAMPLE_12U_ROSTER.forEach((row, index) => SAMPLE_PLAYERS.push(sample12uPlayer(row, index)));
+
+/* One reading each month, May through October, for every stat the card charts.
+   Each step is a small gain in the right direction and the last point is the current card value.
+   This replaces older sample logs that dipped or jumped, so the month charts do not have to invent points. */
+const SAMPLE_CHART_MONTHS = ["2026-05-12", "2026-06-14", "2026-07-16", "2026-08-18", "2026-09-16", "2026-10-20"];
+const SAMPLE_CHART_SPECS = [
+  { key: "exitVelo", better: "higher", digits: 1 },
+  { key: "batSpeed", better: "higher", digits: 1 },
+  { key: "tenYard", better: "lower", digits: 2 },
+  { key: "throwVelo", better: "higher", digits: 1 },
+  { key: "broadJump", better: "higher", digits: 0 },
+  { key: "vertical", better: "higher", digits: 0 },
+  { key: "flying10", better: "lower", digits: 2 },
+  { key: "medBall", better: "higher", digits: 1 },
+  { key: "gripDominant", better: "higher", digits: 0 },
+  { key: "fastballVelo", better: "higher", digits: 1 },
+  { key: "spinRate", better: "higher", digits: 0 },
+  { key: "strikePct", better: "higher", digits: 0 },
+  { key: "whiffPct", better: "higher", digits: 0 },
+  { key: "pitchCapacity", better: "higher", digits: 0 },
+];
+
+function sampleChartStep(end, digits) {
+  const mag = Math.abs(end);
+  if (digits === 2) return 0.02;
+  if (digits === 0 && mag >= 400) return 30;
+  if (digits === 0) return 1;
+  if (digits === 1 && mag >= 30) return 0.5;
+  if (digits === 1) return 0.3;
+  return 1;
+}
+
+function sampleChartRound(n, digits) {
+  const f = 10 ** digits;
+  return Math.round(n * f) / f;
+}
+
+function sampleSteadyValues(end, better, digits, salt) {
+  const higher = better !== "lower";
+  const min = digits === 2 ? 0.01 : (digits === 1 ? 0.1 : 1);
+  const base = sampleChartStep(end, digits);
+  const wobble = [0, 1, -1, 1, 0];
+  const bump = digits === 2 ? 0.01 : (digits === 0 && Math.abs(end) >= 400 ? 8 : min);
+  const values = new Array(6);
+  values[5] = sampleChartRound(end, digits);
+  for (let i = 4; i >= 0; i -= 1) {
+    const next = values[i + 1];
+    const step = Math.max(min, base + wobble[(i + salt) % wobble.length] * bump);
+    let value = higher ? sampleChartRound(next - step, digits) : sampleChartRound(next + step, digits);
+    if (higher && value >= next) value = sampleChartRound(next - min, digits);
+    if (!higher && value <= next) value = sampleChartRound(next + min, digits);
+    if (higher && value < 0) value = 0;
+    values[i] = value;
+  }
+  return values;
+}
+
+function seedSampleMonthLog(player) {
+  if (!player.readingLog || typeof player.readingLog !== "object") player.readingLog = {};
+  if (!player.history || typeof player.history !== "object") player.history = {};
+  SAMPLE_CHART_SPECS.forEach((spec) => {
+    const end = player.metrics ? Number(player.metrics[spec.key]) : NaN;
+    if (!Number.isFinite(end)) return;
+    let salt = 0;
+    const id = String(player.id) + spec.key;
+    for (let i = 0; i < id.length; i += 1) salt = (salt + id.charCodeAt(i) * (i + 3)) % 5;
+    const values = sampleSteadyValues(end, spec.better, spec.digits, salt);
+    player.readingLog[spec.key] = values.map((value, i) => ({ value: value, at: SAMPLE_CHART_MONTHS[i] }));
+    player.history[spec.key] = values.slice();
+  });
+}
+
+SAMPLE_PLAYERS.forEach(seedSampleMonthLog);
+
 /* ---------- Grade math ---------- */
 function clamp(n, lo, hi) { return Math.min(hi, Math.max(lo, n)); }
 
