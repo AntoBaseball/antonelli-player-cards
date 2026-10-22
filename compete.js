@@ -553,7 +553,8 @@ function competePaint() {
   }).join("");
   const h2h = mine.map((ch) => competeH2H(ch)).join("");
   const options = competeRoster().filter((p) => p.id !== me.id).map((p) => "<option value=\"" + competeEsc(p.id) + "\">" + competeEsc(p.name) + "</option>").join("");
-  const metrics = COMPETE_METRICS.map((m) => "<option value=\"" + m.key + "\">" + m.label + "</option>").join("");
+  const metricIcon = { batSpeed: "⚾", exitVelo: "💥", tenYard: "⚡", throwVelo: "🎯", broadJump: "🦘", vertical: "⬆", flying10: "🏃" };
+  const metrics = COMPETE_METRICS.map((m) => "<option value=\"" + m.key + "\">" + (metricIcon[m.key] || "⚾") + " " + m.label + "</option>").join("");
   const dayMount = document.getElementById("cardsOfDay");
   if (dayMount) {
     dayMount.innerHTML = competeDayCardsHTML(cotd);
@@ -580,12 +581,12 @@ function competePaint() {
     "<h3>Days holding the crown</h3>" + crownRows +
     "</div>" +
     "<div class=\"compete-board pr-board\"><div class=\"trophy-grid\">" + boards + "</div></div>" +
-    "<div class=\"compete-board\" id=\"challengeBoard\"><p class=\"compete-kicker\">HEAD TO HEAD</p><div id=\"h2hBoard\">" + h2hBlock + "</div>" +
-    (incomingHTML ? "<p class=\"compete-kicker\">INCOMING</p>" + incomingHTML : "<p>No pending challenges.</p>") +
-    "<ol class=\"ch-steps\"><li><span>1</span><label>Pick teammate<select id=\"chWho\">" + options + "</select></label></li>" +
-    "<li><span>2</span><label>Pick category<select id=\"chMetric\">" + metrics + "</select></label></li>" +
-    "<li><span>3</span><label>Pick end date <em>up to 1 month</em><select id=\"chDeadline\">" + endChoices + "</select></label></li>" +
-    "<li><span>4</span><button class=\"btn btn-red\" type=\"button\" id=\"chSend\">Send</button></li></ol></div>" +
+    "<div class=\"compete-board h2h-board\" id=\"challengeBoard\"><h2 class=\"day-title\">HEAD TO HEAD</h2><div id=\"h2hBoard\">" + h2hBlock + "</div>" +
+    (incomingHTML ? "<p class=\"compete-kicker\">INCOMING</p>" + incomingHTML : "<p class=\"h2h-empty\">No pending challenges.</p>") +
+    "<div class=\"ch-picks\"><label class=\"ch-field\"><span>Teammate</span><select id=\"chWho\">" + options + "</select><div class=\"ch-preview\" id=\"chPreview\"></div></label>" +
+    "<label class=\"ch-field\"><span>Category</span><select id=\"chMetric\">" + metrics + "</select></label>" +
+    "<label class=\"ch-field\"><span>End date</span><select id=\"chDeadline\">" + endChoices + "</select><em>Up to 1 month</em></label></div>" +
+    "<button class=\"ch-challenge\" type=\"button\" id=\"chSend\">CHALLENGE</button></div>" +
     "<div class=\"compete-board quest-board\">" +
     "<h3>" + quest.name + "</h3><p>" + quest.detail + "</p><div class=\"road-track\"><span style=\"width:" + Math.min(100, Math.round((quest.progress / quest.target) * 100)) + "%\"></span></div><p>" + quest.progress + " / " + quest.target + "</p>" +
     "<h3>" + month.name + "</h3><p>" + month.detail + " · " + month.progress + " MPH</p>" +
@@ -602,6 +603,15 @@ function competePaint() {
   });
   mount.querySelectorAll("[data-accept]").forEach((btn) => btn.addEventListener("click", () => competeAnswer(btn.dataset.accept, "accepted")));
   mount.querySelectorAll("[data-decline]").forEach((btn) => btn.addEventListener("click", () => competeAnswer(btn.dataset.decline, "declined")));
+  const who = document.getElementById("chWho");
+  const preview = document.getElementById("chPreview");
+  const paintPreview = () => {
+    if (!who || !preview) return;
+    const player = competeRoster().find((p) => p.id === who.value);
+    preview.innerHTML = player ? competeFace(player) + "<b>" + competeEsc(player.name) + "</b>" : "";
+  };
+  if (who) who.addEventListener("change", paintPreview);
+  paintPreview();
   const send = document.getElementById("chSend");
   if (send) send.addEventListener("click", () => {
     const facilityNow = competeFacility();
