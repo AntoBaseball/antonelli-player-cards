@@ -11,7 +11,8 @@
 .lb-board .compete-kicker{margin-top:18px}
 .lb-list{display:grid;grid-template-columns:auto auto;justify-content:center;column-gap:40px;width:100%;text-align:left}
 .pr-board .lb-list{column-gap:24px}
-.lb-list > .lb-row,.lb-list > .award-row{display:grid;grid-template-columns:subgrid;grid-column:1 / -1;align-items:baseline;width:auto;max-width:none;margin:0;gap:0;justify-content:stretch}
+.lb-list > .lb-row,.lb-list > .award-row{display:grid;grid-template-columns:subgrid;grid-column:1 / -1;column-gap:40px;align-items:baseline;width:auto;max-width:none;margin:0;justify-content:stretch}
+.pr-board .lb-list > .lb-row{column-gap:24px}
 .lb-rank{display:inline-block;width:1.7em;margin-right:.35em;text-align:right;font-variant-numeric:tabular-nums}
 .lb-emoji{display:inline-block;width:1.5em;margin-right:.15em;text-align:center}
 .lb-who,.lb-name{white-space:nowrap}
@@ -91,6 +92,10 @@
 .react-btn:hover{border-color:#f2d060}
 .trophy-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;width:100%}
 .trophy-card{border:1px solid rgba(212,175,55,.35);border-radius:12px;padding:8px;background:rgba(0,0,0,.35)}
+@media (min-width:601px){
+  .pr-board .trophy-grid{display:flex;flex-wrap:wrap;justify-content:center;gap:12px}
+  .pr-board .trophy-card{flex:0 1 260px;width:260px;max-width:100%}
+}
 .hidden-ach{opacity:.45}
 @media (max-width:600px){
   .day-row{justify-content:flex-start;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding:0 2px 10px;-webkit-overflow-scrolling:touch}
