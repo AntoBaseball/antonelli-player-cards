@@ -784,7 +784,6 @@ function roadHomeHTML(player) {
   const lvl = roadLevel(player);
   const missions = roadTodayMissions(player);
   const done = missions.filter((m) => m.done).length;
-  const width99 = Math.round((g.overall / 99) * 100);
   const widthXp = Math.round((lvl.into / lvl.span) * 100);
   const can = roadCanEdit(player);
   const list = missions.map((m) => {
@@ -803,8 +802,6 @@ function roadHomeHTML(player) {
     "<div class=\"road-stage\">" +
     "<div class=\"road-own\">" + (typeof cardHTML === "function" ? cardHTML(player, true, null, { flip: true }) : "") + "</div>" +
     "<div class=\"road-meters\">" +
-    "<div class=\"road-99\"><div class=\"road-99-top\"><span>OVERALL</span><b>" + g.overall + "</b></div>" +
-    "<div class=\"road-track\" id=\"road99Track\"><span style=\"width:" + width99 + "%\"></span></div></div>" +
     "<div class=\"road-99\"><div class=\"road-xp-line\"><span>LEVEL " + lvl.level + "</span><span id=\"xpReadout\">" + lvl.into.toLocaleString() + " / " + lvl.span.toLocaleString() + " XP</span><span>" + lvl.remain.toLocaleString() + " XP TO LEVEL " + Math.min(99, lvl.level + 1) + "</span></div>" +
     "<div class=\"road-track\" id=\"xpTrack\"><span style=\"width:" + widthXp + "%\"></span></div></div></div></div>" +
     "<h3 class=\"road-hello\">" + roadEsc(roadGreeting()) + ", " + roadEsc(roadFirstName(player)) + "</h3>" +

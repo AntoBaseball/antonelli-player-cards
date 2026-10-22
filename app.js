@@ -3143,10 +3143,40 @@ function cardHTML(player, large, face, opts) {
   </div>`;
 }
 
+/* Shrink a one-line label until its glyphs sit inside the box. Italic faces
+   paint past the em box, so the range rect is the real width. */
+function fitCardLine(el, floor) {
+  if (!el) return;
+  el.style.fontSize = "";
+  const max = parseFloat(getComputedStyle(el).fontSize) || floor;
+  let size = max;
+  el.style.fontSize = size + "px";
+  const tooWide = () => {
+    const box = el.getBoundingClientRect();
+    if (box.width < 8) return false;
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    const ink = range.getBoundingClientRect();
+    return ink.width > box.width + 0.5 || ink.right > box.right + 0.5;
+  };
+  let guard = 0;
+  while (tooWide() && size > floor && guard < 48) {
+    size = Math.round((size - 0.5) * 10) / 10;
+    el.style.fontSize = size + "px";
+    guard += 1;
+  }
+}
+
+function fitCardName(card) {
+  fitCardLine(card.querySelector(".card-name .archetype"), 8);
+  fitCardLine(card.querySelector(".card-name h2, .card-name h3"), 12);
+}
+
 /* One star for every card, 20% larger than the 327/130 pair. On the 420px-tall
    phone card the ink is 196.2px (about 392px on a 600px-wide render) and its top
-   sits 121px down. A 392px desktop card is 156px. It stays behind the name. */
+   sits 121px down. A 392px desktop card is 156px. The ink is centered on the card. */
 function fitCardStar(card) {
+  fitCardName(card);
   const logo = card.querySelector(".card-logo");
   const visual = card.querySelector(".card-visual");
   if (!logo || !visual) return;
@@ -3161,11 +3191,15 @@ function fitCardStar(card) {
   const height = ink / inkFrac;
   const width = height * (512 / 500);
   const visualInset = (visual.getBoundingClientRect().top - cardBox.top) / scale;
-  const marginTop = 121 - visualInset - height * padT;
+  const top = 121 - visualInset - height * padT;
   logo.style.width = width.toFixed(2) + "px";
   logo.style.height = height.toFixed(2) + "px";
-  logo.style.marginTop = marginTop.toFixed(2) + "px";
-  logo.style.marginRight = "0px";
+  logo.style.position = "absolute";
+  logo.style.left = "50%";
+  logo.style.right = "auto";
+  logo.style.margin = "0";
+  logo.style.top = top.toFixed(2) + "px";
+  logo.style.transform = "translateX(-50%)";
 }
 
 function watchCardStars() {
