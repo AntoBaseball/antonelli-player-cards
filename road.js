@@ -889,11 +889,34 @@ function roadBackExtra(player) {
     "</div></section>";
 }
 
+function roadHeadlineSpec(player) {
+  return player && player.type === "pitcher" ? ROAD_CHART_PITCHING[0] : ROAD_CHART_HITTING[0];
+}
+
+/* Same monthly points the Exit Velo / Fastball chart draws, dated from the readingLog. */
+function roadHeadlineSeries(player, spec) {
+  const log = roadSeries(player, spec.key);
+  return roadMonthlyPoints(player, spec).map((point) => {
+    let hit = null;
+    for (let i = log.length - 1; i >= 0; i -= 1) {
+      if (String(log[i].at).slice(0, 7) === point.month) { hit = log[i]; break; }
+    }
+    const at = hit ? String(hit.at).slice(0, 10) : (point.month + "-15");
+    const label = hit ? roadPrettyDate(hit.at) : roadMonthLabel(point.month, point.month.slice(0, 4) !== roadToday().slice(0, 4));
+    return { value: point.value, at: at, label: label };
+  });
+}
+
+function roadSignedDelta(spec, delta) {
+  if (!Number.isFinite(delta) || Math.abs(delta) < 0.001) return "0";
+  const mag = roadFormatStat(spec, Math.abs(delta));
+  return (delta > 0 ? "+" : "−") + mag;
+}
+
 function roadChangeList(player) {
-  const key = player.type === "pitcher" ? "fastballVelo" : "exitVelo";
+  const spec = roadHeadlineSpec(player);
   const unit = player.type === "pitcher" ? "MPH FB" : "MPH EV";
-  const series = roadSeries(player, key);
-  const year = roadYearDelta(player, key);
+  const series = roadHeadlineSeries(player, spec);
   const bits = [
     ["30-day", roadDelta(series, 30)],
     ["90-day", roadDelta(series, 90)],
@@ -902,15 +925,18 @@ function roadChangeList(player) {
   ];
   const rows = bits.map(([label, row]) => {
     if (!row) return "<div class=\"chart-row\"><span>" + label + "</span><b>--</b></div>";
-    const sign = row.delta > 0 ? "+" : "";
-    return "<div class=\"chart-row\"><span>" + label + "</span><b>" + sign + (Math.round(row.delta * 10) / 10) + "</b><small>" + unit + "</small></div>";
+    return "<div class=\"chart-row\"><span>" + label + "</span><b>" + roadSignedDelta(spec, row.delta) + "</b><small>" + unit + "</small></div>";
   }).join("");
-  const banner = year ? "<p class=\"year-banner\">" + (year.delta > 0 ? "+" : "") + (Math.round(year.delta * 10) / 10) + " " + unit + " THIS YEAR</p>" : "";
+  let banner = "";
+  if (series.length >= 2) {
+    const delta = Number(series[series.length - 1].value) - Number(series[0].value);
+    banner = "<p class=\"year-banner\">" + roadSignedDelta(spec, delta) + " " + unit + " THIS YEAR</p>";
+  }
   let compare = "<p class=\"muted\">Log two tests and the line appears.</p>";
   if (series.length) {
     const a = series[0];
     const b = series[series.length - 1];
-    compare = "<div class=\"chart-compare\"><div><span>WHERE I STARTED</span><b>" + a.value + "</b><small>" + roadEsc(roadPrettyDate(a.at)) + "</small></div><div><span>WHERE I AM</span><b>" + b.value + "</b><small>" + roadEsc(roadPrettyDate(b.at)) + "</small></div></div>";
+    compare = "<div class=\"chart-compare\"><div><span>WHERE I STARTED</span><b>" + roadFormatStat(spec, a.value) + "</b><small>" + roadEsc(a.label) + "</small></div><div><span>WHERE I AM</span><b>" + roadFormatStat(spec, b.value) + "</b><small>" + roadEsc(b.label) + "</small></div></div>";
   }
   return "<div class=\"chart-block\">" + compare + banner + roadChartSVG(series) + "<div class=\"chart-windows\">" + rows + "</div></div>";
 }

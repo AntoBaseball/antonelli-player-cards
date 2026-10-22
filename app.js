@@ -257,7 +257,8 @@ const METRICS = {
   onPlaneEfficiency: { label: "On-Plane Efficiency", unit: "%", step: 1, blast: true, entryMin: 30, entryMax: 100, help: "Share of the swing on the plane set by vertical bat angle. Blast's aim is 70%+." },
   earlyConnection: { label: "Early Connection", unit: "°", step: 1, blast: true, entryMin: 40, entryMax: 140, help: "Body tilt vs bat angle as the downswing starts. Blast's target is 90°." },
   connectionAtImpact: { label: "Connection at Impact", unit: "°", step: 1, blast: true, entryMin: 40, entryMax: 140, help: "Body tilt vs bat angle at contact. Blast's target is 90°." },
-  // Pitcher metrics — coach benchmarks, not Blast ranges.
+  // Pitcher metrics. low/high is the 16U-and-older coach window (grade 20 at low, 99 at high).
+  // 10U, 12U, and 14U keep that width and shift it down in PITCH_AGE_SHIFT.
   fastballVelo: { label: "Fastball Velocity", unit: " mph", low: 68, high: 96, step: 0.5, help: "Typical top fastball velocity" },
   spinRate: { label: "Fastball Spin Rate", unit: " rpm", low: 1600, high: 2600, step: 10, help: "Fastball spin efficiency / carry" },
   strikePct: { label: "Strike % (Command)", unit: "%", low: 45, high: 76, step: 1, help: "Pitches in / around the strike zone" },
@@ -1293,6 +1294,24 @@ function ageTableScore(key, value, age) {
   return null;
 }
 
+/* How far each pitcher window sits below the published 16U coach scale.
+   The width stays the same, so a normal fastball, spin rate, strike rate,
+   whiff rate, or pitch count at that age grades like a normal older arm.
+   16U, 18U, College, and Pro are not listed and stay on METRICS low/high. */
+const PITCH_AGE_SHIFT = {
+  "10U": { fastballVelo: 32, spinRate: 700, strikePct: 8, whiffPct: 14, pitchCapacity: 40 },
+  "12U": { fastballVelo: 24, spinRate: 500, strikePct: 6, whiffPct: 10, pitchCapacity: 30 },
+  "14U": { fastballVelo: 10, spinRate: 250, strikePct: 3, whiffPct: 5, pitchCapacity: 15 },
+};
+
+function pitchGradeWindow(key, ageGroup) {
+  const m = METRICS[key];
+  if (!m || m.low == null || m.high == null) return null;
+  const group = AGE_GROUP_ORDER.includes(ageGroup) ? ageGroup : "16U";
+  const shift = (PITCH_AGE_SHIFT[group] && PITCH_AGE_SHIFT[group][key]) || 0;
+  return { low: m.low - shift, high: m.high - shift };
+}
+
 function normalizeMetric(key, value, ageGroup, ageYears) {
   const m = METRICS[key];
   if (!m || metricNumber(value) == null || m.displayOnly) return null;
@@ -1301,8 +1320,11 @@ function normalizeMetric(key, value, ageGroup, ageYears) {
   if (m.blast) return gradeBlastMetric(key, value, ageGroup).grade;
   const coach = coachSpecFor(key);
   if (m.coach && coach) return gradeWindow(value, coach, ageGroup);
-  if (m.low == null || m.high == null) return null;
-  let pct = (Number(value) - m.low) / (m.high - m.low);
+  const pitchWindow = PITCHER_KEYS.includes(key) ? pitchGradeWindow(key, ageGroup) : null;
+  const low = pitchWindow ? pitchWindow.low : m.low;
+  const high = pitchWindow ? pitchWindow.high : m.high;
+  if (low == null || high == null || high === low) return null;
+  let pct = (Number(value) - low) / (high - low);
   if (m.invert) pct = 1 - pct;
   return Math.round(clamp(20 + pct * 79, 20, 99));
 }
