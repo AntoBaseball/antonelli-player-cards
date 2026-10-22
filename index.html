@@ -5,10 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ROAD TO 99 — Antonelli Baseball</title>
 <meta name="description" content="ROAD TO 99. Antonelli Baseball player development: train, test, and level up a baseball card. Overall is earned in testing. Level is earned by showing up.">
-<link rel="stylesheet" href="styles.css?v=20261022d">
-<link rel="stylesheet" href="road.css?v=20261022d">
-<link rel="stylesheet" href="compete.css?v=20261022d">
-<link rel="stylesheet" href="style.css?v=20261022d">
+<link rel="stylesheet" href="styles.css?v=20261022f">
+<link rel="stylesheet" href="road.css?v=20261022f">
+<link rel="stylesheet" href="compete.css?v=20261022f">
+<link rel="stylesheet" href="style.css?v=20261022f">
+<link rel="stylesheet" href="vision.css?v=20261022f">
 </head>
 <body data-app="home">
 <header class="topbar">
@@ -36,6 +37,7 @@
           <option value="coach">Coach</option>
         </select>
       </label>
+      <button class="btn btn-ghost vision-nav" id="visionNav" type="button">Pitch Recognition</button>
       <button class="btn btn-ghost" id="roadMute" type="button">Sound off</button>
       <button class="btn btn-ghost" id="resetBtn" type="button">Reset Sample Data</button>
       <button class="btn btn-red" id="addPlayerBtn" type="button">+ Add Player</button>
@@ -55,7 +57,8 @@
   <!-- ROSTER VIEW -->
   <section id="rosterView">
     <div id="roadHome"></div>
-    <section class="tier-showcase" id="tierShowcase" aria-label="Diamond and Legend cards"></section>
+    <section id="cardsOfDay" class="cards-day" aria-label="Cards of the day"></section>
+    <section class="tier-showcase" id="tierShowcase" aria-label="Diamond and Legend cards" hidden></section>
     <div id="trainGames"></div>
     <div id="competeHome"></div>
     <div class="hero">
@@ -322,11 +325,12 @@
   <button type="button" data-app="train"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13 2 4 14h7l-1 8 10-14h-7l0-6z"/></svg><span>Train</span></button>
 </nav>
 
-<script src="store.js?v=20261022d"></script>
-<script src="road.js?v=20261022d"></script>
-<script src="compete.js?v=20261022d"></script>
-<script src="vendor/qrcode.js?v=20261022d"></script>
-<script src="style.js?v=20261022d"></script>
-<script src="app.js?v=20261022d"></script>
+<script src="store.js?v=20261022f"></script>
+<script src="road.js?v=20261022f"></script>
+<script src="compete.js?v=20261022f"></script>
+<script src="vendor/qrcode.js?v=20261022f"></script>
+<script src="style.js?v=20261022f"></script>
+<script src="vision.js?v=20261022f"></script>
+<script src="app.js?v=20261022f"></script>
 </body>
 </html>

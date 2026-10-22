@@ -444,6 +444,7 @@ function styleTrainMount() {
     games.map((row) => "<li class=\"mission-row\"><button class=\"mission-hit\" type=\"button\" data-game=\"" + row[0] + "\"><span class=\"check-circle\" aria-hidden=\"true\"></span><span class=\"mission-copy\"><b>" + row[1] + "</b><small>Play</small></span></button></li>").join("") +
     "</ul><div data-game-host id=\"styleGameTrain\"></div></div>";
   mount.querySelectorAll("[data-game]").forEach((btn) => btn.addEventListener("click", () => styleStartGame(player, btn.dataset.game)));
+  if (typeof visionMount === "function") visionMount();
 }
 
 function styleStartGame(player, id) {

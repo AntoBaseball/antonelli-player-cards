@@ -194,6 +194,17 @@ table,th,td{color:#f4f1ea;border-color:rgba(212,175,55,.22)}
 .sample-banner[hidden]{display:none}
 .sample-dismiss{background:transparent;border:1px solid rgba(212,175,55,.5);color:#f2d060;border-radius:999px;width:28px;height:28px;cursor:pointer;flex:none}
 .app-tabs,#trainGames{display:none}
+body[data-app="train"] #trainGames{display:block}
+body[data-app="train"] #roadHome,
+body[data-app="train"] .tier-showcase,
+body[data-app="train"] #competeHome,
+body[data-app="train"] .hero,
+body[data-app="train"] .controls,
+body[data-app="train"] .section-head,
+body[data-app="train"] #rosterGrid,
+body[data-app="train"] #emptyState{display:none}
+.vision-try{justify-content:center;margin:14px 0 0}
+.vision-nav{display:inline-flex}
 .mission-list li{display:block;padding:0}
 .mission-hit{display:flex;align-items:center;gap:12px;width:100%;background:transparent;border:0;color:inherit;padding:11px 2px;text-align:left;cursor:pointer}
 .mission-copy{display:block;flex:1;min-width:0}

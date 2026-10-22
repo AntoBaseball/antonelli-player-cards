@@ -3173,8 +3173,9 @@ function fitCardName(card) {
 }
 
 /* One star for every card, 20% larger than the 327/130 pair. On the 420px-tall
-   phone card the ink is 196.2px (about 392px on a 600px-wide render) and its top
-   sits 121px down. A 392px desktop card is 156px. The ink is centered on the card. */
+   phone card the ink is 196.2px (about 392 device px at 2x). A 392px-tall card
+   is 156px. The image box is centered on the card. Name overlap is allowed.
+   Perks, the overall diamond, and the stat row are not. */
 function fitCardStar(card) {
   fitCardName(card);
   const logo = card.querySelector(".card-logo");
@@ -3191,7 +3192,48 @@ function fitCardStar(card) {
   const height = ink / inkFrac;
   const width = height * (512 / 500);
   const visualInset = (visual.getBoundingClientRect().top - cardBox.top) / scale;
-  const top = 121 - visualInset - height * padT;
+  const boxOf = (el) => {
+    if (!el || !el.getClientRects().length) return null;
+    const r = el.getBoundingClientRect();
+    return {
+      top: (r.top - cardBox.top) / scale,
+      bottom: (r.bottom - cardBox.top) / scale,
+      left: (r.left - cardBox.left) / scale,
+      right: (r.right - cardBox.left) / scale,
+    };
+  };
+  const inkBox = (center) => {
+    const top = center - height / 2;
+    const left = (layoutW - width) / 2;
+    return {
+      top: top + height * (9 / 500),
+      bottom: top + height - height * (10 / 500),
+      left: left + width * (10 / 512),
+      right: left + width - width * (10 / 512),
+    };
+  };
+  const hits = (a, b) => a && b && a.top < b.bottom - 1 && a.bottom > b.top + 1 && a.left < b.right - 1 && a.right > b.left + 1;
+  const perks = boxOf(card.querySelector(".card-quirks"));
+  const diamond = boxOf(card.querySelector(".overall-diamond"));
+  const stats = boxOf(card.querySelector(".subgrades"));
+  const name = boxOf(card.querySelector(".card-name"));
+  const blocked = (center) => {
+    const star = inkBox(center);
+    return hits(star, perks) || hits(star, diamond) || hits(star, stats);
+  };
+  let center = layoutH / 2;
+  if (blocked(center)) {
+    const bandTop = Math.max(perks ? perks.bottom : 0, diamond ? diamond.bottom : 0);
+    const bandBot = name ? name.top : (stats ? stats.top : layoutH);
+    center = (bandTop + bandBot) / 2;
+    const minCenter = bandTop + height / 2 - height * (9 / 500);
+    if (center < minCenter) center = minCenter;
+    if (stats) {
+      const maxCenter = stats.top - height / 2 + height * (10 / 500);
+      if (center > maxCenter) center = maxCenter;
+    }
+  }
+  const top = center - height / 2 - visualInset;
   logo.style.width = width.toFixed(2) + "px";
   logo.style.height = height.toFixed(2) + "px";
   logo.style.position = "absolute";
@@ -3200,6 +3242,7 @@ function fitCardStar(card) {
   logo.style.margin = "0";
   logo.style.top = top.toFixed(2) + "px";
   logo.style.transform = "translateX(-50%)";
+  logo.style.zIndex = "2";
 }
 
 function watchCardStars() {
@@ -3311,13 +3354,9 @@ function showcaseSample(id) {
 function renderTierShowcase() {
   const mount = $("tierShowcase");
   if (!mount) return;
-  const cole = showcaseSample("sample-cole-brennan");
-  const roman = showcaseSample("sample-roman-hale");
-  if (!cole || !roman) return;
-  const spot = (player, label) => `<figure class="tier-spot"><figcaption>${esc(label)}</figcaption><div class="tier-spot-card">${cardHTML(player, true)}</div></figure>`;
-  mount.hidden = false;
-  mount.innerHTML = `<div class="tier-showcase-row">${spot(cole, "Diamond")}${spot(roman, "Legend")}</div>`;
-  wireCardFlips(mount);
+  /* Cole and Roman now render in Cards of the Day, from the same built-in samples. */
+  mount.hidden = true;
+  mount.innerHTML = "";
 }
 
 function renderRoster() {

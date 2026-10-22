@@ -6,7 +6,16 @@
 .compete-kicker{letter-spacing:2px;font-size:11px;font-weight:800;color:#f2d060;margin:0 0 4px}
 .lb-row,.award-row,.react-row{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid rgba(212,175,55,.16);font-size:14px}
 .lb-row b{color:#f2d060}
-.compete-stack{display:grid;gap:14px}
+.compete-stack{display:flex;flex-direction:column;gap:14px;width:100%}
+.cards-day{margin:0 0 18px}
+.day-title{margin:0 0 16px;text-align:center;font-family:Impact,"Arial Black",system-ui,sans-serif;font-style:italic;font-size:clamp(40px,7vw,72px);line-height:.85;letter-spacing:1px;color:#fff;text-shadow:0 3px 0 #000}
+.day-row{display:flex;justify-content:center;align-items:flex-start;gap:22px}
+.day-spot{flex:1 1 0;min-width:0;max-width:300px;margin:0}
+.day-spot figcaption{display:flex;flex-direction:column;align-items:center;gap:2px;margin:0 0 8px;text-align:center}
+.day-spot figcaption b{font-family:Impact,"Arial Black",system-ui,sans-serif;font-style:italic;font-size:22px;letter-spacing:.6px;color:#f2d060;line-height:1}
+.day-spot figcaption span{color:#f7ecc8;font-size:13px;font-weight:700}
+.day-card{width:100%}
+.day-card .card-shell,.day-card .bb-card{width:100%}
 .cotd-board{overflow:visible}
 .cotd{display:grid;grid-template-columns:minmax(220px,280px) minmax(0,1fr);gap:18px;align-items:center}
 .cotd .mini-card{width:100%;min-width:0}
@@ -60,32 +69,16 @@
 .bb-card.is-perfect{box-shadow:0 0 0 2px #f2d060, 0 0 22px rgba(242,208,96,.7)}
 .react-btn{background:transparent;border:1px solid rgba(212,175,55,.4);color:#fff;border-radius:999px;padding:4px 8px;cursor:pointer}
 .react-btn:hover{border-color:#f2d060}
-.trophy-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.trophy-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;width:100%}
 .trophy-card{border:1px solid rgba(212,175,55,.35);border-radius:12px;padding:8px;background:rgba(0,0,0,.35)}
 .hidden-ach{opacity:.45}
-@media (min-width:601px){
-  .compete-stack{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}
-  .cotd-board,#challengeBoard{grid-column:1 / -1}
-  .cotd-board{order:1}
-  .quest-board{order:2}
-  .lb-board{order:3}
-  #challengeBoard{order:4}
-}
 @media (max-width:600px){
-  .compete-stack{display:flex;flex-direction:column;gap:12px}
-  #challengeBoard{order:1}
-  .lb-board{order:2}
-  .cotd-board{order:3}
-  .quest-board{order:4}
+  .day-row{justify-content:flex-start;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding:0 2px 10px;-webkit-overflow-scrolling:touch}
+  .day-spot{flex:0 0 78%;max-width:280px;scroll-snap-align:center}
   #h2hBoard .h2h{min-height:180px}
-  .trophy-grid,.cotd{grid-template-columns:1fr}
-  .cotd .mini-card{width:min(280px,100%);margin:0 auto}
+  .trophy-grid{grid-template-columns:1fr 1fr}
   body[data-app="trophies"] .show-panel[data-panel="road"] > .road-card,
   body[data-app="trophies"] #styleLab{display:none}
-}
-@media (max-width:800px){
-  .trophy-grid,.cotd{grid-template-columns:1fr}
-  .cotd .mini-card{width:min(280px,100%);margin:0 auto}
 }
 @media (prefers-reduced-motion:reduce){
   .bb-card.is-chem,.bb-card.is-perfect{box-shadow:0 0 0 2px #f2d060}

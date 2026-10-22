@@ -246,6 +246,7 @@ function roadPickMissions(seed) {
 }
 
 function roadMissionMeta(id) {
+  if (id === "vision") return { id: "vision", label: "Featured vision drill", gear: "Phone", xp: "vision" };
   return ROAD_MISSIONS.find((m) => m.id === id) || { id, label: id, gear: "" };
 }
 
@@ -258,6 +259,7 @@ function roadTodayMissions(player) {
     r.missionDay = today;
     r.dailyBonus = false;
   }
+  if (!r.missions.some((m) => m.id === "vision")) r.missions.push({ id: "vision", done: false });
   return r.missions;
 }
 
@@ -520,7 +522,8 @@ function roadCompleteMission(player, id) {
   roadFloatFrom = origin ? origin.getBoundingClientRect() : null;
   roadAward(player, meta.xp === "minigame" ? ROAD_XP.minigame : ROAD_XP.assignment, meta.xp === "minigame" ? "minigame" : "assignment");
   const r = roadEnsure(player);
-  if (!r.dailyBonus && missions.every((m) => m.done)) {
+  const core = missions.filter((m) => m.id !== "vision");
+  if (!r.dailyBonus && core.length && core.every((m) => m.done)) {
     r.dailyBonus = true;
     r.streaks.goal = (r.streaks.goal || 0) + 1;
     roadAward(player, ROAD_XP.dailyAll, "daily");
@@ -783,12 +786,13 @@ function roadHomeHTML(player) {
   const g = typeof gradesFor === "function" ? gradesFor(player) : { overall: 0 };
   const lvl = roadLevel(player);
   const missions = roadTodayMissions(player);
-  const done = missions.filter((m) => m.done).length;
+  const coreMissions = missions.filter((m) => m.id !== "vision");
+  const done = coreMissions.filter((m) => m.done).length;
   const widthXp = Math.round((lvl.into / lvl.span) * 100);
   const can = roadCanEdit(player);
   const list = missions.map((m) => {
     const meta = roadMissionMeta(m.id);
-    const xp = meta.xp === "minigame" ? ROAD_XP.minigame : ROAD_XP.assignment;
+    const xp = meta.xp === "vision" ? 150 : meta.xp === "minigame" ? ROAD_XP.minigame : ROAD_XP.assignment;
     const hit = "<span class=\"check-circle\" aria-hidden=\"true\"></span><span class=\"mission-copy\"><b>" + roadEsc(meta.label) + "</b><small>" + roadEsc(meta.gear) + "</small></span><span class=\"mission-xp\">+" + xp + " XP</span>";
     if (can && !m.done) return "<li class=\"mission-row\"><button class=\"mission-hit\" type=\"button\" data-mission=\"" + roadEsc(m.id) + "\">" + hit + "</button></li>";
     return "<li class=\"mission-row" + (m.done ? " is-done" : "") + "\"><div class=\"mission-hit\">" + hit + "</div></li>";
@@ -806,6 +810,7 @@ function roadHomeHTML(player) {
     "<div class=\"road-track\" id=\"xpTrack\"><span style=\"width:" + widthXp + "%\"></span></div></div></div></div>" +
     "<h3 class=\"road-hello\">" + roadEsc(roadGreeting()) + ", " + roadEsc(roadFirstName(player)) + "</h3>" +
     "<p class=\"road-streak\">DAY " + (player.road.streaks.training || 0) + " STREAK 🔥" + hot + "</p>" +
+    ((roadSession().mode === "coach" || player.id === "sample-mason-carter") ? "<div class=\"road-actions vision-try\"><button class=\"btn btn-red\" type=\"button\" id=\"visionTry\">Pitch Recognition</button></div>" : "") +
     "<p class=\"road-quote\">" + roadEsc(roadQuote()) + "</p>" +
     "<div class=\"road-grid\">" +
     "<div class=\"road-card road-missions\"><h3>Today's mission <b>" + done + "/4</b></h3><ul class=\"mission-list\">" + list + "</ul>" +
@@ -847,8 +852,13 @@ function roadPaint() {
   if (typeof competePaint === "function") competePaint();
   if (typeof styleDrawQrs === "function") styleDrawQrs(document);
   if (typeof styleTrainMount === "function") styleTrainMount();
+  if (typeof visionMount === "function") visionMount();
   mount.querySelectorAll("[data-mission]").forEach((btn) => {
     btn.addEventListener("click", () => {
+      if (btn.dataset.mission === "vision") {
+        if (typeof visionOpen === "function") visionOpen(player, { featured: true });
+        return;
+      }
       if (btn.classList.contains("is-checking")) return;
       btn.classList.add("is-checking");
       const reduced = typeof motionReduced === "function" && motionReduced();
@@ -856,6 +866,8 @@ function roadPaint() {
       setTimeout(() => roadCompleteMission(player, btn.dataset.mission), wait);
     });
   });
+  const tryGames = document.getElementById("visionTry");
+  if (tryGames) tryGames.addEventListener("click", () => { if (typeof visionOpen === "function") visionOpen(player); });
   const train = document.getElementById("roadTrain");
   if (train) train.addEventListener("click", () => roadTrain(player));
   const tilt = document.getElementById("roadTilt");
@@ -1122,6 +1134,13 @@ function roadBoot() {
       DataLayer.saveSession(session);
       if (!session.mute) roadAudioCtx();
       roadPaintChrome();
+    });
+  }
+  const visionNav = document.getElementById("visionNav");
+  if (visionNav && !visionNav.dataset.wired) {
+    visionNav.dataset.wired = "1";
+    visionNav.addEventListener("click", () => {
+      if (typeof visionOpen === "function") visionOpen(roadSignedIn());
     });
   }
   if (bell && !bell.dataset.wired) {

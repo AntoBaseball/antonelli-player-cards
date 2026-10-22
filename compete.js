@@ -505,6 +505,24 @@ function competeSettle() {
   DataLayer.saveFacility(facility);
 }
 
+function competeDayCardsHTML(cotd) {
+  const spots = [];
+  if (cotd && cotd.player && typeof cardHTML === "function") {
+    spots.push({ kicker: "Today", note: cotd.reason, player: cotd.player });
+  }
+  [
+    ["sample-cole-brennan", "Diamond"],
+    ["sample-roman-hale", "Legend"],
+  ].forEach((pair) => {
+    const source = typeof SAMPLE_PLAYERS !== "undefined" ? SAMPLE_PLAYERS.find((p) => p.id === pair[0]) : null;
+    if (!source || typeof cardHTML !== "function") return;
+    spots.push({ kicker: pair[1], note: source.name, player: structuredClone(source) });
+  });
+  if (!spots.length) return "";
+  const row = spots.map((spot) => "<figure class=\"day-spot\"><figcaption><b>" + competeEsc(spot.kicker) + "</b><span>" + competeEsc(spot.note) + "</span></figcaption><div class=\"day-card\">" + cardHTML(spot.player, true, null, { flip: true }) + "</div></figure>").join("");
+  return "<h2 class=\"day-title\">CARDS OF THE DAY</h2><div class=\"day-row\">" + row + "</div>";
+}
+
 function competePaint() {
   const mount = document.getElementById("competeHome");
   if (!mount || typeof roadSignedIn !== "function") return;
@@ -536,7 +554,11 @@ function competePaint() {
   const h2h = mine.map((ch) => competeH2H(ch)).join("");
   const options = competeRoster().filter((p) => p.id !== me.id).map((p) => "<option value=\"" + competeEsc(p.id) + "\">" + competeEsc(p.name) + "</option>").join("");
   const metrics = COMPETE_METRICS.map((m) => "<option value=\"" + m.key + "\">" + m.label + "</option>").join("");
-  const card = cotd && typeof cardHTML === "function" ? "<div class=\"mini-card\">" + cardHTML(cotd.player, false) + "</div>" : "";
+  const dayMount = document.getElementById("cardsOfDay");
+  if (dayMount) {
+    dayMount.innerHTML = competeDayCardsHTML(cotd);
+    if (typeof wireCardFlips === "function") wireCardFlips(dayMount);
+  }
   const crowns = competeCrowns("exitVelo", competeGroup(me));
   const king = crowns.king;
   const crownRows = crowns.board.map((row) => {
@@ -557,13 +579,13 @@ function competePaint() {
     "<li><span>2</span><label>Pick category<select id=\"chMetric\">" + metrics + "</select></label></li>" +
     "<li><span>3</span><label>Pick end date <em>up to 1 month</em><select id=\"chDeadline\">" + endChoices + "</select></label></li>" +
     "<li><span>4</span><button class=\"btn btn-red\" type=\"button\" id=\"chSend\">Send</button></li></ol></div>" +
-    "<div class=\"compete-board lb-board\"><p class=\"compete-kicker\">LEADERBOARD</p><div class=\"trophy-grid\">" + boards + "</div>" +
+    "<div class=\"compete-board lb-board\"><h2 class=\"day-title\">LEADERBOARD</h2>" +
     "<h3>Most improved this month</h3>" + improved.map((p, i) => "<div class=\"lb-row\"><span>" + (i + 1) + ". " + competeEsc(p.name) + "</span><b>" + (competeExitDelta(p, 30) > 0 ? "+" : "") + (Math.round(competeExitDelta(p, 30) * 10) / 10) + " MPH</b></div>").join("") +
     "<h3>Awards</h3>" + awards +
     "<p class=\"compete-kicker\">KING OF THE HILL · " + competeEsc(competeGroup(me)) + " EXIT</p><p class=\"king-line\">" + (king ? "👑 " + competeEsc(king.name) + " · " + crowns.days + " days on the throne" : "—") + "</p>" +
     "<h3>Days holding the crown</h3>" + crownRows +
     "</div>" +
-    "<div class=\"compete-board cotd-board\"><p class=\"compete-kicker\">CARD OF THE DAY</p><div class=\"cotd\">" + card + "<div class=\"cotd-copy\"><h3>" + competeEsc(cotd ? cotd.player.name : "") + "</h3><p>" + competeEsc(cotd ? cotd.reason : "") + "</p></div></div></div>" +
+    "<div class=\"compete-board pr-board\"><div class=\"trophy-grid\">" + boards + "</div></div>" +
     "<div class=\"compete-board quest-board\">" +
     "<h3>" + quest.name + "</h3><p>" + quest.detail + "</p><div class=\"road-track\"><span style=\"width:" + Math.min(100, Math.round((quest.progress / quest.target) * 100)) + "%\"></span></div><p>" + quest.progress + " / " + quest.target + "</p>" +
     "<h3>" + month.name + "</h3><p>" + month.detail + " · " + month.progress + " MPH</p>" +

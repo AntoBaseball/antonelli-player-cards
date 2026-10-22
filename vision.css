@@ -1,0 +1,43 @@
+/* Pitch Recognition — dark broadcast drills. Canvas does the picture. */
+.vision-hub{margin:0 0 16px;padding:16px 12px 14px;border-radius:18px;border:1px solid rgba(212,175,55,.45);background:radial-gradient(700px 220px at 50% 0%, rgba(225,29,72,.16), transparent 55%), linear-gradient(165deg,#070707,#14110c 70%);color:#f6f1e4;scroll-margin-top:64px;scroll-margin-bottom:88px}
+.vision-kicker{margin:0 0 4px;letter-spacing:2.4px;font-size:11px;font-weight:800;color:#f2d060;text-align:center}
+.vision-hub h2{margin:0 0 6px;text-align:center;font-family:Impact,"Arial Black",system-ui,sans-serif;font-style:italic;font-size:clamp(32px,8vw,52px);line-height:.9;color:#fff}
+.vision-lead{margin:0 auto 12px;max-width:46ch;text-align:center;color:#f7ecc8;line-height:1.45}
+.vision-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.vision-tile{display:flex;flex-direction:column;gap:6px;min-width:0;padding:12px;border-radius:14px;background:rgba(8,8,8,.72);border:1px solid rgba(212,175,55,.28)}
+.vision-tile.is-featured{border-color:#f2d060;box-shadow:0 0 0 1px rgba(242,208,96,.35), 0 10px 24px rgba(0,0,0,.35)}
+.vision-tile .vision-kicker{text-align:left;letter-spacing:1px}
+.vision-tile h3{margin:0;font-size:18px;color:#fff;line-height:1}
+.vision-tile p{margin:0;color:#d9d0b8;font-size:13px;line-height:1.35}
+.vision-tile .vision-pb{color:#f2d060;font-weight:800;font-size:12px;letter-spacing:.3px}
+.vision-tile .btn{margin-top:auto;min-height:52px;font-size:16px}
+.vision-board{margin-top:14px;padding-top:10px;border-top:1px solid rgba(212,175,55,.28)}
+.vision-board h3{margin:0 0 8px;text-align:center;font-size:16px;color:#fff}
+.vision-board ol{margin:0;padding:0 0 0 1.2em;color:#f7ecc8}
+.vision-board li{padding:3px 0}
+.vision-stage{display:flex;flex-direction:column;gap:8px}
+.vision-stage h2{margin:0;text-align:center;font-family:Impact,"Arial Black",system-ui,sans-serif;font-style:italic;font-size:clamp(28px,7vw,44px);line-height:.9;color:#fff}
+.vision-copy{margin:0;text-align:center;color:#f7ecc8;line-height:1.5}
+.vision-controls-note{margin:0;text-align:center;color:#f2d060;font-size:13px;font-weight:800;letter-spacing:.2px}
+.vision-hud{display:flex;justify-content:space-between;gap:8px;font-size:12px;font-weight:800;letter-spacing:.4px;color:#f2d060}
+.vision-canvas{width:100%;height:min(52vh,420px);border-radius:16px;background:#07080c;border:1px solid rgba(212,175,55,.4);touch-action:none;display:block}
+.vision-pad{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.vision-pad.is-one{grid-template-columns:1fr}
+.vision-pad button{min-height:56px;border-radius:14px;border:1px solid rgba(212,175,55,.55);background:rgba(255,255,255,.06);color:#fff;font-weight:900;letter-spacing:.4px;font-size:16px;cursor:pointer}
+.vision-pad.is-one button{min-height:76px;font-size:20px;background:linear-gradient(180deg,#8f6f0e,#f2d060);color:#111}
+.vision-pad button:active{transform:translateY(1px)}
+.vision-sound{margin:0;text-align:center;font-weight:800;color:#fff;letter-spacing:.6px}
+.vision-results{text-align:center}
+.vision-score{margin:4px 0;font-family:Impact,"Arial Black",system-ui,sans-serif;font-style:italic;font-size:72px;line-height:.85;color:#fff}
+.vision-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:10px 0}
+.vision-stats div{padding:10px 6px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(212,175,55,.28)}
+.vision-stats b{display:block;font-family:Impact,"Arial Black",system-ui,sans-serif;font-style:italic;font-size:28px;color:#fff;line-height:1}
+.vision-stats span{font-size:10px;font-weight:800;letter-spacing:.6px;color:#f2d060}
+.vision-actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:8px}
+@media (max-width:600px){
+  .vision-nav{display:none}
+  .vision-grid{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){
+  .vision-pad button:active{transform:none}
+}
