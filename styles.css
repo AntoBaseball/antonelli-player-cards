@@ -32,6 +32,16 @@ h1,h2,h3,.brand-name,.stat b,.card-name h2,.card-name h3{font-family:Impact,"Ari
 .migration-banner{background:#111;color:var(--pale-gold);border-bottom:1px solid var(--gold)}
 .migration-banner[hidden]{display:none}
 .container{max-width:1180px;margin:0 auto;padding:22px 16px 40px}
+.tier-showcase{margin:0 0 18px;padding:16px 16px 18px;border-radius:22px;border:1px solid rgba(212,175,55,.4);
+  background:
+    radial-gradient(480px 160px at 22% 0%, rgba(56,189,248,.18), transparent 62%),
+    radial-gradient(480px 160px at 78% 0%, rgba(255,42,24,.2), transparent 64%),
+    linear-gradient(180deg,#10131a,#07080c);
+  box-shadow:0 18px 40px rgba(0,0,0,.35)}
+.tier-showcase-row{display:flex;flex-wrap:wrap;justify-content:center;align-items:flex-start;gap:18px 36px}
+.tier-spot{margin:0;display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0}
+.tier-spot figcaption{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-style:normal;font-weight:800;font-size:11px;letter-spacing:2.6px;text-transform:uppercase;color:#f2d060}
+.tier-spot-card{width:280px;max-width:100%}
 .hero{display:grid;grid-template-columns:1.5fr .9fr;gap:20px;align-items:stretch;margin-bottom:18px}
 .hero>div:first-child{background:linear-gradient(135deg,var(--navy),var(--navy3) 60%,var(--red));color:#fff;border-radius:var(--radius);padding:26px;box-shadow:var(--shadow)}
 .eyebrow{letter-spacing:2px;font-size:11px;font-weight:800;opacity:.85;margin:0 0 8px}

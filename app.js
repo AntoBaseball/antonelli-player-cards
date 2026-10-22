@@ -3269,7 +3269,20 @@ function renderTeamFilter() {
   $("teamFilter").innerHTML = '<option value="all">All teams</option>' + teams.map((t) => `<option ${t === cur ? "selected" : ""}>${esc(t)}</option>`).join("");
 }
 
+function renderTierShowcase() {
+  const mount = $("tierShowcase");
+  if (!mount) return;
+  const cole = players.find((p) => p.id === "sample-cole-brennan");
+  const roman = players.find((p) => p.id === "sample-roman-hale");
+  if (!cole || !roman) { mount.hidden = true; mount.innerHTML = ""; return; }
+  const spot = (player, label) => `<figure class="tier-spot"><figcaption>${esc(label)}</figcaption><div class="tier-spot-card">${cardHTML(player, true)}</div></figure>`;
+  mount.hidden = false;
+  mount.innerHTML = `<div class="tier-showcase-row">${spot(cole, "Diamond")}${spot(roman, "Legend")}</div>`;
+  wireCardFlips(mount);
+}
+
 function renderRoster() {
+  renderTierShowcase();
   renderHeroStats(); renderTeamFilter();
   const q = $("searchInput").value.trim().toLowerCase();
   const tf = $("typeFilter").value, team = $("teamFilter").value, sort = $("sortSelect").value;
