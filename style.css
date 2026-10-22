@@ -12,7 +12,7 @@
 .bb-card.skin-thanksgiving{box-shadow:inset 0 0 0 3px #d97706}
 .bb-card.skin-worldseries{box-shadow:inset 0 0 0 3px #f2d060, 0 0 22px rgba(242,208,96,.55)}
 .card-auto{position:absolute;left:8%;bottom:22%;width:46%;height:auto;z-index:7;pointer-events:none;mix-blend-mode:screen;opacity:.9}
-.style-qr{width:148px;height:148px;background:#fff;border-radius:8px;image-rendering:pixelated;display:block}
+.style-qr{width:89px;height:89px;background:#fff;border-radius:8px;image-rendering:pixelated;display:block}
 .card-auto.auto-gold{filter:drop-shadow(0 0 4px #f2d060) sepia(.4)}
 .card-auto.auto-holo{filter:hue-rotate(170deg) saturate(1.6) drop-shadow(0 0 6px #7dd3fc)}
 .card-auto.auto-animated{animation:sign-shimmer 2.2s linear infinite}

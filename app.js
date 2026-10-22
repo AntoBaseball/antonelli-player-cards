@@ -3118,7 +3118,7 @@ function cardHTML(player, large, face, opts) {
     ${tier.key === "legend" ? `<div class="legend-fx" aria-hidden="true"><i></i><i></i><i></i></div>` : ""}
     ${sparkleHTML(tier.key, phase, quiet)}
     <div class="card-stack">
-      <div class="card-brand"><b>ANTONELLI</b><span>${tier.label}</span></div>
+      <div class="card-brand"><span>${tier.label}</span></div>
       ${lvlChip}
       ${quirkHTML}
     </div>
@@ -3143,9 +3143,9 @@ function cardHTML(player, large, face, opts) {
   </div>`;
 }
 
-/* One star for every card. On the 420px-tall phone card the ink is 163.5px
-   (327px on a 600px-wide render) and its top sits 121px down. Shorter cards
-   keep that top and give the height back, so a 392px desktop card is about 135px. */
+/* One star for every card, 20% larger than the 327/130 pair. On the 420px-tall
+   phone card the ink is 196.2px (about 392px on a 600px-wide render) and its top
+   sits 121px down. A 392px desktop card is 156px. It stays behind the name. */
 function fitCardStar(card) {
   const logo = card.querySelector(".card-logo");
   const visual = card.querySelector(".card-visual");
@@ -3157,7 +3157,7 @@ function fitCardStar(card) {
   const scale = cardBox.height / layoutH || 1;
   const padT = 8 / 500;
   const inkFrac = 1 - padT - 10 / 500;
-  const ink = Math.max(48, 163.5 - (420 - layoutH) * (33.5 / 28));
+  const ink = Math.max(48, 163.5 - (420 - layoutH) * (33.5 / 28)) * 1.2;
   const height = ink / inkFrac;
   const width = height * (512 / 500);
   const visualInset = (visual.getBoundingClientRect().top - cardBox.top) / scale;

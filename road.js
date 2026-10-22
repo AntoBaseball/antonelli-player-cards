@@ -424,8 +424,11 @@ function roadNextMarkup(next) {
   if (!next) return "";
   if (!next.gain) return "<p class=\"coach-line\">" + roadEsc(next.text) + "</p>";
   return "<p class=\"next-kicker\">NEXT UPGRADE</p>" +
-    "<p class=\"next-num\">" + roadEsc(next.gain) + " <span>" + roadEsc(next.probe.label) + "</span></p>" +
-    "<p class=\"next-move\">" + roadEsc(next.raised.key) + " <b>" + next.raised.from + "</b> <i>→</i> <b>" + next.raised.to + "</b></p>" +
+    "<div class=\"coach-stat\"><b>" + roadEsc(next.gain) + "</b><span>" + roadEsc(next.probe.label) + "</span></div>" +
+    "<div class=\"coach-stats\">" +
+    "<div class=\"coach-stat\"><b>" + next.raised.from + "</b><span>" + roadEsc(next.raised.key) + " now</span></div>" +
+    "<div class=\"coach-stat\"><b>" + next.raised.to + "</b><span>" + roadEsc(next.raised.key) + " next</span></div>" +
+    "</div>" +
     "<p class=\"coach-line\">" + roadEsc(next.plan || "") + "</p>";
 }
 
@@ -796,14 +799,17 @@ function roadHomeHTML(player) {
   const hot = roadIsHot(player) ? " · 🔥 HOT STREAK ACTIVATED" : "";
   const coachTools = roadSession().mode === "coach" ? "<div class=\"road-actions\"><label for=\"roadCoachPlan\">Assign today's four</label><select id=\"roadCoachPlan\" multiple size=\"4\">" + ROAD_MISSIONS.map((m) => "<option value=\"" + m.id + "\">" + roadEsc(m.label) + "</option>").join("") + "</select><button class=\"btn btn-ghost\" type=\"button\" id=\"roadAssign\">Assign</button></div>" : "";
   return "<div class=\"road-hero\">" +
-    "<p class=\"road-kicker\">ROAD TO 99</p>" +
-    "<h2 class=\"road-hello\">" + roadEsc(roadGreeting()) + ", " + roadEsc(roadFirstName(player)) + "</h2>" +
-    "<p class=\"road-streak\">DAY " + (player.road.streaks.training || 0) + " STREAK 🔥" + hot + "</p>" +
-    "<p class=\"road-quote\">" + roadEsc(roadQuote()) + "</p>" +
-    "<div class=\"road-99\"><div class=\"road-99-top\"><span>ROAD TO 99</span><b>" + g.overall + "</b></div>" +
+    "<h2 class=\"road-title\">ROAD TO <b>99</b></h2>" +
+    "<div class=\"road-stage\">" +
+    "<div class=\"road-own\">" + (typeof cardHTML === "function" ? cardHTML(player, true, null, { flip: true }) : "") + "</div>" +
+    "<div class=\"road-meters\">" +
+    "<div class=\"road-99\"><div class=\"road-99-top\"><span>OVERALL</span><b>" + g.overall + "</b></div>" +
     "<div class=\"road-track\" id=\"road99Track\"><span style=\"width:" + width99 + "%\"></span></div></div>" +
     "<div class=\"road-99\"><div class=\"road-xp-line\"><span>LEVEL " + lvl.level + "</span><span id=\"xpReadout\">" + lvl.into.toLocaleString() + " / " + lvl.span.toLocaleString() + " XP</span><span>" + lvl.remain.toLocaleString() + " XP TO LEVEL " + Math.min(99, lvl.level + 1) + "</span></div>" +
-    "<div class=\"road-track\" id=\"xpTrack\"><span style=\"width:" + widthXp + "%\"></span></div></div>" +
+    "<div class=\"road-track\" id=\"xpTrack\"><span style=\"width:" + widthXp + "%\"></span></div></div></div></div>" +
+    "<h3 class=\"road-hello\">" + roadEsc(roadGreeting()) + ", " + roadEsc(roadFirstName(player)) + "</h3>" +
+    "<p class=\"road-streak\">DAY " + (player.road.streaks.training || 0) + " STREAK 🔥" + hot + "</p>" +
+    "<p class=\"road-quote\">" + roadEsc(roadQuote()) + "</p>" +
     "<div class=\"road-grid\">" +
     "<div class=\"road-card road-missions\"><h3>Today's mission <b>" + done + "/4</b></h3><ul class=\"mission-list\">" + list + "</ul>" +
     "<div class=\"road-actions\"><button class=\"btn btn-red\" type=\"button\" id=\"roadTrain\"" + (can ? "" : " disabled") + ">Log training</button></div>" + coachTools + "</div>" +
@@ -839,6 +845,8 @@ function roadPaint() {
     });
   }
   if (player) roadLastBar = { id: player.id, pct: nextPct };
+  if (typeof wireCardFlips === "function") wireCardFlips(mount);
+  if (typeof watchCardMotion === "function") watchCardMotion();
   if (typeof competePaint === "function") competePaint();
   if (typeof styleDrawQrs === "function") styleDrawQrs(document);
   if (typeof styleTrainMount === "function") styleTrainMount();

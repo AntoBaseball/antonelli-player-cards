@@ -114,7 +114,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid rgba(201,162,39,.45);b
 .card-logo{width:57.9%;height:auto;aspect-ratio:512/500;margin-top:39%;margin-right:0;object-fit:contain;display:block;filter:drop-shadow(0 2px 5px rgba(0,0,0,.55));pointer-events:none}
 .card-brand{position:absolute;top:14px;left:14px;z-index:7;line-height:1}
 .card-brand b{display:block;font-size:11px;letter-spacing:1.6px;text-shadow:0 1px 6px rgba(0,0,0,.45)}
-.card-brand span{display:inline-block;margin-top:6px;background:rgba(6,18,42,.55);border:1px solid rgba(255,255,255,.45);padding:4px 7px;border-radius:999px;font-size:10px;font-weight:900;letter-spacing:1.2px}
+.card-brand span{display:inline-block;margin-top:0;background:rgba(6,18,42,.55);border:1px solid rgba(255,255,255,.45);padding:4px 7px;border-radius:999px;font-size:10px;font-weight:900;letter-spacing:1.2px}
 /* Diamond-shaped overall badge, top-right. The running rim is out of flow so it cannot shift the number. */
 .overall-diamond{position:absolute;top:12px;right:12px;z-index:8;width:73px;height:73px;color:#fff;background:none;border:0;box-shadow:none;
   filter:drop-shadow(0 6px 10px rgba(0,0,0,.35)) drop-shadow(0 0 var(--stat-bloom, 2px) var(--stat-glow, #f2d060));}
@@ -131,7 +131,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid rgba(201,162,39,.45);b
 .tier-gold .overall-diamond > div::before{background:linear-gradient(145deg,#111,#2b2108)}
 .tier-gold .overall-diamond{color:var(--gold-bright)}
 .tier-diamond .overall-diamond > div::before{background:linear-gradient(145deg,#a5f3fc,#06b6d4 55%,#2563eb)}
-.card-bottom{position:absolute;left:0;right:0;bottom:0;z-index:7;background:linear-gradient(180deg,transparent 0,rgba(4,12,30,.62) 28%,rgba(4,12,30,.92) 100%);padding:34px 10px 1px}
+.card-bottom{position:absolute;left:0;right:0;bottom:0;z-index:7;background:linear-gradient(180deg,transparent 0,rgba(4,12,30,.62) 28%,rgba(4,12,30,.92) 100%);padding:34px 16px 2px 6px}
 .card-meta-row{display:flex;justify-content:space-between;align-items:flex-end;gap:10px}
 .team-mark{position:relative;width:76px;flex:none;text-align:center}
 .card-star{width:68px;height:68px;display:block;margin:0 auto;filter:drop-shadow(0 4px 8px rgba(0,0,0,.45))}
@@ -145,7 +145,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid rgba(201,162,39,.45);b
 .card-name h3{font-size:23px}.card-name h2{font-size:31px}
 .pos-bar{display:inline-block;background:linear-gradient(180deg,var(--gold-bright),var(--gold));color:#111;border:1px solid rgba(255,255,255,.65);padding:4px 8px;border-radius:5px;font-size:11px;font-weight:900;letter-spacing:1px;box-shadow:0 3px 8px rgba(0,0,0,.3)}
 .card-teamline{display:block;margin-top:5px;font-size:11px;font-weight:700;opacity:.9;text-shadow:0 1px 5px rgba(0,0,0,.7)}
-.subgrades{position:relative;z-index:1;display:flex;gap:3px;flex-wrap:nowrap;margin-top:14px;--run:0deg}
+.subgrades{position:relative;z-index:1;display:flex;gap:3px;flex-wrap:nowrap;margin-top:20px;--run:0deg}
 .subgrade{position:relative;flex:1 1 0;min-width:0;background:rgba(0,0,0,.28);border:0;border-radius:8px;padding:5px 1px;text-align:center;box-shadow:0 0 var(--stat-bloom, 3px) color-mix(in srgb, var(--stat-glow, #f2d060) 55%, transparent)}
 .subgrade b,.subgrade span{position:relative;z-index:1}
 .subgrade b{display:block;font-size:14px;line-height:1;text-shadow:0 1px 4px rgba(0,0,0,.65)}
