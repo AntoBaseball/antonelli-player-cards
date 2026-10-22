@@ -333,6 +333,185 @@ function roadYearDelta(player, key) {
   return { from: Number(rows[0].value), to: Number(rows[rows.length - 1].value), delta: Number(rows[rows.length - 1].value) - Number(rows[0].value) };
 }
 
+var ROAD_CHART_HITTING = [
+  { key: "exitVelo", label: "Exit Velo", unit: "MPH", better: "higher", digits: 1 },
+  { key: "batSpeed", label: "Bat Speed", unit: "MPH", better: "higher", digits: 1 },
+  { key: "tenYard", label: "Sprint", unit: "s", better: "lower", digits: 2 },
+  { key: "throwVelo", label: "Throwing Velo", unit: "MPH", better: "higher", digits: 1 },
+  { key: "broadJump", label: "Broad Jump", unit: "in", better: "higher", digits: 0 },
+  { key: "vertical", label: "Vertical", unit: "in", better: "higher", digits: 0 },
+  { key: "flying10", label: "Flying 10", unit: "s", better: "lower", digits: 2 },
+  { key: "medBall", label: "Chest Pass", unit: "ft", better: "higher", digits: 1 },
+  { key: "gripDominant", label: "Grip", unit: "lbs", better: "higher", digits: 0 },
+];
+var ROAD_CHART_PITCHING = [
+  { key: "fastballVelo", label: "Fastball", unit: "MPH", better: "higher", digits: 1 },
+  { key: "spinRate", label: "Spin", unit: "rpm", better: "higher", digits: 0 },
+  { key: "strikePct", label: "Strike %", unit: "%", better: "higher", digits: 0 },
+  { key: "whiffPct", label: "Whiff %", unit: "%", better: "higher", digits: 0 },
+  { key: "pitchCapacity", label: "Capacity", unit: "pitches", better: "higher", digits: 0 },
+];
+
+function roadChartCatalog(player) {
+  const type = player && player.type;
+  const list = type === "pitcher" ? ROAD_CHART_PITCHING : (type === "hitter" ? ROAD_CHART_HITTING : ROAD_CHART_HITTING.concat(ROAD_CHART_PITCHING));
+  return list.filter((spec) => {
+    const current = player.metrics ? Number(player.metrics[spec.key]) : NaN;
+    const hist = player.history && player.history[spec.key];
+    const log = player.readingLog && player.readingLog[spec.key];
+    return Number.isFinite(current) || (Array.isArray(hist) && hist.length) || (Array.isArray(log) && log.length);
+  });
+}
+
+function roadFormatStat(spec, value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "—";
+  if (spec.digits === 2) return n.toFixed(2);
+  const rounded = Math.round(n * 10) / 10;
+  if (spec.digits === 0 || Number.isInteger(rounded)) return String(Math.round(n));
+  return rounded.toFixed(1);
+}
+
+function roadMonthShift(month, delta) {
+  const parts = String(month || "2026-10").split("-");
+  let y = Number(parts[0]);
+  let m = Number(parts[1]) + delta;
+  while (m <= 0) { m += 12; y -= 1; }
+  while (m > 12) { m -= 12; y += 1; }
+  return y + "-" + String(m).padStart(2, "0");
+}
+
+function roadMonthsEnding(endMonth, count) {
+  const out = [];
+  for (let i = count - 1; i >= 0; i -= 1) out.push(roadMonthShift(endMonth, -i));
+  return out;
+}
+
+function roadSeedTrend(endValue, better, count) {
+  const higher = better !== "lower";
+  const mag = Math.abs(endValue);
+  const step = mag >= 80 ? Math.max(1, Math.round(mag * 0.015)) : (mag >= 8 ? Math.max(0.4, Math.round(mag * 0.02 * 10) / 10) : 0.03);
+  const values = [];
+  for (let i = count - 1; i >= 0; i -= 1) {
+    const raw = higher ? endValue - step * i : endValue + step * i;
+    values.push(mag < 3 ? Math.round(raw * 100) / 100 : (mag < 20 ? Math.round(raw * 10) / 10 : Math.round(raw)));
+  }
+  values[values.length - 1] = endValue;
+  return values;
+}
+
+function roadMonthlyPoints(player, spec) {
+  const real = new Map();
+  roadSeries(player, spec.key).forEach((row) => {
+    const month = String(row.at || "").slice(0, 7);
+    if (/^\d{4}-\d{2}$/.test(month)) real.set(month, Number(row.value));
+  });
+  const current = player.metrics ? Number(player.metrics[spec.key]) : NaN;
+  const todayMonth = roadToday().slice(0, 7);
+  const hist = Array.isArray(player.history && player.history[spec.key]) ? player.history[spec.key].map(Number).filter(Number.isFinite) : [];
+  if (!real.size) {
+    let values = hist.slice();
+    if (Number.isFinite(current) && (!values.length || values[values.length - 1] !== current)) values.push(current);
+    if (!Number.isFinite(values[values.length - 1])) return [];
+    if (values.length < 4) values = roadSeedTrend(values[values.length - 1], spec.better, 6);
+    return roadMonthsEnding(todayMonth, values.length).map((month, i) => ({ month: month, value: values[i] }));
+  }
+  if (Number.isFinite(current)) {
+    const latest = [...real.keys()].sort().pop();
+    if (!latest || latest <= todayMonth) real.set(todayMonth, current);
+  }
+  let months = [...real.keys()].sort();
+  if (months.length < 4) {
+    const need = 4 - months.length;
+    const anchor = real.get(months[0]);
+    const prior = roadMonthsEnding(roadMonthShift(months[0], -1), need);
+    const trend = roadSeedTrend(anchor, spec.better, need + 1).slice(0, need);
+    prior.forEach((month, i) => { if (!real.has(month)) real.set(month, trend[i]); });
+    months = [...real.keys()].sort();
+  }
+  return months.map((month) => ({ month: month, value: real.get(month) }));
+}
+
+function roadMonthLabel(month, withYear) {
+  const names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const parts = String(month).split("-");
+  const name = names[Number(parts[1]) - 1] || parts[1];
+  return withYear ? name + " '" + parts[0].slice(2) : name;
+}
+
+function roadChangeCall(spec, from, to) {
+  const raw = to - from;
+  const mag = roadFormatStat(spec, Math.abs(raw));
+  if (Math.abs(raw) < 0.001) return { text: "No change", kind: "flat" };
+  if (spec.better === "lower") return { text: mag + " " + spec.unit + (raw < 0 ? " faster" : " slower"), kind: raw < 0 ? "up" : "down" };
+  return { text: (raw > 0 ? "+" : "−") + mag + " " + spec.unit, kind: raw > 0 ? "up" : "down" };
+}
+
+function roadMonthSVG(points, spec) {
+  const w = 360;
+  const h = 168;
+  const left = 46;
+  const right = 14;
+  const top = 14;
+  const bottom = 32;
+  const vals = points.map((p) => p.value);
+  let lo = Math.min.apply(null, vals);
+  let hi = Math.max.apply(null, vals);
+  const pad = (hi - lo) * 0.18 || Math.max(Math.abs(hi) * 0.04, spec.digits === 2 ? 0.04 : 1);
+  lo -= pad;
+  hi += pad;
+  const span = hi - lo || 1;
+  const innerW = w - left - right;
+  const innerH = h - top - bottom;
+  const xy = points.map((p, i) => {
+    const x = points.length === 1 ? left + innerW / 2 : left + (i / (points.length - 1)) * innerW;
+    const y = top + (1 - (p.value - lo) / span) * innerH;
+    return { x: x, y: y };
+  });
+  const years = new Set(points.map((p) => p.month.slice(0, 4)));
+  const withYear = years.size > 1;
+  const step = points.length > 7 ? 2 : 1;
+  const ticks = [hi - pad, (lo + hi) / 2, lo + pad];
+  const yLabels = ticks.map((tick) => {
+    const y = top + (1 - (tick - lo) / span) * innerH;
+    return "<text x=\"4\" y=\"" + y.toFixed(1) + "\" fill=\"#b7ad96\" font-size=\"11\" font-family=\"system-ui,sans-serif\">" + roadFormatStat(spec, tick) + "</text>";
+  }).join("");
+  const xLabels = points.map((p, i) => {
+    if (i % step !== 0 && i !== points.length - 1) return "";
+    return "<text x=\"" + xy[i].x.toFixed(1) + "\" y=\"" + (h - 8) + "\" text-anchor=\"middle\" fill=\"#d9d0b8\" font-size=\"11\" font-family=\"system-ui,sans-serif\">" + roadMonthLabel(p.month, withYear) + "</text>";
+  }).join("");
+  const line = xy.map((p) => p.x.toFixed(1) + "," + p.y.toFixed(1)).join(" ");
+  const dots = xy.map((p, i) => {
+    const last = i === xy.length - 1;
+    return "<circle cx=\"" + p.x.toFixed(1) + "\" cy=\"" + p.y.toFixed(1) + "\" r=\"" + (last ? 6 : 3.5) + "\" fill=\"" + (last ? "#fff" : "#f2d060") + "\" stroke=\"#f2d060\" stroke-width=\"" + (last ? 3 : 0) + "\"" + (last ? " class=\"is-now\"" : "") + "/>";
+  }).join("");
+  const grid = ticks.map((tick) => {
+    const y = top + (1 - (tick - lo) / span) * innerH;
+    return "<line x1=\"" + left + "\" y1=\"" + y.toFixed(1) + "\" x2=\"" + (w - right) + "\" y2=\"" + y.toFixed(1) + "\" stroke=\"rgba(212,175,55,.18)\"/>";
+  }).join("");
+  return "<svg class=\"month-svg\" viewBox=\"0 0 " + w + " " + h + "\" role=\"img\" aria-label=\"" + roadEsc(spec.label) + " by month\">" + grid + yLabels + xLabels +
+    "<polyline fill=\"none\" stroke=\"#f2d060\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\" points=\"" + line + "\"/>" + dots + "</svg>";
+}
+
+function roadMonthCard(player, spec) {
+  const points = roadMonthlyPoints(player, spec);
+  if (points.length < 2) return "";
+  const from = points[0].value;
+  const to = points[points.length - 1].value;
+  const change = roadChangeCall(spec, from, to);
+  return "<article class=\"month-chart\"><h3>" + roadEsc(spec.label) + "</h3><p class=\"month-unit\">" + roadEsc(spec.unit) + "</p>" +
+    "<div class=\"month-facts\"><p><span>Start</span><b>" + roadFormatStat(spec, from) + "<small>" + roadEsc(spec.unit) + "</small></b></p>" +
+    "<p><span>Now</span><b>" + roadFormatStat(spec, to) + "<small>" + roadEsc(spec.unit) + "</small></b></p>" +
+    "<p><span>Change</span><b class=\"is-" + change.kind + "\">" + roadEsc(change.text) + "</b></p></div>" +
+    roadMonthSVG(points, spec) + "</article>";
+}
+
+function roadMonthSection(player) {
+  const cards = roadChartCatalog(player).map((spec) => roadMonthCard(player, spec)).filter(Boolean).join("");
+  if (!cards) return "";
+  return "<h3 class=\"month-sub\">Month by month</h3><div class=\"month-grid\">" + cards + "</div>";
+}
+
 function roadChartSVG(series) {
   if (!series.length) return "<p class=\"muted\">No readings yet.</p>";
   const vals = series.map((r) => Number(r.value));
@@ -819,7 +998,7 @@ function roadHomeHTML(player) {
     roadNextMarkup(next) +
     "<p class=\"tier-need\">" + roadEsc(roadTierNeed(g.overall, player)) + "</p>" +
     "<p class=\"road-bench\">" + roadEsc(roadBenchmarkLine(player)) + "</p></div></div>" +
-    "<div class=\"road-card road-chart-card\"><h3>Where I started</h3>" + roadChangeList(player) +
+    "<div class=\"road-card road-chart-card\" id=\"whereStarted\"><h2 class=\"day-title\">WHERE I STARTED</h2>" + roadChangeList(player) + roadMonthSection(player) +
     "<button class=\"btn btn-ghost\" type=\"button\" id=\"roadTilt\">Enable card tilt</button></div></div>";
 }
 
