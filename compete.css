@@ -8,12 +8,14 @@
 .lb-row b{color:#f2d060}
 .lb-board,.pr-board .trophy-card{text-align:center}
 .lb-board h3,.lb-board .compete-kicker,.lb-board .king-line,.pr-board .trophy-card h3{text-align:center}
-.lb-board .lb-row,.lb-board .award-row,.pr-board .lb-row{width:fit-content;max-width:min(520px,100%);margin-left:auto;margin-right:auto;justify-content:center;text-align:left}
-.lb-board .lb-row,.lb-board .award-row{gap:40px}
-.pr-board .lb-row{gap:24px}
 .lb-board .compete-kicker{margin-top:18px}
-.lb-board .lb-row > span,.lb-board .award-row > span:first-child,.pr-board .lb-row > span{min-width:0;white-space:nowrap}
-.lb-board .lb-row b,.lb-board .award-row b,.pr-board .lb-row b{flex:none;white-space:nowrap}
+.lb-list{display:grid;grid-template-columns:auto auto;justify-content:center;column-gap:40px;width:100%;text-align:left}
+.pr-board .lb-list{column-gap:24px}
+.lb-list > .lb-row,.lb-list > .award-row{display:grid;grid-template-columns:subgrid;grid-column:1 / -1;align-items:baseline;width:auto;max-width:none;margin:0;gap:0;justify-content:stretch}
+.lb-rank{display:inline-block;width:1.7em;margin-right:.35em;text-align:right;font-variant-numeric:tabular-nums}
+.lb-emoji{display:inline-block;width:1.5em;margin-right:.15em;text-align:center}
+.lb-who,.lb-name{white-space:nowrap}
+.lb-list b{justify-self:start;text-align:left;font-variant-numeric:tabular-nums;white-space:nowrap}
 .compete-stack{display:flex;flex-direction:column;gap:14px;width:100%}
 .cards-day{margin:0 0 18px}
 .day-title{margin:0 0 16px;text-align:center;font-family:Impact,"Arial Black",system-ui,sans-serif;font-style:italic;font-size:clamp(40px,7vw,72px);line-height:.85;letter-spacing:1px;color:#fff;text-shadow:0 3px 0 #000}

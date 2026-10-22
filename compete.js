@@ -539,11 +539,11 @@ function competePaint() {
   const rival = competeRival(me);
   const boards = ["exitVelo", "batSpeed", "tenYard", "throwVelo", "broadJump"].map((key) => {
     const spec = COMPETE_METRICS.find((m) => m.key === key) || { label: key, unit: "" };
-    const rows = competeSorted(key).slice(0, 5).map((p, i) => "<div class=\"lb-row\"><span>" + (i + 1) + ". " + competeEsc(p.name) + "</span><b>" + competeNum(p, key) + " " + spec.unit + "</b></div>").join("");
-    return "<div class=\"trophy-card\"><h3>" + spec.label + "</h3>" + rows + "</div>";
+    const rows = competeSorted(key).slice(0, 5).map((p, i) => "<div class=\"lb-row\"><span class=\"lb-who\"><span class=\"lb-rank\">" + (i + 1) + ".</span><span class=\"lb-name\">" + competeEsc(p.name) + "</span></span><b>" + competeNum(p, key) + " " + spec.unit + "</b></div>").join("");
+    return "<div class=\"trophy-card\"><h3>" + spec.label + "</h3><div class=\"lb-list\">" + rows + "</div></div>";
   }).join("");
   const improved = competeRoster().slice().sort((a, b) => competeExitDelta(b, 30) - competeExitDelta(a, 30)).slice(0, 5);
-  const awards = competeAwards().map((row) => "<div class=\"award-row\" tabindex=\"0\"><span>" + row.icon + " " + competeEsc(row.name) + "</span><b>" + competeEsc(row.player.name.split(" ")[0]) + "</b><span class=\"award-tip\" role=\"tooltip\">" + competeEsc(row.tip) + "</span></div>").join("");
+  const awards = competeAwards().map((row) => "<div class=\"award-row\" tabindex=\"0\"><span class=\"lb-who\"><span class=\"lb-emoji\">" + row.icon + "</span><span class=\"lb-name\">" + competeEsc(row.name) + "</span></span><b>" + competeEsc(row.player.name.split(" ")[0]) + "</b><span class=\"award-tip\" role=\"tooltip\">" + competeEsc(row.tip) + "</span></div>").join("");
   const facility = competeFacility();
   const incoming = facility.challenges.filter((ch) => ch.to === me.id && ch.status === "pending");
   const mine = facility.challenges.filter((ch) => (ch.from === me.id || ch.to === me.id) && ch.status === "accepted");
@@ -564,7 +564,7 @@ function competePaint() {
   const king = crowns.king;
   const crownRows = crowns.board.map((row) => {
     const who = competeRoster().find((p) => p.id === row.id);
-    return "<div class=\"lb-row\"><span>" + competeEsc(who ? who.name : "Alumni") + "</span><b>" + row.days + " days</b></div>";
+    return "<div class=\"lb-row\"><span class=\"lb-who\"><span class=\"lb-name\">" + competeEsc(who ? who.name : "Alumni") + "</span></span><b>" + row.days + " days</b></div>";
   }).join("");
   const rivalLine = me.road.rivalry ? competeRivalLine(rival) : "Rivalries are off. Turn them on if you want the chase.";
   const endChoices = [7, 14, 21, 31].map((n) => {
@@ -575,10 +575,10 @@ function competePaint() {
   const h2hBlock = h2h || "<div class=\"h2h\"><div class=\"h2h-side\"><div class=\"h2h-ava\"><span>?</span></div><b>—</b><div>You</div></div><div class=\"h2h-mid\"><span>HEAD TO HEAD</span><strong>No live challenge</strong></div><div class=\"h2h-side\"><div class=\"h2h-ava\"><span>?</span></div><b>—</b><div>Teammate</div></div></div>";
   mount.innerHTML = "<div class=\"compete-stack\">" +
     "<div class=\"compete-board lb-board\"><h2 class=\"day-title\">LEADERBOARD</h2>" +
-    "<h3>Most improved this month</h3>" + improved.map((p, i) => "<div class=\"lb-row\"><span>" + (i + 1) + ". " + competeEsc(p.name) + "</span><b>" + (competeExitDelta(p, 30) > 0 ? "+" : "") + (Math.round(competeExitDelta(p, 30) * 10) / 10) + " MPH</b></div>").join("") +
-    "<h3>Awards</h3>" + awards +
+    "<h3>Most improved this month</h3><div class=\"lb-list\">" + improved.map((p, i) => "<div class=\"lb-row\"><span class=\"lb-who\"><span class=\"lb-rank\">" + (i + 1) + ".</span><span class=\"lb-name\">" + competeEsc(p.name) + "</span></span><b>" + (competeExitDelta(p, 30) > 0 ? "+" : "") + (Math.round(competeExitDelta(p, 30) * 10) / 10) + " MPH</b></div>").join("") + "</div>" +
+    "<h3>Awards</h3><div class=\"lb-list\">" + awards + "</div>" +
     "<p class=\"compete-kicker\">KING OF THE HILL · " + competeEsc(competeGroup(me)) + " EXIT</p><p class=\"king-line\">" + (king ? "👑 " + competeEsc(king.name) + " · " + crowns.days + " days on the throne" : "—") + "</p>" +
-    "<h3>Days holding the crown</h3>" + crownRows +
+    "<h3>Days holding the crown</h3><div class=\"lb-list\">" + crownRows + "</div>" +
     "</div>" +
     "<div class=\"compete-board pr-board\"><div class=\"trophy-grid\">" + boards + "</div></div>" +
     "<div class=\"compete-board h2h-board\" id=\"challengeBoard\"><h2 class=\"day-title\">HEAD TO HEAD</h2><div id=\"h2hBoard\">" + h2hBlock + "</div>" +
