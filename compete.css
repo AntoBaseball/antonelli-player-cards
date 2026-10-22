@@ -6,9 +6,19 @@
 .compete-kicker{letter-spacing:2px;font-size:11px;font-weight:800;color:#f2d060;margin:0 0 4px}
 .lb-row,.award-row,.react-row{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid rgba(212,175,55,.16);font-size:14px}
 .lb-row b{color:#f2d060}
-.lb-board,.pr-board .trophy-card{text-align:center}
-.lb-board h3,.lb-board .compete-kicker,.lb-board .king-line,.pr-board .trophy-card h3{text-align:center}
-.lb-board .compete-kicker{margin-top:18px}
+.lb-board,.king-board,.pr-board .trophy-card{text-align:center}
+.lb-board h3,.king-board h3,.king-board .compete-kicker,.king-board .king-line,.pr-board .trophy-card h3{text-align:center}
+.lb-board .lb-awards{margin-top:36px}
+.king-board{border-color:#d4af37;background:radial-gradient(90% 70% at 50% 0%, rgba(242,208,96,.18), transparent 58%), #100e0a;box-shadow:0 0 24px rgba(212,175,55,.22)}
+.quest-card{text-align:center;padding:22px 18px 20px}
+.quest-title{margin:0 0 8px;text-align:center;font-family:Impact,"Arial Black",system-ui,sans-serif;font-style:italic;font-size:clamp(28px,6vw,44px);line-height:.9;letter-spacing:.5px;color:#fff;text-shadow:0 3px 0 #000}
+.quest-sub{margin:0 auto 14px;max-width:42ch;color:#d9d0b8;font-size:15px;line-height:1.45}
+.quest-num{margin:0 0 12px;font-family:Impact,"Arial Black",system-ui,sans-serif;font-style:italic;font-size:clamp(48px,8vw,68px);line-height:.85;color:#f2d060}
+.quest-num small{margin-left:6px;font-size:.38em;color:#d9d0b8;letter-spacing:0}
+.quest-card .road-track{max-width:420px;height:16px;margin:4px auto 0}
+.quest-note{margin:12px auto 0;max-width:40ch;color:#b7ad96;font-size:13px;line-height:1.4}
+.rival-opt{display:inline-flex;align-items:center;justify-content:center;gap:8px;margin-top:14px;color:#f7ecc8;font-size:14px;font-weight:700;line-height:1.4}
+#competeHome > .road-actions{justify-content:center}
 .lb-list{display:grid;grid-template-columns:auto auto;justify-content:center;column-gap:40px;width:100%;text-align:left}
 .pr-board .lb-list{column-gap:24px}
 .lb-list > .lb-row,.lb-list > .award-row{display:grid;grid-template-columns:subgrid;grid-column:1 / -1;column-gap:40px;align-items:baseline;width:auto;max-width:none;margin:0;justify-content:stretch}

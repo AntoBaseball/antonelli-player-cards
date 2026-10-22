@@ -523,6 +523,51 @@ function competeDayCardsHTML(cotd) {
   return "<h2 class=\"day-title\">CARDS OF THE DAY</h2><div class=\"day-row\">" + row + "</div>";
 }
 
+function competeQuestCards(me, quest, month, event, points, team, chem, rival) {
+  const weekCopy = {
+    speed: ["SPEED WEEK", "This week's goal: 2 training sessions."],
+    barrel: ["BARREL WEEK", "This week's goal: raise exit velo from your first test this month."],
+    consistency: ["CONSISTENCY", "This week's goal: train 5 days."],
+    batprs: ["BAT-SPEED PRS", "This week's goal: stack 3 personal bests."],
+  };
+  const week = weekCopy[quest.id] || [String(quest.name || "THIS WEEK").toUpperCase(), quest.detail];
+  const rivalToggle = "<label class=\"rival-opt\"><input id=\"rivalToggle\" type=\"checkbox\"" + (me.road.rivalry ? " checked" : "") + (roadCanEdit(me) ? "" : " disabled") + "> Opt in to rivalries</label>";
+  let rivalCard;
+  if (!me.road.rivalry) {
+    rivalCard = { title: "RIVALRY", sub: "Turn this on to chase a close teammate.", extra: rivalToggle };
+  } else if (!rival) {
+    rivalCard = { title: "RIVALRY", sub: "No teammate is close enough yet.", extra: rivalToggle };
+  } else {
+    const first = competeEsc(rival.other.name.split(" ")[0]);
+    const label = competeEsc(rival.spec.label);
+    const tied = rival.mine === rival.theirs;
+    rivalCard = {
+      title: "RIVALRY",
+      sub: tied ? "Tied with " + first + " in " + label + "." : (rival.iLead ? "You lead " + first + " in " + label + "." : first + " leads you in " + label + "."),
+      num: competeEsc(String(rival.abs)),
+      unit: " " + competeEsc(rival.spec.unit),
+      extra: rivalToggle,
+    };
+  }
+  const chemNote = chem.perfect ? "Perfect team week." : (chem.glow ? "Chemistry glow is on." : chem.done + " of " + chem.size + " trained this week.");
+  return [
+    competeQuestCard({ title: week[0], sub: week[1], num: quest.progress, unit: " / " + quest.target, progress: quest.progress, target: quest.target, bar: true, note: quest.progress >= quest.target ? "Goal reached." : "" }),
+    competeQuestCard({ title: "POWER SURGE", sub: "Add 2 MPH of exit velo this month.", num: (month.progress > 0 ? "+" : "") + month.progress, unit: " MPH", progress: month.progress, target: month.target, bar: true, note: month.done ? "Goal reached." : "" }),
+    competeQuestCard({ title: competeEsc(event.name).toUpperCase(), sub: "This month's event: " + competeEsc(event.blurb.replace(/\.$/, "")) + ".", num: points, unit: " PTS", note: "The event card is a one-time reward." }),
+    competeQuestCard({ title: "TEAM POWER", sub: competeEsc(team.team) + " goal: gain " + team.target + " MPH of exit velo this month.", num: team.progress, unit: " MPH", progress: team.progress, target: team.target, bar: true }),
+    competeQuestCard({ title: "TEAM CHEMISTRY", sub: "Cards glow when 70% of the team trains this week.", num: chem.pct, unit: "%", progress: chem.pct, target: 100, bar: true, note: chemNote }),
+    competeQuestCard(rivalCard),
+  ].join("");
+}
+
+function competeQuestCard(card) {
+  const pct = card.target > 0 ? Math.max(0, Math.min(100, Math.round((Number(card.progress) / card.target) * 100))) : 0;
+  const bar = card.bar ? "<div class=\"road-track\" role=\"progressbar\" aria-valuenow=\"" + pct + "\" aria-valuemin=\"0\" aria-valuemax=\"100\"><span style=\"width:" + pct + "%\"></span></div>" : "";
+  const num = card.num == null ? "" : "<p class=\"quest-num\">" + card.num + (card.unit ? "<small>" + card.unit + "</small>" : "") + "</p>";
+  const note = card.note ? "<p class=\"quest-note\">" + card.note + "</p>" : "";
+  return "<div class=\"compete-board quest-card\"><h2 class=\"quest-title\">" + card.title + "</h2><p class=\"quest-sub\">" + card.sub + "</p>" + num + bar + note + (card.extra || "") + "</div>";
+}
+
 function competePaint() {
   const mount = document.getElementById("competeHome");
   if (!mount || typeof roadSignedIn !== "function") return;
@@ -566,7 +611,6 @@ function competePaint() {
     const who = competeRoster().find((p) => p.id === row.id);
     return "<div class=\"lb-row\"><span class=\"lb-who\"><span class=\"lb-name\">" + competeEsc(who ? who.name : "Alumni") + "</span></span><b>" + row.days + " days</b></div>";
   }).join("");
-  const rivalLine = me.road.rivalry ? competeRivalLine(rival) : "Rivalries are off. Turn them on if you want the chase.";
   const endChoices = [7, 14, 21, 31].map((n) => {
     const iso = typeof roadAddDays === "function" ? roadAddDays(competeToday(), n) : competeToday();
     const tail = n === 31 ? " · 1 month" : (n === 14 ? " · 2 weeks" : "");
@@ -576,8 +620,10 @@ function competePaint() {
   mount.innerHTML = "<div class=\"compete-stack\">" +
     "<div class=\"compete-board lb-board\"><h2 class=\"day-title\">LEADERBOARD</h2>" +
     "<h3>Most improved this month</h3><div class=\"lb-list\">" + improved.map((p, i) => "<div class=\"lb-row\"><span class=\"lb-who\"><span class=\"lb-rank\">" + (i + 1) + ".</span><span class=\"lb-name\">" + competeEsc(p.name) + "</span></span><b>" + (competeExitDelta(p, 30) > 0 ? "+" : "") + (Math.round(competeExitDelta(p, 30) * 10) / 10) + " MPH</b></div>").join("") + "</div>" +
-    "<h3>Awards</h3><div class=\"lb-list\">" + awards + "</div>" +
-    "<p class=\"compete-kicker\">KING OF THE HILL · " + competeEsc(competeGroup(me)) + " EXIT</p><p class=\"king-line\">" + (king ? "👑 " + competeEsc(king.name) + " · " + crowns.days + " days on the throne" : "—") + "</p>" +
+    "<h3 class=\"lb-awards\">Awards</h3><div class=\"lb-list\">" + awards + "</div>" +
+    "</div>" +
+    "<div class=\"compete-board king-board\"><h2 class=\"day-title\">KING OF THE HILL</h2>" +
+    "<p class=\"compete-kicker\">" + competeEsc(competeGroup(me)) + " EXIT</p><p class=\"king-line\">" + (king ? "👑 " + competeEsc(king.name) + " · " + crowns.days + " days on the throne" : "—") + "</p>" +
     "<h3>Days holding the crown</h3><div class=\"lb-list\">" + crownRows + "</div>" +
     "</div>" +
     "<div class=\"compete-board pr-board\"><div class=\"trophy-grid\">" + boards + "</div></div>" +
@@ -587,14 +633,8 @@ function competePaint() {
     "<label class=\"ch-field\"><span>Category</span><select id=\"chMetric\">" + metrics + "</select></label>" +
     "<label class=\"ch-field\"><span>End date</span><select id=\"chDeadline\">" + endChoices + "</select><em>Up to 1 month</em></label></div>" +
     "<button class=\"ch-challenge\" type=\"button\" id=\"chSend\">CHALLENGE</button></div>" +
-    "<div class=\"compete-board quest-board\">" +
-    "<h3>" + quest.name + "</h3><p>" + quest.detail + "</p><div class=\"road-track\"><span style=\"width:" + Math.min(100, Math.round((quest.progress / quest.target) * 100)) + "%\"></span></div><p>" + quest.progress + " / " + quest.target + "</p>" +
-    "<h3>" + month.name + "</h3><p>" + month.detail + " · " + month.progress + " MPH</p>" +
-    "<h3>" + event.name + "</h3><p>" + event.blurb + " · " + points + " event points. The event card does not come back.</p>" +
-    "<h3>" + team.name + "</h3><p>" + team.detail + " · " + team.team + "</p><div class=\"road-track\"><span style=\"width:" + Math.min(100, Math.round((team.progress / team.target) * 100)) + "%\"></span></div><p>" + team.progress + " / " + team.target + "</p>" +
-    "<p>Team chemistry " + chem.pct + "% · " + (chem.perfect ? "PERFECT TEAM WEEK" : chem.glow ? "Chemistry glow is on." : "70% of the team trains and the cards glow.") + "</p>" +
-    "<p class=\"coach-line\">" + competeEsc(rivalLine) + "</p>" +
-    "<label><input id=\"rivalToggle\" type=\"checkbox\"" + (me.road.rivalry ? " checked" : "") + (roadCanEdit(me) ? "" : " disabled") + "> Opt in to rivalries</label></div></div>";
+    competeQuestCards(me, quest, month, event, points, team, chem, rival) +
+    "</div>";
   const toggle = document.getElementById("rivalToggle");
   if (toggle) toggle.addEventListener("change", () => {
     me.road.rivalry = toggle.checked;
