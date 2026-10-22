@@ -207,6 +207,12 @@ table,th,td{color:#f4f1ea;border-color:rgba(212,175,55,.22)}
   .road-hello{font-size:34px}
   .road-hero{padding:14px 12px 12px}
   .inbox{top:56px;right:8px;z-index:80}
+  .tier-showcase{margin-bottom:12px;padding:12px 8px 14px}
+  .tier-showcase-row{flex-direction:column;align-items:center;gap:16px}
+  .tier-spot{width:min(300px,100%)}
+  .tier-spot-card{width:100%}
+  body[data-app="compete"] .tier-showcase,
+  body[data-app="train"] .tier-showcase{display:none !important}
   body[data-app="home"] #competeHome,
   body[data-app="home"] .hero,
   body[data-app="home"] .controls,
