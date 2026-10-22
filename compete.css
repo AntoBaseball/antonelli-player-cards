@@ -6,6 +6,11 @@
 .compete-kicker{letter-spacing:2px;font-size:11px;font-weight:800;color:#f2d060;margin:0 0 4px}
 .lb-row,.award-row,.react-row{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid rgba(212,175,55,.16);font-size:14px}
 .lb-row b{color:#f2d060}
+.lb-board,.pr-board .trophy-card{text-align:center}
+.lb-board h3,.lb-board .compete-kicker,.lb-board .king-line,.pr-board .trophy-card h3{text-align:center}
+.lb-board .lb-row,.lb-board .award-row,.pr-board .lb-row{width:fit-content;max-width:min(460px,100%);margin-left:auto;margin-right:auto;justify-content:center;gap:16px;text-align:left}
+.lb-board .lb-row > span,.lb-board .award-row > span:first-child,.pr-board .lb-row > span{min-width:0}
+.lb-board .lb-row b,.lb-board .award-row b,.pr-board .lb-row b{flex:none;white-space:nowrap}
 .compete-stack{display:flex;flex-direction:column;gap:14px;width:100%}
 .cards-day{margin:0 0 18px}
 .day-title{margin:0 0 16px;text-align:center;font-family:Impact,"Arial Black",system-ui,sans-serif;font-style:italic;font-size:clamp(40px,7vw,72px);line-height:.85;letter-spacing:1px;color:#fff;text-shadow:0 3px 0 #000}
@@ -77,6 +82,7 @@
   .day-spot{flex:0 0 78%;max-width:280px;scroll-snap-align:center}
   #h2hBoard .h2h{min-height:180px}
   .trophy-grid{grid-template-columns:1fr 1fr}
+  .pr-board .trophy-grid{grid-template-columns:1fr}
   body[data-app="trophies"] .show-panel[data-panel="road"] > .road-card,
   body[data-app="trophies"] #styleLab{display:none}
 }
