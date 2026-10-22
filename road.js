@@ -372,6 +372,14 @@ function roadFormatStat(spec, value) {
   return rounded.toFixed(1);
 }
 
+function roadRoundStat(spec, value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return n;
+  if (spec.digits === 2) return Math.round(n * 100) / 100;
+  if (spec.digits === 0) return Math.round(n);
+  return Math.round(n * 10) / 10;
+}
+
 function roadMonthShift(month, delta) {
   const parts = String(month || "2026-10").split("-");
   let y = Number(parts[0]);
@@ -387,6 +395,8 @@ function roadMonthsEnding(endMonth, count) {
   return out;
 }
 
+var ROAD_MONTH_SPAN = 6;
+
 function roadSeedTrend(endValue, better, count) {
   const higher = better !== "lower";
   const mag = Math.abs(endValue);
@@ -400,36 +410,59 @@ function roadSeedTrend(endValue, better, count) {
   return values;
 }
 
+function roadMonthIndex(month) {
+  const parts = String(month).split("-");
+  return Number(parts[0]) * 12 + Number(parts[1]) - 1;
+}
+
+function roadFillAxis(axis, known, spec) {
+  const rows = [...known.entries()].filter((row) => Number.isFinite(row[1])).sort((a, b) => (a[0] < b[0] ? -1 : 1));
+  if (!rows.length) return [];
+  return axis.map((month) => {
+    const exact = rows.find((row) => row[0] === month);
+    if (exact) return { month: month, value: exact[1] };
+    let prev = null;
+    let next = null;
+    rows.forEach((row) => {
+      if (row[0] < month) prev = row;
+      else if (!next && row[0] > month) next = row;
+    });
+    let value = next ? next[1] : prev[1];
+    if (prev && next) {
+      const span = roadMonthIndex(next[0]) - roadMonthIndex(prev[0]);
+      const t = span ? (roadMonthIndex(month) - roadMonthIndex(prev[0])) / span : 0;
+      value = prev[1] + (next[1] - prev[1]) * t;
+    } else if (prev) value = prev[1];
+    return { month: month, value: roadRoundStat(spec, value) };
+  });
+}
+
 function roadMonthlyPoints(player, spec) {
+  const todayMonth = roadToday().slice(0, 7);
+  const axis = roadMonthsEnding(todayMonth, ROAD_MONTH_SPAN);
   const real = new Map();
   roadSeries(player, spec.key).forEach((row) => {
     const month = String(row.at || "").slice(0, 7);
     if (/^\d{4}-\d{2}$/.test(month)) real.set(month, Number(row.value));
   });
   const current = player.metrics ? Number(player.metrics[spec.key]) : NaN;
-  const todayMonth = roadToday().slice(0, 7);
+  if (real.size) {
+    if (Number.isFinite(current)) {
+      const latest = [...real.keys()].sort().pop();
+      if (!latest || latest <= todayMonth) real.set(todayMonth, current);
+    }
+    return roadFillAxis(axis, real, spec);
+  }
   const hist = Array.isArray(player.history && player.history[spec.key]) ? player.history[spec.key].map(Number).filter(Number.isFinite) : [];
-  if (!real.size) {
-    let values = hist.slice();
-    if (Number.isFinite(current) && (!values.length || values[values.length - 1] !== current)) values.push(current);
-    if (!Number.isFinite(values[values.length - 1])) return [];
-    if (values.length < 4) values = roadSeedTrend(values[values.length - 1], spec.better, 6);
-    return roadMonthsEnding(todayMonth, values.length).map((month, i) => ({ month: month, value: values[i] }));
+  let values = hist.slice();
+  if (Number.isFinite(current) && (!values.length || values[values.length - 1] !== current)) values.push(current);
+  if (!Number.isFinite(values[values.length - 1])) return [];
+  if (values.length > ROAD_MONTH_SPAN) values = values.slice(-ROAD_MONTH_SPAN);
+  if (values.length < ROAD_MONTH_SPAN) {
+    const need = ROAD_MONTH_SPAN - values.length;
+    values = roadSeedTrend(values[0], spec.better, need + 1).slice(0, need).concat(values);
   }
-  if (Number.isFinite(current)) {
-    const latest = [...real.keys()].sort().pop();
-    if (!latest || latest <= todayMonth) real.set(todayMonth, current);
-  }
-  let months = [...real.keys()].sort();
-  if (months.length < 4) {
-    const need = 4 - months.length;
-    const anchor = real.get(months[0]);
-    const prior = roadMonthsEnding(roadMonthShift(months[0], -1), need);
-    const trend = roadSeedTrend(anchor, spec.better, need + 1).slice(0, need);
-    prior.forEach((month, i) => { if (!real.has(month)) real.set(month, trend[i]); });
-    months = [...real.keys()].sort();
-  }
-  return months.map((month) => ({ month: month, value: real.get(month) }));
+  return axis.map((month, i) => ({ month: month, value: values[i] }));
 }
 
 function roadMonthLabel(month, withYear) {
@@ -442,9 +475,9 @@ function roadMonthLabel(month, withYear) {
 function roadChangeCall(spec, from, to) {
   const raw = to - from;
   const mag = roadFormatStat(spec, Math.abs(raw));
-  if (Math.abs(raw) < 0.001) return { text: "No change", kind: "flat" };
-  if (spec.better === "lower") return { text: mag + " " + spec.unit + (raw < 0 ? " faster" : " slower"), kind: raw < 0 ? "up" : "down" };
-  return { text: (raw > 0 ? "+" : "−") + mag + " " + spec.unit, kind: raw > 0 ? "up" : "down" };
+  if (Math.abs(raw) < 0.001) return { num: "0", unit: spec.unit, note: "no change", kind: "flat" };
+  if (spec.better === "lower") return { num: mag, unit: spec.unit, note: raw < 0 ? "faster" : "slower", kind: raw < 0 ? "up" : "down" };
+  return { num: (raw > 0 ? "+" : "−") + mag, unit: spec.unit, note: "", kind: raw > 0 ? "up" : "down" };
 }
 
 function roadMonthSVG(points, spec) {
@@ -470,14 +503,12 @@ function roadMonthSVG(points, spec) {
   });
   const years = new Set(points.map((p) => p.month.slice(0, 4)));
   const withYear = years.size > 1;
-  const step = points.length > 7 ? 2 : 1;
   const ticks = [hi - pad, (lo + hi) / 2, lo + pad];
   const yLabels = ticks.map((tick) => {
     const y = top + (1 - (tick - lo) / span) * innerH;
     return "<text x=\"4\" y=\"" + y.toFixed(1) + "\" fill=\"#b7ad96\" font-size=\"11\" font-family=\"system-ui,sans-serif\">" + roadFormatStat(spec, tick) + "</text>";
   }).join("");
   const xLabels = points.map((p, i) => {
-    if (i % step !== 0 && i !== points.length - 1) return "";
     return "<text x=\"" + xy[i].x.toFixed(1) + "\" y=\"" + (h - 8) + "\" text-anchor=\"middle\" fill=\"#d9d0b8\" font-size=\"11\" font-family=\"system-ui,sans-serif\">" + roadMonthLabel(p.month, withYear) + "</text>";
   }).join("");
   const line = xy.map((p) => p.x.toFixed(1) + "," + p.y.toFixed(1)).join(" ");
@@ -499,10 +530,11 @@ function roadMonthCard(player, spec) {
   const from = points[0].value;
   const to = points[points.length - 1].value;
   const change = roadChangeCall(spec, from, to);
+  const note = change.note ? "<em>" + roadEsc(change.note) + "</em>" : "";
   return "<article class=\"month-chart\"><h3>" + roadEsc(spec.label) + "</h3><p class=\"month-unit\">" + roadEsc(spec.unit) + "</p>" +
     "<div class=\"month-facts\"><p><span>Start</span><b>" + roadFormatStat(spec, from) + "<small>" + roadEsc(spec.unit) + "</small></b></p>" +
     "<p><span>Now</span><b>" + roadFormatStat(spec, to) + "<small>" + roadEsc(spec.unit) + "</small></b></p>" +
-    "<p><span>Change</span><b class=\"is-" + change.kind + "\">" + roadEsc(change.text) + "</b></p></div>" +
+    "<p><span>Change</span><b class=\"is-" + change.kind + "\">" + change.num + "<small>" + roadEsc(change.unit) + "</small>" + note + "</b></p></div>" +
     roadMonthSVG(points, spec) + "</article>";
 }
 

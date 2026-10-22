@@ -54,19 +54,31 @@
 .next-move i{font-style:normal;color:#f2d060;margin:0 4px}
 .chart-svg{width:100%;height:140px;display:block}
 .road-chart-card .day-title{margin-bottom:18px}
-.month-sub{margin:22px 0 14px;text-align:center;font-family:Impact,"Arial Black",system-ui,sans-serif;font-style:italic;font-size:clamp(22px,4vw,32px);line-height:.9;color:#f2d060}
+.road-chart-card .chart-block{width:min(100%,864px);margin:0 auto 4px;text-align:center}
+.road-chart-card .chart-compare{gap:16px;margin-bottom:14px}
+.road-chart-card .chart-compare div{text-align:center;padding:16px 14px}
+.road-chart-card .chart-compare span,.road-chart-card .chart-row span{font-size:12px;letter-spacing:1.2px}
+.road-chart-card .chart-compare b{font-size:clamp(32px,5vw,42px)}
+.road-chart-card .year-banner{text-align:center;margin:12px 0 8px}
+.road-chart-card .chart-windows{grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:8px}
+.road-chart-card .chart-row{flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:6px;padding:14px 10px;min-width:0}
+.road-chart-card .chart-row b{font-size:28px}
+.road-chart-card .chart-row small{display:block}
+.road-card h3.month-sub{margin:32px 0 24px;text-align:center;font-family:Impact,"Arial Black",system-ui,sans-serif;font-style:italic;font-size:clamp(28px,4vw,36px);line-height:.9;color:#f2d060}
 .month-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;width:min(100%,864px);margin:0 auto}
 .month-chart{min-width:0;text-align:center;padding:16px 14px 12px;border:1px solid rgba(212,175,55,.35);border-radius:14px;background:rgba(0,0,0,.35)}
+.month-chart:last-child:nth-child(odd){grid-column:1 / -1;justify-self:center;width:calc((100% - 24px) / 2)}
 .month-chart h3{margin:0 0 4px;text-align:center;font-family:Impact,"Arial Black",system-ui,sans-serif;font-style:italic;font-size:clamp(22px,4vw,30px);line-height:.9;color:#fff}
 .month-unit{margin:0 0 14px;color:#b7ad96;font-size:12px;font-weight:800;letter-spacing:1.4px}
-.month-facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px 16px;margin:0 0 12px}
-.month-facts p{display:flex;flex-direction:column;align-items:center;gap:6px;margin:0;min-width:0}
-.month-facts span{font-size:11px;font-weight:800;letter-spacing:1px;color:#f2d060;line-height:1.2}
-.month-facts b{font-family:Impact,"Arial Black",system-ui,sans-serif;font-style:italic;font-size:clamp(22px,4vw,30px);line-height:1;color:#fff}
+.month-facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));column-gap:12px;row-gap:8px;margin:0 0 14px;align-items:start}
+.month-facts p{display:flex;flex-direction:column;align-items:center;gap:8px;margin:0;min-width:0}
+.month-facts span{font-size:13px;font-weight:800;letter-spacing:.8px;color:#f2d060;line-height:1.2}
+.month-facts b{font-family:Impact,"Arial Black",system-ui,sans-serif;font-style:italic;font-size:clamp(18px,2.4vw,26px);line-height:1;color:#fff;white-space:nowrap}
 .month-facts b small{margin-left:4px;font-size:.42em;color:#d9d0b8;letter-spacing:0}
+.month-facts b em{display:block;margin-top:5px;font-family:system-ui,sans-serif;font-style:normal;font-weight:800;font-size:12px;letter-spacing:.5px;line-height:1.2}
 .month-facts b.is-up{color:#f2d060}
 .month-facts b.is-down{color:#e7b4b4}
-.month-facts b.is-flat{color:#d9d0b8;font-size:16px}
+.month-facts b.is-flat{color:#d9d0b8}
 .month-svg{width:100%;height:auto;display:block}
 .month-svg .is-now{filter:drop-shadow(0 0 5px #f2d060)}
 .chart-compare{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px}
@@ -255,7 +267,12 @@ body[data-app="train"] #emptyState{display:none}
   .container{padding:10px 12px 16px}
   .road-grid,.chart-windows,.hero,.hero-stats,.controls{grid-template-columns:1fr}
   .chart-compare{grid-template-columns:1fr 1fr}
+  .road-chart-card .chart-windows{grid-template-columns:1fr 1fr}
   .month-grid{grid-template-columns:1fr;width:100%}
+  .month-chart:last-child:nth-child(odd){grid-column:auto;width:100%;justify-self:stretch}
+  .month-facts span{font-size:14px;letter-spacing:.4px}
+  .month-facts b{font-size:20px}
+  .month-facts b em{font-size:13px}
   .road-bench{display:none}
   .road-hello{font-size:30px}
   .road-title{font-size:clamp(44px,12vw,72px);margin-bottom:28px}
