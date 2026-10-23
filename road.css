@@ -232,6 +232,7 @@ input,select,textarea{background:#101218;color:#f4f1ea;border-color:rgba(212,175
 .pill{background:#1a1c22;color:#f2d060}
 .muted,.control label,.field label,.stat span{color:#b7aa8a}
 .roster-info h3,.show-team,.show-name{color:#fff}
+.roster-grid .roster-card,.roster-grid .roster-card:hover{background:transparent;border:0;box-shadow:none}
 a{color:#f2d060}
 table,th,td{color:#f4f1ea;border-color:rgba(212,175,55,.22)}
 .hero>div:first-child{border:1px solid rgba(212,175,55,.35);box-shadow:0 16px 40px rgba(0,0,0,.35)}

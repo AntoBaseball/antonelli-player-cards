@@ -3886,12 +3886,6 @@ function renderRoster() {
     return `
     <article class="roster-card">
       ${cardHTML(p, false, null, { flip: true, profileButton: true })}
-      <div class="roster-info">
-        <h3>${esc(p.name)}</h3>
-        <div class="meta">${esc(positionLine(p))} • ${esc(p.team)} • Age ${esc(p.age)} • ${esc(activeAgeGroup(p))} • ${esc(p.classYear)}<br>Bats ${esc(p.bats)} / Throws ${esc(p.throws)} • Overall ${overall}</div>
-        <div class="pills"><span class="pill red">${esc(p.archetype)}</span><span class="pill">${typeLabel(p.type)}</span><span class="pill${tierClass}">${tier.label}</span></div>
-        <button class="btn btn-red roster-profile" type="button" data-open="${esc(p.id)}">View Profile</button>
-      </div>
     </article>`;
   }).join("");
   document.querySelectorAll("[data-open]").forEach((el) => {
