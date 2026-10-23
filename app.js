@@ -4774,7 +4774,7 @@ function openProfile(id, opts) {
   selectedId = id;
   const { subs, overall } = gradesFor(p);
   const tier = tierFor(overall, p);
-  const canEdit = typeof roadCanEdit !== "function" || roadCanEdit(p);
+  const canEdit = typeof roadCoachTools === "function" ? roadCoachTools(p) : (typeof roadCanEdit !== "function" || roadCanEdit(p));
   const group = activeAgeGroup(p);
   const names = nameParts(p.name);
   const delta = assessmentDelta(p);
@@ -4819,7 +4819,7 @@ function openProfile(id, opts) {
           <button class="btn btn-ghost" type="button" id="previewOverallBtn">Preview overall-up</button>
           <button class="btn btn-ghost" type="button" id="previewTierBtn">Preview tier-up</button>
           <button class="btn btn-ghost" type="button" id="rolloverBtn">Start New Season (Sept 1 Rollover)</button>
-          <button class="btn btn-ghost" type="button" id="deleteProfileBtn">Delete Player</button>` : `<p class="muted">Read only. Signed-in players can open any card. Edits stay on your own card unless you are in coach mode.</p>`}
+          <button class="btn btn-ghost" type="button" id="deleteProfileBtn">Delete Player</button>` : `<p class="muted">${roadProfileLockNote(p)}</p>`}
           <button class="btn btn-ghost" type="button" id="showdownProfileBtn">Challenge in SHOWDOWN</button>
         </div>
       </div>

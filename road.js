@@ -153,7 +153,7 @@ function roadIsHot(player) {
    the demo streak reads 0. Slide those dates forward so the newest one is today.
    Real accounts are left alone. */
 function roadAnchorSampleDates(player) {
-  const auth = globalThis.AntonelliAuth;
+  const auth = roadAuth();
   const demo = !auth || typeof auth.configured !== "function" || !auth.configured() || !auth.user || auth.holdingSample;
   if (!demo || !player || String(player.id).indexOf("sample-") !== 0 || player.sampleTouched) return;
   const dates = player.road && player.road.dates;
@@ -297,11 +297,34 @@ function roadSignedIn() {
   return list.find((p) => p.id === session.playerId) || list[0] || null;
 }
 
+function roadAuth() {
+  if (typeof AntonelliAuth !== "undefined") return AntonelliAuth;
+  return globalThis.AntonelliAuth || null;
+}
+
 function roadCanEdit(player) {
   if (!player) return false;
   const session = roadSession();
   if (session.mode === "coach") return true;
   return session.playerId === player.id;
+}
+
+/* Edit Metrics, previews, season rollover, and delete.
+   A signed-in player does not get those. Demo mode and a signed-in coach do. */
+function roadCoachTools(player) {
+  const auth = roadAuth();
+  const configured = !!(auth && typeof auth.configured === "function" && auth.configured());
+  if (!configured || auth.holdingSample) return roadCanEdit(player);
+  if (auth.user && auth.role === "coach") return true;
+  return false;
+}
+
+function roadProfileLockNote(player) {
+  const auth = roadAuth();
+  const livePlayer = !!(auth && typeof auth.configured === "function" && auth.configured() && auth.user && auth.role === "player" && !auth.holdingSample);
+  if (livePlayer && roadCanEdit(player)) return "Metrics, the season, and delete stay with the coach.";
+  if (livePlayer) return "Read only.";
+  return "Read only. Signed-in players can open any card. Edits stay on your own card unless you are in coach mode.";
 }
 
 function roadRoster() {
@@ -1478,6 +1501,7 @@ globalThis.roadTierKey = roadTierKey;
 globalThis.roadDevBonus = roadDevBonus;
 globalThis.roadIsHot = roadIsHot;
 globalThis.roadCanEdit = roadCanEdit;
+globalThis.roadCoachTools = roadCoachTools;
 globalThis.roadBackExtra = roadBackExtra;
 globalThis.roadProfileHTML = roadProfileHTML;
 globalThis.roadWireProfile = roadWireProfile;
