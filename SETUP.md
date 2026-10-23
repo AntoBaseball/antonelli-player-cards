@@ -94,7 +94,9 @@ Realtime is on for `notifications` and `challenges` only. Reactions, crowns, and
 
 `supabase/migrations/20261023180000_notify_dedupe.sql` is applied. A second challenge on the same day notifies. Reactions stay one note per day.
 
-`supabase/migrations/20261023190000_metrics_coach_only.sql` is **not applied yet**. Today a signed-in player can update their whole `player_private` row, including `metrics` and the XP stored in `road`. That file rejects metric and history changes from a player. Reading log, quest progress, and XP stay writable so the game plan can save.
+`supabase/migrations/20261023190000_metrics_coach_only.sql` is applied. A player cannot change `metrics` or `history`.
+
+`supabase/migrations/20261023200000_document_allowlist.sql` is **not applied yet**. It replaces that guard. A player update may change only `readingLog`, `earnedQuirks`, `gradeSeen`, and the player-owned keys inside `road` (missions, quest totals, XP, streaks, highlights, card lab). Age, position, photo, coach quirks, the coach plan, bio, and the rest of the profile stay with the coach. The signed-in player save sends only those keys.
 
 Demo mode (empty config, or signed out) does not call these tables. Sample challenges, reactions, and the Cage session link stay in `localStorage`. Demo highlight files stay in IndexedDB and still cap at about 1.2 MB. Quest XP claims and personal reminders (streak, XP close, rival) stay on the device even after the migration, because they are not team posts.
 

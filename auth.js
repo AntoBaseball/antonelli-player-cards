@@ -372,7 +372,43 @@ const AntonelliAuth = {
     };
   },
 
+  /* Keep these in sync with player_document_keys() and player_road_keys()
+     in supabase/migrations/20261023200000_document_allowlist.sql.
+     A player save sends only these keys. */
+  documentKeys: ["readingLog", "earnedQuirks", "gradeSeen", "road"],
+  roadKeys: [
+    "xp", "streaks", "dates", "missions", "missionDay", "dailyBonus",
+    "trainingLog", "miniDay", "miniXp", "streakPaid", "hotUntil",
+    "prs", "challenges", "trophies", "rivalry", "videos", "vision",
+    "skin", "celebration", "signature", "autograph", "autographTier",
+  ],
+
+  playerRoad(player) {
+    const src = player && player.road || {};
+    const road = {};
+    this.roadKeys.forEach((key) => {
+      if (Object.prototype.hasOwnProperty.call(src, key)) road[key] = src[key];
+    });
+    return road;
+  },
+
+  playerDocument(player) {
+    const doc = { readingLog: player.readingLog || {}, road: this.playerRoad(player) };
+    if (player.earnedQuirks !== undefined) doc.earnedQuirks = player.earnedQuirks;
+    if (player.gradeSeen !== undefined) doc.gradeSeen = player.gradeSeen;
+    return doc;
+  },
+
   privateRow(player) {
+    if (this.role !== "coach") {
+      const road = this.playerRoad(player);
+      return {
+        player_id: player.id,
+        reading_log: player.readingLog || {},
+        road: road,
+        document: this.playerDocument(player),
+      };
+    }
     return {
       player_id: player.id,
       metrics: player.metrics || {},
