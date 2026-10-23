@@ -7,6 +7,7 @@ const AntonelliAuth = {
   playerId: null,
   mode: "signin",
   saveTimer: 0,
+  holdingSample: false,
 
   configured() {
     const cfg = globalThis.ANTONELLI_CONFIG || {};
@@ -232,11 +233,30 @@ const AntonelliAuth = {
       const res = await this.client.from("player_private").select("*");
       if (!res.error && Array.isArray(res.data)) privs = res.data;
     }
+    const rows = pubs || [];
+    if (!rows.length) {
+      this.holdSampleRoster();
+      return;
+    }
+    this.holdingSample = false;
+    const banner = document.getElementById("sampleBanner");
+    if (banner) banner.hidden = true;
     const byId = new Map(privs.map((row) => [row.player_id, row]));
-    const next = (pubs || []).map((pub) => this.hydrate(pub, byId.get(pub.id) || null));
+    const next = rows.map((pub) => this.hydrate(pub, byId.get(pub.id) || null));
     if (typeof players !== "undefined" && Array.isArray(players)) {
       players.splice(0, players.length, ...next);
     }
+    if (typeof renderRoster === "function") renderRoster();
+  },
+
+  /* An empty shared roster would blank the public site. Keep the invented
+     cards on screen until a coach uploads, and do not write them up on an edit. */
+  holdSampleRoster() {
+    this.holdingSample = true;
+    const banner = document.getElementById("sampleBanner");
+    const span = banner && banner.querySelector("span");
+    if (span) span.innerHTML = "<strong>SAMPLE DATA</strong> · The shared roster is empty, so these invented cards stay here until a coach uploads them.";
+    if (banner) banner.hidden = false;
     if (typeof renderRoster === "function") renderRoster();
   },
 
@@ -332,7 +352,7 @@ const AntonelliAuth = {
   },
 
   onRosterSaved() {
-    if (!this.client || !this.user) return;
+    if (!this.client || !this.user || this.holdingSample) return;
     clearTimeout(this.saveTimer);
     this.saveTimer = setTimeout(() => {
       const list = typeof players !== "undefined" ? players : [];
