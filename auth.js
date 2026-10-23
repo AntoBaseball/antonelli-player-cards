@@ -263,6 +263,7 @@ const AntonelliAuth = {
     const rows = pubs || [];
     if (!rows.length) {
       this.holdSampleRoster();
+      if (globalThis.Social) Social.stop();
       return;
     }
     this.holdingSample = false;
@@ -274,6 +275,10 @@ const AntonelliAuth = {
       players.splice(0, players.length, ...next);
     }
     if (typeof renderRoster === "function") renderRoster();
+    if (globalThis.Social) {
+      if (this.user) await Social.start();
+      else Social.stop();
+    }
   },
 
   /* An empty shared roster would blank the public site. Keep the invented

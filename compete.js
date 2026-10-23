@@ -203,6 +203,7 @@ function competeSorted(key) {
 }
 
 function competeKing(key, scope, value) {
+  if (globalThis.Social && Social.live && typeof Social.king === "function") return Social.king(key, scope);
   const list = competeRoster().filter((p) => (scope ? (competeTeam(p) === scope || competeGroup(p) === scope) : true) && competeNum(p, key) != null);
   return list.sort((a, b) => competeBetter(key, competeNum(a, key), competeNum(b, key)) ? -1 : 1)[0] || null;
 }
@@ -347,6 +348,7 @@ function competeRecords(player, key) {
 }
 
 function competeCrowns(key, scope) {
+  if (globalThis.Social && Social.live && typeof Social.crowns === "function") return Social.crowns(key, scope);
   const facility = competeFacility();
   const slot = (scope || "all") + ":" + key;
   if (!facility.crownDays[slot] && scope === "16U" && key === "exitVelo") {
@@ -487,6 +489,10 @@ function competeClaim(player, key, amount, note) {
 }
 
 function competeSettle() {
+  if (globalThis.Social && Social.live && typeof Social.settle === "function") {
+    Social.settle();
+    return;
+  }
   const facility = competeFacility();
   const today = competeToday();
   facility.challenges.forEach((ch) => {
@@ -597,7 +603,7 @@ function competePaint() {
     return "<div class=\"lb-row\"><span>" + competeEsc(from ? from.name : "Teammate") + " challenged your " + competeEsc(competeMetricLabel(ch.metric)) + " · due " + competeEsc(competePrettyDate(ch.deadline)) + "</span><span><button class=\"btn btn-red\" type=\"button\" data-accept=\"" + competeEsc(ch.id) + "\">Accept</button> <button class=\"btn btn-ghost\" type=\"button\" data-decline=\"" + competeEsc(ch.id) + "\">Decline</button></span></div>";
   }).join("");
   const h2h = mine.map((ch) => competeH2H(ch)).join("");
-  const options = competeRoster().filter((p) => p.id !== me.id).map((p) => "<option value=\"" + competeEsc(p.id) + "\">" + competeEsc(p.name) + "</option>").join("");
+  const options = competeRoster().filter((p) => p.id !== me.id && !(globalThis.Social && Social.live && !Social.sameTeam(me, p))).map((p) => "<option value=\"" + competeEsc(p.id) + "\">" + competeEsc(p.name) + "</option>").join("");
   const metricIcon = { batSpeed: "⚾", exitVelo: "💥", tenYard: "⚡", throwVelo: "🎯", broadJump: "🦘", vertical: "⬆", flying10: "🏃" };
   const metrics = COMPETE_METRICS.map((m) => "<option value=\"" + m.key + "\">" + (metricIcon[m.key] || "⚾") + " " + m.label + "</option>").join("");
   const dayMount = document.getElementById("cardsOfDay");
@@ -736,7 +742,7 @@ function competeWire(player) {
     const today = competeToday();
     if (facility.reactions[player.id].some((r) => r.from === me.id && r.at === today && r.emoji === btn.dataset.react)) return;
     facility.reactions[player.id].push({ from: me.id, emoji: btn.dataset.react, at: today });
-    facility.reactions[player.id] = facility.reactions[player.id].slice(-12);
+    if (!(globalThis.Social && Social.live)) facility.reactions[player.id] = facility.reactions[player.id].slice(-12);
     DataLayer.saveFacility(facility);
     DataLayer.notify(player.id, "reaction", me.name.split(" ")[0] + " reacted " + btn.dataset.react + " on your card.");
     const old = mount.querySelector("#trophyCase");
@@ -757,15 +763,17 @@ function competeBoot() {
   const team = competeTeamChallenge(competeTeam(me));
   const left = Math.round((team.target - team.progress) * 10) / 10;
   if (left > 0 && left <= 8) DataLayer.notify(me.id, "team-close", "The team is " + left + " MPH from the power challenge.");
-  const king = competeKing("exitVelo", competeGroup(me));
-  const facility = competeFacility();
-  const slot = competeGroup(me) + ":exitVelo";
-  if (king && facility.kings[slot] && facility.kings[slot] !== king.id) {
-    DataLayer.notify(king.id, "new-king", "NEW KING · exit velo, " + competeGroup(me) + ".");
-    DataLayer.notify(facility.kings[slot], "crown-taken", "The exit-velo crown moved.");
+  if (!(globalThis.Social && Social.live)) {
+    const king = competeKing("exitVelo", competeGroup(me));
+    const facility = competeFacility();
+    const slot = competeGroup(me) + ":exitVelo";
+    if (king && facility.kings[slot] && facility.kings[slot] !== king.id) {
+      DataLayer.notify(king.id, "new-king", "NEW KING · exit velo, " + competeGroup(me) + ".");
+      DataLayer.notify(facility.kings[slot], "crown-taken", "The exit-velo crown moved.");
+    }
+    if (king) facility.kings[slot] = king.id;
+    DataLayer.saveFacility(facility);
   }
-  if (king) facility.kings[slot] = king.id;
-  DataLayer.saveFacility(facility);
   if (typeof roadPaintChrome === "function") roadPaintChrome();
 }
 

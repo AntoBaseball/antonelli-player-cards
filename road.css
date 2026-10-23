@@ -187,6 +187,8 @@
 .inbox{position:absolute;right:16px;top:70px;z-index:40;width:min(360px,92vw);background:#111;color:#f6f1e4;border:1px solid #d4af37;border-radius:14px;padding:12px;box-shadow:0 16px 40px rgba(0,0,0,.4)}
 .inbox[hidden]{display:none}
 .inbox li{padding:8px 0;border-bottom:1px solid #333;font-size:14px;line-height:1.35}
+.highlights{margin:8px 0 18px}
+.highlights .road-actions{margin:8px 0 12px}
 .confetti i{position:fixed;top:-10px;z-index:130;width:8px;height:12px;animation:confetti-fall 1.3s ease-in forwards}
 @keyframes confetti-fall{to{transform:translateY(100vh) rotate(240deg);opacity:.2}}
 @media (max-width:399px){

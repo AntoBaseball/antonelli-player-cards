@@ -943,6 +943,26 @@ function roadChangeList(player) {
   return "<div class=\"chart-block\">" + compare + banner + roadChartSVG(series) + "<div class=\"chart-windows\">" + rows + "</div></div>";
 }
 
+function roadHighlightItems(player) {
+  const items = [];
+  const seen = new Set();
+  const push = (label, href) => {
+    if (!href || href === "#") return;
+    const key = String(href);
+    if (seen.has(key)) return;
+    seen.add(key);
+    items.push({ label: label || href, href: href });
+  };
+  if (globalThis.Social && Social.live && typeof Social.clips === "function") {
+    Social.clips(player.id).forEach((clip) => push(clip.label, clip.href));
+  }
+  (player.road && player.road.videos || []).forEach((clip) => {
+    if (globalThis.Social && Social.live && clip.fileId) return;
+    push(clip.label || clip.url, clip.url);
+  });
+  return items;
+}
+
 function roadProfileHTML(player) {
   roadEnsure(player);
   const g = typeof gradesFor === "function" ? gradesFor(player) : { overall: 0 };
@@ -954,12 +974,13 @@ function roadProfileHTML(player) {
     const n = roadPercentile(player, key);
     return "<div class=\"chart-row\"><span>" + label + "</span><b>" + (n == null ? "--" : ("P" + n)) + "</b></div>";
   };
-  const videos = (player.road.videos || []).map((v) => "<li><a href=\"" + roadEsc(v.url) + "\" target=\"_blank\" rel=\"noopener\">" + roadEsc(v.label || v.url) + "</a></li>").join("") || "<li>No clips yet.</li>";
+  const videos = roadHighlightItems(player).map((v) => "<li><a href=\"" + roadEsc(v.href) + "\" target=\"_blank\" rel=\"noopener\">" + roadEsc(v.label || v.href) + "</a></li>").join("") || "<li>No clips yet.</li>";
   const evos = (player.road.evolutions || []).map((m) => "<li><button type=\"button\" class=\"btn btn-ghost\" data-replay-evo=\"" + roadEsc(m.id) + "\">Replay " + roadEsc(m.toTier) + "</button> <button type=\"button\" class=\"btn btn-ghost\" data-export-evo=\"" + roadEsc(m.id) + "\">PNG</button></li>").join("") || "<li>No evolution yet. Cross a tier and it lives here.</li>";
   const timeline = (player.road.timeline || []).map((t) => "<li><b>" + roadEsc(roadPrettyDate(t.at)) + "</b> " + roadEsc(t.text) + "</li>").join("") || "<li>The story starts with the next session.</li>";
   const links = player.road.links || {};
   const can = roadCanEdit(player);
-  const edit = can ? "<div class=\"road-actions\"><input id=\"roadVideoUrl\" placeholder=\"YouTube, Instagram, or Hudl link\"><button class=\"btn btn-ghost\" type=\"button\" id=\"roadAddVideo\">Add link</button><input id=\"roadVideoFile\" type=\"file\" accept=\"video/*\"><button class=\"btn btn-red\" type=\"button\" id=\"roadEvoPreview\">Preview Legend evolution</button></div>" : "<p class=\"muted\">Read only. Switch to this player, or to coach mode, to log work.</p>";
+  const edit = can ? "<div class=\"road-actions\"><button class=\"btn btn-red\" type=\"button\" id=\"roadEvoPreview\">Preview Legend evolution</button></div>" : "<p class=\"muted\">Read only. Switch to this player, or to coach mode, to log work.</p>";
+  const videoEdit = can ? "<div class=\"road-actions\" id=\"highlightActions\"><input id=\"roadVideoUrl\" placeholder=\"YouTube, Instagram, or Hudl link\"><button class=\"btn btn-ghost\" type=\"button\" id=\"roadAddVideo\">Add link</button><input id=\"roadVideoFile\" type=\"file\" accept=\"video/mp4,video/webm,video/quicktime,video/ogg,video/*\"></div>" : "";
   const width = Math.round((lvl.into / lvl.span) * 100);
   return "<div class=\"panel road-card\"><h3>Road to 99</h3>" +
     "<div class=\"road-xp-line\"><span>LEVEL " + lvl.level + "</span><span>" + lvl.into.toLocaleString() + " / " + lvl.span.toLocaleString() + " XP</span><span>" + lvl.remain.toLocaleString() + " XP TO LEVEL " + Math.min(99, lvl.level + 1) + "</span></div>" +
@@ -971,7 +992,7 @@ function roadProfileHTML(player) {
     roadNextMarkup(next) +
     "<h3>Where I started</h3>" + roadChangeList(player) +
     "<h3>Age-group percentiles</h3>" + pct("Exit velo", "exitVelo") + pct("Bat speed", "batSpeed") + pct("10-yard", "tenYard") + pct("Throw", "throwVelo") +
-    "<h3>Videos</h3><ul>" + videos + "</ul>" +
+    "<section class=\"highlights\" id=\"highlights\"><h3>Highlights</h3>" + videoEdit + "<ul>" + videos + "</ul></section>" +
     "<h3>Bio</h3><p>" + roadEsc(player.road.bio || "—") + "</p>" +
     "<h3>Player scouting report</h3><p>" + roadEsc(player.road.scoutingReport || "—") + "</p>" +
     "<h3>External profiles</h3><p>" +
@@ -998,19 +1019,29 @@ function roadWireProfile(player) {
     const input = document.getElementById("roadVideoUrl");
     const url = input && input.value.trim();
     if (!url) return;
+    const done = () => { if (typeof openProfile === "function") openProfile(player.id, { tab: "road" }); };
+    if (globalThis.Social && Social.live) {
+      Social.addLink(player.id, url).then(done).catch((err) => alert(err.message || "That link could not be saved."));
+      return;
+    }
     if (typeof markSampleEdited === "function") markSampleEdited(player);
     roadEnsure(player).videos.push({ label: url.replace(/^https?:\/\//, "").slice(0, 42), url });
     if (typeof savePlayers === "function") savePlayers();
-    if (typeof openProfile === "function") openProfile(player.id, { tab: "road" });
+    done();
   });
   const file = document.getElementById("roadVideoFile");
   if (file) file.addEventListener("change", () => {
     const clip = file.files && file.files[0];
     if (!clip || !globalThis.DataLayer) return;
+    const done = () => { if (typeof openProfile === "function") openProfile(player.id, { tab: "road" }); };
+    if (globalThis.Social && Social.live) {
+      Social.uploadClip(player.id, clip).then(done).catch((err) => alert(err.message || "That clip could not be saved."));
+      return;
+    }
     DataLayer.saveVideo(player.id, clip).then((saved) => {
       roadEnsure(player).videos.push({ label: saved.name, fileId: saved.id, url: "#" });
       if (typeof savePlayers === "function") savePlayers();
-      if (typeof openProfile === "function") openProfile(player.id, { tab: "road" });
+      done();
     }).catch((err) => alert(err.message || "That clip could not be saved."));
   });
   const preview = document.getElementById("roadEvoPreview");

@@ -1,8 +1,7 @@
 /* Data access for ROAD TO 99.
-   Today this is localStorage + IndexedDB on a static page.
-   A hosted backend replaces this file: same function names, accounts instead of the signed-in switcher.
-   Multi-user actions (rival alerts to both players, accept/decline across phones, shared team bars)
-   are stored on the signed-in browser until that backend exists. */
+   Logged-out and demo mode stay on localStorage + IndexedDB.
+   social.js swaps the shared calls for Supabase once a player is signed in
+   and the social tables exist. Quest claims and personal reminders stay here. */
 const ROAD_SESSION_KEY = "antonelli-road-session-v1";
 const ROAD_INBOX_KEY = "antonelli-road-inbox-v1";
 const ROAD_VIDEO_DB = "antonelli-road-videos";

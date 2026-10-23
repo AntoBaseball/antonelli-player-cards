@@ -74,6 +74,24 @@ Signed in as coach, the settings menu has:
 
 A player who finishes the sign-up link lands on their own card and personal page. Coaches can open every card, enter tests, and edit the roster.
 
-## What stays on this browser
+## 7. Shared challenges, reactions, crowns, inbox, highlights
 
-Head-to-head challenges, reactions, King of the Hill claims, the inbox, and highlight video files still use this browser’s storage (`antonelli-road-facility-v1`, `antonelli-road-inbox-v1`, and IndexedDB). The public pages (roster, card faces, leaderboards, Card of the Day, King of the Hill standings that are computed from public grades, awards on the card) read the shared `players` rows. While that table is empty they keep showing the sample cards instead of a blank roster. The personal page (My Game Plan, Where I Started, the reading log, missions, XP, Development Coach) reads `player_private`, which row-level security hides from everyone except that player and coaches.
+`supabase/migrations/20261023170000_social.sql` is in the repo and is **not applied yet**. Paste it into the SQL editor and run it once. It is safe to run again. Do not run the older account migrations again.
+
+Until that file is applied, a signed-in player keeps challenges, reactions, crowns, the inbox, and highlight files on this browser, the same as demo mode. After it is applied, the next sign-in reads and writes the shared tables.
+
+What the migration adds:
+
+- `challenges` — from player, to player, category, end date, status, server-picked winner. You cannot challenge yourself. Only the challenged player can accept or decline. When the end date has passed, `settle_due_challenges()` scores it from `player_private`. The browser cannot set the winner.
+- `reactions` — one emoji per player per card per day, and at most 8 reactions a day. Not on your own card.
+- `koth_claims` — King of the Hill. `refresh_koth()` reads private metrics and writes a row only when the age-group leader changes. Players do not insert crowns.
+- `notifications` — written only by those triggers. A player reads and marks their own. One kind per player per UTC day. The coach can delete any row.
+- `highlights` — a link or a file in the private Storage bucket `highlights`. Uploads go in a folder named with that user's id. Cap is 50 MB. Types are MP4, WebM, MOV, and OGG.
+
+Row-level security uses `is_coach()` and `(select auth.uid())`. A player reads social rows for their own card and for players with the same `team` value. Crown rows are also readable inside the same age group, so the throne is visible when the holder is listed on another team string. The coach can moderate and delete. Logged-out visitors still see only public cards.
+
+Realtime is on for `notifications` and `challenges` only. Reactions, crowns, and highlights refresh when the page loads and after the signed-in player saves one.
+
+Demo mode (empty config, or signed out) does not call these tables. Sample challenges, reactions, and the Cage session link stay in `localStorage`. Demo highlight files stay in IndexedDB and still cap at about 1.2 MB. Quest XP claims and personal reminders (streak, XP close, rival) stay on the device even after the migration, because they are not team posts.
+
+The public pages (roster, card faces, leaderboards, Card of the Day) read the shared `players` rows. While that table is empty they keep showing the sample cards. The personal page (My Game Plan, Where I Started, the reading log, missions, XP, Development Coach) reads `player_private`.
