@@ -691,6 +691,7 @@ function roadAward(player, amount, reason) {
     r.miniXp = (r.miniXp || 0) + gain;
   }
   if (gain <= 0) return { gained: 0, capped: true };
+  if (typeof markSampleEdited === "function") markSampleEdited(player);
   const before = roadLevelFromXp(r.xp);
   r.xp += gain;
   const after = roadLevelFromXp(r.xp);
@@ -759,6 +760,7 @@ function roadCheckIn(player) {
   const r = roadEnsure(player);
   const today = roadToday();
   if (r.dates.checkin.indexOf(today) >= 0) return;
+  if (typeof markSampleEdited === "function") markSampleEdited(player);
   r.dates.checkin.push(today);
   roadRefreshStreaks(player);
   if (typeof savePlayers === "function") savePlayers();
@@ -996,6 +998,7 @@ function roadWireProfile(player) {
     const input = document.getElementById("roadVideoUrl");
     const url = input && input.value.trim();
     if (!url) return;
+    if (typeof markSampleEdited === "function") markSampleEdited(player);
     roadEnsure(player).videos.push({ label: url.replace(/^https?:\/\//, "").slice(0, 42), url });
     if (typeof savePlayers === "function") savePlayers();
     if (typeof openProfile === "function") openProfile(player.id, { tab: "road" });
@@ -1118,6 +1121,7 @@ function roadPaint() {
     const sel = document.getElementById("roadCoachPlan");
     const ids = [...sel.selectedOptions].map((o) => o.value).slice(0, 4);
     if (ids.length < 4 || !player) return;
+    if (typeof markSampleEdited === "function") markSampleEdited(player);
     roadEnsure(player).coachPlan = ids;
     player.road.missionDay = "";
     roadTodayMissions(player);

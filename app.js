@@ -41,6 +41,9 @@
 
 const STORAGE_KEY = "antonelli-player-cards-v2";
 const LEGACY_STORAGE_KEY = "antonelli-player-cards-v1";
+/* Bump this when SAMPLE_PLAYERS gains players or a new seeded readingLog.
+   Untouched sample cards pick up the new version on load. Edited cards do not. */
+const SAMPLE_DATA_VERSION = 1;
 
 const AGE_GROUP_ORDER = ["10U", "12U", "14U", "16U", "18U", "College", "Pro"];
 
@@ -847,6 +850,10 @@ function seedSampleMonthLog(player) {
 }
 
 SAMPLE_PLAYERS.forEach(seedSampleMonthLog);
+SAMPLE_PLAYERS.forEach((player) => {
+  player.sampleVersion = SAMPLE_DATA_VERSION;
+  player.sampleTouched = false;
+});
 
 /* ---------- Grade math ---------- */
 function clamp(n, lo, hi) { return Math.min(hi, Math.max(lo, n)); }
@@ -2956,29 +2963,167 @@ function migratePlayer(p) {
   return copy;
 }
 
+function sameSampleValue(a, b) {
+  if (Object.is(a, b)) return true;
+  if (typeof a === "number" && typeof b === "number") return a === b;
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
+function sameSampleMetrics(savedMetrics, sampleMetrics) {
+  const left = savedMetrics || {};
+  const right = sampleMetrics || {};
+  const keys = new Set([...Object.keys(left), ...Object.keys(right)]);
+  for (const key of keys) {
+    const lv = metricNumber(left[key]);
+    const rv = metricNumber(right[key]);
+    if (lv == null && rv != null) continue;
+    if (lv == null && rv == null) continue;
+    if (lv !== rv) return false;
+  }
+  return true;
+}
+
+/* A readingLog made of the current May–Oct seed, but with different numbers,
+   was typed in. Older sample logs use other dates and are safe to replace. */
+function readingLogIsUserEdit(saved, sample) {
+  const log = saved && saved.readingLog;
+  if (!log || typeof log !== "object") return false;
+  const months = new Set(SAMPLE_CHART_MONTHS);
+  let sawSeedDate = false;
+  let sawOtherDate = false;
+  Object.values(log).forEach((rows) => {
+    if (!Array.isArray(rows)) return;
+    rows.forEach((row) => {
+      const at = String(row && row.at || "").slice(0, 10);
+      if (months.has(at)) sawSeedDate = true;
+      else if (at) sawOtherDate = true;
+    });
+  });
+  if (!sawSeedDate || sawOtherDate) return false;
+  return JSON.stringify(log) !== JSON.stringify((sample && sample.readingLog) || {});
+}
+
+/* Legacy saves have no sampleVersion. Treat them as edited only when the card
+   itself differs from the current sample. Road check-ins and the old seeded
+   log are not edits. */
+function legacySampleEdited(saved, sample) {
+  if (saved.sampleTouched === true) return true;
+  const keys = ["name", "age", "ageGroup", "classYear", "team", "position", "secondaryPosition", "height", "weight", "hometown", "bats", "throws", "type", "archetype", "photo"];
+  for (let i = 0; i < keys.length; i += 1) {
+    if (!sameSampleValue(saved[keys[i]] ?? null, sample[keys[i]] ?? null)) return true;
+  }
+  if (!sameSampleMetrics(saved.metrics, sample.metrics)) return true;
+  if (!sameSampleValue(saved.coachQuirks || [], sample.coachQuirks || [])) return true;
+  if (!sameSampleValue(saved.strengths || [], sample.strengths || [])) return true;
+  if (!sameSampleValue(saved.improvements || [], sample.improvements || [])) return true;
+  if (saved.manualBests && Object.keys(saved.manualBests).length && !sameSampleValue(saved.manualBests, sample.manualBests || {})) return true;
+  return readingLogIsUserEdit(saved, sample);
+}
+
+function roadHasUserActivity(saved, sample) {
+  const road = (saved && saved.road) || {};
+  const base = (sample && sample.road) || {};
+  const extraDates = (bucket) => {
+    const have = new Set((base.dates && base.dates[bucket]) || []);
+    return ((road.dates && road.dates[bucket]) || []).some((day) => !have.has(day));
+  };
+  if (extraDates("training") || extraDates("checkin")) return true;
+  if ((road.trainingLog || []).length > (base.trainingLog || []).length) return true;
+  if ((road.videos || []).length > (base.videos || []).length) return true;
+  if ((road.evolutions || []).length > (base.evolutions || []).length) return true;
+  if ((road.timeline || []).length > (base.timeline || []).length) return true;
+  if ((road.xp || 0) > (base.xp || 0)) return true;
+  if (road.autograph) return true;
+  if ((road.bio || "") && road.bio !== (base.bio || "")) return true;
+  if ((road.scoutingReport || "") && road.scoutingReport !== (base.scoutingReport || "")) return true;
+  return false;
+}
+
+function adoptSamplePlayer(saved, sample) {
+  const next = structuredClone(sample);
+  next.sampleVersion = SAMPLE_DATA_VERSION;
+  next.sampleTouched = false;
+  if (roadHasUserActivity(saved, sample)) next.road = saved.road;
+  ["earnedQuirks", "cardCollection", "currentSeason", "gradeSeen", "ageGroupPinned", "pbFresh", "seasonReveal"].forEach((key) => {
+    if (saved[key] != null) next[key] = saved[key];
+  });
+  return next;
+}
+
+/* Pull in sample players this browser has never stored, and refresh sample
+   cards that are still the seeded originals. User-created players and any
+   sample card with sampleTouched (or a real edit) stay as saved. */
+function mergeSampleRoster(saved) {
+  const samples = new Map(SAMPLE_PLAYERS.map((player) => [player.id, player]));
+  const seen = new Set();
+  let changed = false;
+  const next = [];
+  (saved || []).forEach((player) => {
+    if (!player || !player.id || seen.has(player.id)) {
+      changed = true;
+      return;
+    }
+    seen.add(player.id);
+    const sample = samples.get(player.id);
+    if (!sample) {
+      next.push(player);
+      return;
+    }
+    if (player.sampleTouched === true || player.sampleVersion === SAMPLE_DATA_VERSION) {
+      next.push(player);
+      return;
+    }
+    if (player.sampleVersion == null && legacySampleEdited(player, sample)) {
+      player.sampleTouched = true;
+      changed = true;
+      next.push(player);
+      return;
+    }
+    changed = true;
+    next.push(adoptSamplePlayer(player, sample));
+  });
+  SAMPLE_PLAYERS.forEach((sample) => {
+    if (seen.has(sample.id)) return;
+    next.push(structuredClone(sample));
+    changed = true;
+  });
+  return { players: next, changed };
+}
+
+function markSampleEdited(player) {
+  if (!player || !player.id) return;
+  if (!SAMPLE_PLAYERS.some((sample) => sample.id === player.id)) return;
+  player.sampleTouched = true;
+}
+
 function loadPlayers() {
   try {
     const rawV2 = localStorage.getItem(STORAGE_KEY);
     if (rawV2) {
       const parsed = JSON.parse(rawV2);
       if (Array.isArray(parsed) && parsed.length) {
-        if (parsed.some(hittingLooksLegacy)) return { players: parsed.map(migratePlayer), migrated: true };
-        return { players: parsed, migrated: false };
+        const legacy = parsed.some(hittingLooksLegacy);
+        const base = legacy ? parsed.map(migratePlayer) : parsed;
+        const merged = mergeSampleRoster(base);
+        return { players: merged.players, migrated: legacy, sampleSynced: merged.changed };
       }
     }
     const rawV1 = localStorage.getItem(LEGACY_STORAGE_KEY);
     if (rawV1) {
       const parsed = JSON.parse(rawV1);
-      if (Array.isArray(parsed) && parsed.length) return { players: parsed.map(migratePlayer), migrated: true };
+      if (Array.isArray(parsed) && parsed.length) {
+        const merged = mergeSampleRoster(parsed.map(migratePlayer));
+        return { players: merged.players, migrated: true, sampleSynced: merged.changed };
+      }
     }
   } catch (e) { /* sample data */ }
-  return { players: structuredClone(SAMPLE_PLAYERS), migrated: false };
+  return { players: structuredClone(SAMPLE_PLAYERS), migrated: false, sampleSynced: false };
 }
 
 const loadedState = loadPlayers();
 let players = loadedState.players;
 let migrationNotice = loadedState.migrated;
-if (migrationNotice) {
+if (migrationNotice || loadedState.sampleSynced) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(players)); } catch (e) { /* banner still explains the in-memory reset */ }
 }
 let selectedId = null;
@@ -5511,6 +5656,7 @@ function bindApp() {
       like.earnedQuirks = structuredClone(existing.earnedQuirks || []);
       const manualBests = readManualBests(existing, today);
       Object.assign(existing, like, { history, manualBests });
+      markSampleEdited(existing);
       markNewPersonalBests(existing, before);
       saved = existing;
     } else {
