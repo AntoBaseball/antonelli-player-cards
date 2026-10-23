@@ -2,12 +2,7 @@
 
 The site stays a static GitHub Pages app. The live Supabase project ref is `cqmzxrhoxnktjrzqtdsi` (`https://cqmzxrhoxnktjrzqtdsi.supabase.co`). `config.js` already has that URL and the public anon key.
 
-Done on the live project:
-
-- `supabase/migrations/20261023140000_init_accounts.sql` is applied.
-- `supabase/migrations/20261023150000_harden_functions.sql` is applied (`touch_updated_at` search_path cleared, `is_coach()` execute revoked from anon). The file is in the repo so it matches the database.
-- Edge function `invite-players` is deployed with `verify_jwt = false`. It is no longer the way players join.
-- `supabase/migrations/20261023160000_join_links.sql` is applied. Every new `auth.users` row must match an open invite: the email and `raw_user_meta_data.join_token` both have to equal that invite. Supabase Auth inserts users on its own connection, so the trigger does not look at `auth.role()`.
+Done on the live project: every file in [Migrations](#2-migrations), in that order. Edge function `invite-players` is deployed with `verify_jwt = false`. It is no longer the way players join.
 
 Until `players` has a row, logged-out visitors still see the invented sample cards, with a banner that says the shared roster is empty. The first real row replaces those cards. Clearing both config strings turns accounts off and keeps the sample roster only.
 
@@ -21,7 +16,18 @@ Authentication → URL configuration: add the Pages URL `https://antobaseball.gi
 
 ## 2. Migrations
 
-Already applied. Do not run them again. They created:
+Already applied, in this order. Do not run them again.
+
+1. `supabase/migrations/20261023140000_init_accounts.sql` — accounts. Public `players`, private `player_private`, invite rows, `profiles`, and `is_coach()`.
+2. `supabase/migrations/20261023150000_harden_functions.sql` — `touch_updated_at` search_path cleared, and anon execute revoked on `is_coach()`.
+3. `supabase/migrations/20261023160000_join_links.sql` — a new `auth.users` row must match an open invite email and join token. Supabase Auth inserts users on its own connection, so the trigger does not look at `auth.role()`.
+4. `supabase/migrations/20261023170000_social.sql` — challenges, reactions, crowns, notifications, and highlights.
+5. `supabase/migrations/20261023180000_notify_dedupe.sql` — challenge notes are unique per challenge. Reactions stay one note per player per UTC day.
+6. `supabase/migrations/20261023190000_metrics_coach_only.sql` — a player cannot change `metrics` or `history`.
+7. `supabase/migrations/20261023200000_document_allowlist.sql` — a player can change only `readingLog`, `earnedQuirks`, `gradeSeen`, and the player-owned keys inside `road`.
+8. `supabase/migrations/20261023210000_pin_helper_search_path.sql` — empty `search_path` on `jsonb_is_blank`, `player_road_keys`, and `player_document_keys`.
+
+The first migration created:
 
 - `players` — public card fields (name, team, OVR, tier, category grades). Readable without a login.
 - `player_private` — metrics, reading log, history, XP, and the full player document. Readable only by that player’s login and by coaches.
@@ -76,11 +82,9 @@ A player who finishes the sign-up link lands on their own card and personal page
 
 ## 7. Shared challenges, reactions, crowns, inbox, highlights
 
-`supabase/migrations/20261023170000_social.sql` is in the repo and is **not applied yet**. Paste it into the SQL editor and run it once. It is safe to run again. Do not run the older account migrations again.
+`supabase/migrations/20261023170000_social.sql` is applied. A signed-in player reads and writes the shared tables. Do not run the older account migrations again.
 
-Until that file is applied, a signed-in player keeps challenges, reactions, crowns, the inbox, and highlight files on this browser, the same as demo mode. After it is applied, the next sign-in reads and writes the shared tables.
-
-What the migration adds:
+What that migration added:
 
 - `challenges` — from player, to player, category, end date, status, server-picked winner. You cannot challenge yourself. Only the challenged player can accept or decline. When the end date has passed, `settle_due_challenges()` scores it from `player_private`. The browser cannot set the winner.
 - `reactions` — one emoji per player per card per day, and at most 8 reactions a day. Not on your own card.
@@ -94,9 +98,9 @@ Realtime is on for `notifications` and `challenges` only. Reactions, crowns, and
 
 `supabase/migrations/20261023180000_notify_dedupe.sql` is applied. A second challenge on the same day notifies. Reactions stay one note per day.
 
-`supabase/migrations/20261023190000_metrics_coach_only.sql` is applied. A player cannot change `metrics` or `history`.
+`supabase/migrations/20261023190000_metrics_coach_only.sql` and `supabase/migrations/20261023200000_document_allowlist.sql` are applied. A player cannot change `metrics` or `history`. A player update may change only `readingLog`, `earnedQuirks`, `gradeSeen`, and the player-owned keys inside `road` (missions, quest totals, XP, streaks, highlights, card lab). Age, position, photo, coach quirks, the coach plan, bio, and the rest of the profile stay with the coach. The signed-in player save sends only those keys.
 
-`supabase/migrations/20261023200000_document_allowlist.sql` is **not applied yet**. It replaces that guard. A player update may change only `readingLog`, `earnedQuirks`, `gradeSeen`, and the player-owned keys inside `road` (missions, quest totals, XP, streaks, highlights, card lab). Age, position, photo, coach quirks, the coach plan, bio, and the rest of the profile stay with the coach. The signed-in player save sends only those keys.
+`supabase/migrations/20261023210000_pin_helper_search_path.sql` is applied. `jsonb_is_blank`, `player_road_keys`, and `player_document_keys` use an empty `search_path`.
 
 Demo mode (empty config, or signed out) does not call these tables. Sample challenges, reactions, and the Cage session link stay in `localStorage`. Demo highlight files stay in IndexedDB and still cap at about 1.2 MB. Quest XP claims and personal reminders (streak, XP close, rival) stay on the device even after the migration, because they are not team posts.
 
