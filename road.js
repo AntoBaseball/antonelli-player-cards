@@ -1209,6 +1209,7 @@ function roadPaintChrome() {
     count.textContent = String(n);
   }
   roadSyncTabs();
+  if (globalThis.AntonelliAuth && typeof AntonelliAuth.lockSession === "function") AntonelliAuth.lockSession();
 }
 
 function roadPlayEvolution(player, moment) {

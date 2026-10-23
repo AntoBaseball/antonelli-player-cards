@@ -1,0 +1,6 @@
+project_id = "antonelli-player-cards"
+
+# The function checks the caller JWT and profiles.role itself.
+# Gateway JWT verification stays off so the browser preflight is not rejected first.
+[functions.invite-players]
+verify_jwt = false

@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ROAD TO 99 — Antonelli Baseball</title>
 <meta name="description" content="ROAD TO 99. Antonelli Baseball player development: train, test, and level up a baseball card. Overall is earned in testing. Level is earned by showing up.">
-<link rel="stylesheet" href="styles.css?v=20261022x">
-<link rel="stylesheet" href="road.css?v=20261022x">
-<link rel="stylesheet" href="compete.css?v=20261022x">
-<link rel="stylesheet" href="style.css?v=20261022x">
-<link rel="stylesheet" href="vision.css?v=20261022x">
+<link rel="stylesheet" href="styles.css?v=20261022y">
+<link rel="stylesheet" href="road.css?v=20261022y">
+<link rel="stylesheet" href="compete.css?v=20261022y">
+<link rel="stylesheet" href="style.css?v=20261022y">
+<link rel="stylesheet" href="vision.css?v=20261022y">
 </head>
 <body data-app="home">
 <header class="topbar">
@@ -40,7 +40,24 @@
       <button class="btn btn-ghost vision-nav" id="visionNav" type="button">Pitch Recognition</button>
       <button class="btn btn-ghost" id="roadMute" type="button">Sound off</button>
       <button class="btn btn-ghost" id="resetBtn" type="button">Reset Sample Data</button>
+      <button class="btn btn-ghost" id="signInSheetBtn" type="button">Sign in</button>
       <button class="btn btn-red" id="addPlayerBtn" type="button">+ Add Player</button>
+      <div id="coachAccounts" class="coach-accounts" hidden>
+        <p class="sheet-label">Roster accounts</p>
+        <form id="inviteOne" class="invite-one">
+          <input id="inviteName" type="text" placeholder="Player name" required>
+          <input id="inviteTeam" type="text" placeholder="Team">
+          <input id="inviteAge" type="text" placeholder="Age group, e.g. 12U">
+          <input id="invitePosition" type="text" placeholder="Position">
+          <input id="inviteEmail" type="email" placeholder="Email (parent for 12U)" required>
+          <button class="btn btn-red" type="submit">Add player and invite</button>
+        </form>
+        <label class="sheet-field">CSV import
+          <input id="inviteCsv" type="file" accept=".csv,text/csv">
+        </label>
+        <button class="btn btn-ghost" id="uploadLocalRoster" type="button">Upload this browser's roster</button>
+        <p id="accountStatus" class="sign-status"></p>
+      </div>
     </div>
   </div>
 </header>
@@ -314,6 +331,23 @@
   <div class="sd-results" id="showdownResults" hidden></div>
 </div>
 
+<div id="signInScreen" class="sign-screen" hidden>
+  <form id="signInForm" class="sign-card">
+    <p class="sign-kicker">ANTONELLI BASEBALL</p>
+    <h2 class="day-title" id="signTitle">SIGN IN</h2>
+    <p class="sign-lead" id="signLead">Players open their own page. For 12U and younger, use a parent's email.</p>
+    <label class="sign-field">Email
+      <input id="signEmail" type="email" autocomplete="username" required>
+    </label>
+    <label class="sign-field" id="signPasswordLabel">Password
+      <input id="signPassword" type="password" autocomplete="current-password" minlength="6" required>
+    </label>
+    <p id="signStatus" class="sign-status" role="status"></p>
+    <button class="btn btn-red" id="signSubmit" type="submit">Sign in</button>
+    <button class="btn btn-ghost" id="signForgot" type="button">Forgot password</button>
+    <button class="btn btn-ghost" id="signClose" type="button">Back to the roster</button>
+  </form>
+</div>
 <div id="evoShow" class="evo-show" hidden role="dialog" aria-modal="true" aria-label="Card evolution"></div>
 <div id="inbox" class="inbox" hidden></div>
 <nav class="app-tabs" aria-label="App">
@@ -324,12 +358,14 @@
   <button type="button" data-app="train"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13 2 4 14h7l-1 8 10-14h-7l0-6z"/></svg><span>Train</span></button>
 </nav>
 
-<script src="store.js?v=20261022x"></script>
-<script src="road.js?v=20261022x"></script>
-<script src="compete.js?v=20261022x"></script>
-<script src="vendor/qrcode.js?v=20261022x"></script>
-<script src="style.js?v=20261022x"></script>
-<script src="vision.js?v=20261022x"></script>
-<script src="app.js?v=20261022x"></script>
+<script src="config.js?v=20261022y"></script>
+<script src="store.js?v=20261022y"></script>
+<script src="road.js?v=20261022y"></script>
+<script src="compete.js?v=20261022y"></script>
+<script src="vendor/qrcode.js?v=20261022y"></script>
+<script src="style.js?v=20261022y"></script>
+<script src="vision.js?v=20261022y"></script>
+<script src="app.js?v=20261022y"></script>
+<script src="auth.js?v=20261022y"></script>
 </body>
 </html>

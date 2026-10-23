@@ -242,6 +242,7 @@ table,th,td{color:#f4f1ea;border-color:rgba(212,175,55,.22)}
 .bar-end{display:flex;align-items:center;gap:8px;position:relative}
 .avatar-btn{display:none}
 .settings-sheet{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.topbar .settings-sheet .btn{padding:8px 12px;font-size:14px}
 .sheet-field{display:flex;flex-direction:column;gap:2px;font-size:11px;font-weight:800;letter-spacing:.4px;color:#f2d060}
 .sheet-field select{min-width:148px}
 .icon-btn.bell{position:relative;width:40px;height:40px;border-radius:999px;display:grid;place-items:center;padding:0;color:#f7ecc8}
@@ -250,6 +251,11 @@ table,th,td{color:#f4f1ea;border-color:rgba(212,175,55,.22)}
 .sample-dismiss{background:transparent;border:1px solid rgba(212,175,55,.5);color:#f2d060;border-radius:999px;width:28px;height:28px;cursor:pointer;flex:none}
 .app-tabs,#trainGames{display:none}
 body[data-app="train"] #trainGames{display:block}
+body[data-accounts="on"][data-auth="anon"] #roadHome,
+body[data-accounts="on"][data-auth="anon"] .is-private,
+body[data-accounts="on"] .metrics-hidden .is-private,
+body[data-accounts="on"][data-auth="anon"] .back-private,
+body[data-accounts="on"] .metrics-locked .back-private{display:none !important}
 body[data-app="train"] #roadHome,
 body[data-app="train"] .tier-showcase,
 body[data-app="train"] #competeHome,
@@ -321,6 +327,9 @@ body[data-app="train"] #emptyState{display:none}
   body[data-app="home"] #rosterGrid,
   body[data-app="home"] #emptyState,
   body[data-app="home"] #trainGames{display:none !important}
+  body[data-accounts="on"][data-auth="anon"][data-app="home"] #rosterGrid{display:grid !important}
+  body[data-accounts="on"][data-auth="anon"][data-app="home"] .controls,
+  body[data-accounts="on"][data-auth="anon"][data-app="home"] .section-head{display:flex !important}
   body[data-app="compete"] #roadHome,
   body[data-app="compete"] #trainGames,
   body[data-app="compete"] .hero,

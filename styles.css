@@ -425,6 +425,19 @@ th{font-size:11px;letter-spacing:.7px;text-transform:uppercase;color:var(--muted
 .card-shell.tier-diamond .back-grade{background:rgba(4,20,48,.38);border-color:rgba(212,175,55,.6)}
 .card-shell.tier-diamond .back-grade b{color:#f2d060}
 .card-shell.tier-diamond .pb-block{background:rgba(4,20,48,.35)}
+.sign-screen{position:fixed;inset:0;z-index:80;display:grid;place-items:center;padding:24px 16px;background:rgba(5,5,5,.78);backdrop-filter:blur(8px)}
+.sign-screen[hidden]{display:none !important}
+.sign-card{width:min(440px,100%);display:flex;flex-direction:column;gap:12px;padding:28px 22px 22px;border-radius:22px;background:linear-gradient(160deg,#070707,#14110c 60%,#1a1208);border:1px solid rgba(212,175,55,.55);box-shadow:0 24px 60px rgba(0,0,0,.45);color:#f6f1e4}
+.sign-card .day-title{font-size:clamp(40px,8vw,64px);white-space:nowrap;margin:0}
+.sign-kicker{margin:0;letter-spacing:2px;font-size:11px;font-weight:800;color:#f2d060;text-align:center}
+.sign-lead{margin:0;text-align:center;line-height:1.5;color:#f7ecc8}
+.sign-field{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:#f2d060}
+.sign-card .btn{width:100%}
+.sign-status{min-height:1.4em;margin:0;text-align:center;line-height:1.45;color:#f2d060}
+.coach-accounts{display:flex;flex-direction:column;gap:8px;width:100%;padding-top:8px;border-top:1px solid rgba(212,175,55,.35)}
+.coach-accounts[hidden]{display:none !important}
+.sheet-label{margin:0;font-size:11px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:#f2d060}
+.invite-one{display:flex;flex-direction:column;gap:8px}
 @media (hover:hover) and (prefers-reduced-motion:no-preference){
   .roster-card:hover .card-shell:not(.is-aim):not(.is-flipped),
   .show-card:hover .card-shell:not(.is-aim):not(.is-flipped){transform:perspective(900px) rotateX(4deg) rotateY(-6deg)}

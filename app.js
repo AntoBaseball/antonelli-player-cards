@@ -1486,6 +1486,10 @@ function hitterOverall(blastSubs, faceSubs, exitGrade) {
 
 function gradesFor(player) {
   if (!player) return { subs: [], overall: 20 };
+  if (player.metricsHidden && player.publicGrades && player.publicGrades.overall != null) {
+    const subs = Array.isArray(player.publicGrades.subs) ? player.publicGrades.subs : [];
+    return { subs, overall: player.publicGrades.overall };
+  }
   if (player.type === "pitcher") {
     const subs = subGradesFor(player, "pitcher");
     return { subs, overall: overallFromSubgrades(subs), pitcherSubs: subs };
@@ -1504,6 +1508,10 @@ function gradesFor(player) {
 
 function tierFor(overall, player) {
   const ovr = Number(overall) || 0;
+  if (player && player.metricsHidden && player.publicGrades && player.publicGrades.tier) {
+    const key = player.publicGrades.tier;
+    return { key, label: TIER_LABEL[key] || "BRONZE" };
+  }
   if (player && typeof roadEvolution === "function" && typeof roadTierKey === "function") {
     const evo = roadEvolution(player, ovr);
     const key = roadTierKey(evo.score, evo.overall);
@@ -3111,6 +3119,7 @@ let selectedId = null;
 function savePlayers() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(players)); }
   catch (e) { alert("Could not save — browser storage is full. Try a smaller photo, or clear a photo and save again."); }
+  if (globalThis.AntonelliAuth && typeof AntonelliAuth.onRosterSaved === "function") AntonelliAuth.onRosterSaved();
 }
 
 /* ---------- Sparkline ---------- */
@@ -3381,12 +3390,14 @@ function cardBackHTML(player, face, subs, opts, perkCap) {
       ${backFact("Season", esc(season))}
     </div>
     <div class="back-grades">${gradeLine}</div>
+    <div class="back-private">
     <div class="back-raws">${hitting}${pitching}</div>
-    ${backPerksHTML(player, face, perkCap)}
-    ${typeof competeBackAwards === "function" ? competeBackAwards(player) : ""}
     ${bests}
     ${typeof roadBackExtra === "function" ? roadBackExtra(player) : ""}
     ${typeof styleBackExtra === "function" ? styleBackExtra(player) : ""}
+    </div>
+    ${backPerksHTML(player, face, perkCap)}
+    ${typeof competeBackAwards === "function" ? competeBackAwards(player) : ""}
     </div>
     ${profileBtn}
   </div>`;
@@ -3443,7 +3454,7 @@ function cardHTML(player, large, face, opts) {
     </div>
   </div>`;
   if (!opts || !opts.flip) return front;
-  return `<div class="card-shell tier-${tier.key}" data-flip tabindex="0" aria-label="Flip ${esc(player.name)}'s card" aria-pressed="false" style="--foil-delay:${phase.toFixed(2)}s">
+  return `<div class="card-shell tier-${tier.key}${player.metricsHidden ? " metrics-locked" : ""}" data-flip tabindex="0" aria-label="Flip ${esc(player.name)}'s card" aria-pressed="false" style="--foil-delay:${phase.toFixed(2)}s">
     <div class="card-flipper">
       ${front}
       ${cardBackHTML(player, face, backSubs, opts, perkCap)}
@@ -3879,15 +3890,10 @@ function renderRoster() {
   });
   $("rosterCount").textContent = `(${list.length})`;
   $("emptyState").hidden = list.length > 0;
-  $("rosterGrid").innerHTML = list.map((p) => {
-    const { overall } = gradesFor(p);
-    const tier = tierFor(overall, p);
-    const tierClass = (tier.key === "diamond" || tier.key === "legend") ? " tier-" + tier.key : "";
-    return `
+  $("rosterGrid").innerHTML = list.map((p) => `
     <article class="roster-card">
       ${cardHTML(p, false, null, { flip: true, profileButton: true })}
-    </article>`;
-  }).join("");
+    </article>`).join("");
   document.querySelectorAll("[data-open]").forEach((el) => {
     el.addEventListener("click", (e) => { e.stopPropagation(); openProfile(el.dataset.open); });
   });
@@ -4781,6 +4787,7 @@ function openProfile(id, opts) {
   const fact = (label, value) => `<div class="show-fact"><b>${value}</b><span>${label}</span></div>`;
   $("rosterView").hidden = true;
   $("profileView").hidden = false;
+  $("profileView").classList.toggle("metrics-hidden", !!p.metricsHidden);
   $("profileContent").innerHTML = `
     <div class="show-top">
       <div class="show-card">${cardHTML(p, true, null, { flip: true })}</div>
@@ -4828,13 +4835,13 @@ function openProfile(id, opts) {
       <button class="show-tab" type="button" role="tab" aria-selected="false" data-tab="road">Road to 99</button>
     </div>
     <div class="show-panel" data-panel="attributes">${attributePanel(p)}</div>
-    <div class="show-panel" data-panel="metrics" hidden>
+    <div class="show-panel is-private" data-panel="metrics" hidden>
       <div class="panel"><h3>Metrics &amp; progress</h3>${metricsTable(p)}</div>
     </div>
     <div class="show-panel" data-panel="perks" hidden>
       <div class="panel"><h3>Player Perks</h3>${quirksPanel(p)}</div>
     </div>
-    <div class="show-panel" data-panel="growth" hidden>
+    <div class="show-panel is-private" data-panel="growth" hidden>
       <div class="panel">
         <h3>What type of ${p.type === "pitcher" ? "pitcher" : "player"} is he?</h3>
         <p style="line-height:1.65">${esc(ARCHETYPE_INFO[p.archetype] || "A developing player whose archetype will sharpen as metrics and game performance grow.")}</p>
@@ -4850,7 +4857,7 @@ function openProfile(id, opts) {
     <div class="show-panel" data-panel="collection" hidden>
       <div class="panel"><h3>Card collection</h3>${collectionPanel(p)}</div>
     </div>
-    <div class="show-panel" data-panel="road" hidden>${typeof roadProfileHTML === "function" ? roadProfileHTML(p) : ""}</div>`;
+    <div class="show-panel is-private" data-panel="road" hidden>${typeof roadProfileHTML === "function" ? roadProfileHTML(p) : ""}</div>`;
   document.querySelectorAll(".show-tab").forEach((btn) => {
     btn.addEventListener("click", () => {
       document.querySelectorAll(".show-tab").forEach((tab) => {
@@ -4966,9 +4973,9 @@ function openRetired(id, index) {
       <button class="show-tab" type="button" role="tab" aria-selected="false" data-tab="growth">Strengths &amp; Growth</button>
     </div>
     <div class="show-panel" data-panel="attributes">${archiveBars(card)}</div>
-    <div class="show-panel" data-panel="metrics" hidden><div class="panel"><h3>Metrics at retirement</h3>${archiveMetricsTable(card)}</div></div>
+    <div class="show-panel is-private" data-panel="metrics" hidden><div class="panel"><h3>Metrics at retirement</h3>${archiveMetricsTable(card)}</div></div>
     <div class="show-panel" data-panel="perks" hidden><div class="panel"><h3>Player Perks that season</h3>${archivePerks(card)}</div></div>
-    <div class="show-panel" data-panel="growth" hidden>
+    <div class="show-panel is-private" data-panel="growth" hidden>
       <div class="panel">
         <h3>${esc(card.archetype || "Player")}</h3>
         <p style="line-height:1.65">${esc(ARCHETYPE_INFO[card.archetype] || "Snapshot of how this player was described when the card was retired.")}</p>
