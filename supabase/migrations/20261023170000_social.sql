@@ -1,5 +1,5 @@
 -- Shared facility: challenges, reactions, King of the Hill, notifications, highlights.
--- Not applied to the live project yet. Safe to run more than once.
+-- Safe to run more than once.
 -- search_path is pinned on every function. Policies use (select auth.uid()).
 -- Clients cannot insert notifications or crown rows. Triggers and security-definer
 -- functions write those, so a browser cannot spoof a challenge note or a crown.
@@ -14,11 +14,15 @@ create table if not exists public.challenges (
   winner_id text references public.players (id) on delete set null,
   result jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(),
-  constraint challenges_not_self check (from_player <> to_player)
+  constraint challenges_not_self check (from_player <> to_player),
+  constraint challenges_category_check check (
+    category in ('batSpeed', 'exitVelo', 'tenYard', 'throwVelo', 'broadJump', 'vertical', 'flying10')
+  )
 );
 
 create index if not exists challenges_to_idx on public.challenges (to_player, status);
 create index if not exists challenges_from_idx on public.challenges (from_player);
+create index if not exists challenges_winner_idx on public.challenges (winner_id);
 
 create table if not exists public.reactions (
   id bigint generated always as identity primary key,
@@ -45,6 +49,7 @@ create table if not exists public.koth_claims (
 );
 
 create index if not exists koth_lookup_idx on public.koth_claims (category, scope, claimed_at desc);
+create index if not exists koth_holder_idx on public.koth_claims (holder_id);
 
 create table if not exists public.notifications (
   id bigint generated always as identity primary key,
@@ -173,20 +178,21 @@ security definer
 set search_path = public
 as $$
 begin
-  if recipient is null or recipient = '' or kind is null or kind = '' then
+  if notify_player.recipient is null or notify_player.recipient = ''
+     or notify_player.kind is null or notify_player.kind = '' then
     return;
   end if;
   if exists (
     select 1
     from public.notifications n
-    where n.recipient_id = recipient
-      and n.kind = kind
+    where n.recipient_id = notify_player.recipient
+      and n.kind = notify_player.kind
       and (n.created_at at time zone 'utc')::date = (timezone('utc', now()))::date
   ) then
     return;
   end if;
   insert into public.notifications (recipient_id, kind, payload)
-  values (recipient, kind, coalesce(payload, '{}'::jsonb));
+  values (notify_player.recipient, notify_player.kind, coalesce(notify_player.payload, '{}'::jsonb));
 end;
 $$;
 
@@ -235,12 +241,24 @@ begin
   new.category := old.category;
   new.created_at := old.created_at;
 
-  if current_setting('antonelli.settle', true) = '1' or public.is_coach() then
+  if public.is_coach() then
     if new.status = 'done' and old.status is distinct from 'done' then
       outcome := public.challenge_outcome(old.from_player, old.to_player, old.category);
       new.winner_id := outcome->>'winner_id';
       new.result := outcome;
     end if;
+    return new;
+  end if;
+
+  -- Settlement. No session setting is trusted: only an accepted challenge whose end date
+  -- has passed can close, and the winner always comes from challenge_outcome().
+  if old.status = 'accepted'
+     and new.status = 'done'
+     and old.ends_on < (timezone('utc', now()))::date then
+    outcome := public.challenge_outcome(old.from_player, old.to_player, old.category);
+    new.ends_on := old.ends_on;
+    new.winner_id := outcome->>'winner_id';
+    new.result := outcome;
     return new;
   end if;
 
@@ -332,6 +350,8 @@ begin
   end if;
   new.created_on := (timezone('utc', now()))::date;
   if not public.is_coach() then
+    -- Serialize one sender's inserts so two parallel requests cannot both pass the cap.
+    perform pg_advisory_xact_lock(hashtext('reactions:' || new.from_player));
     select count(*) into n
     from public.reactions r
     where r.from_player = new.from_player
@@ -399,7 +419,7 @@ begin
   if new.url is not null and new.url <> '' and new.url !~ '^https://|^http://' then
     raise exception 'highlight links have to start with http';
   end if;
-  if new.storage_path is not null and new.storage_path <> '' then
+  if not public.is_coach() and new.storage_path is not null and new.storage_path <> '' then
     folder := split_part(new.storage_path, '/', 1);
     if folder is distinct from (select auth.uid())::text then
       raise exception 'upload into your own folder';
@@ -525,7 +545,6 @@ begin
   if (select auth.uid()) is null then
     raise exception 'sign in required';
   end if;
-  perform set_config('antonelli.settle', '1', true);
   update public.challenges
   set status = 'done'
   where status = 'accepted'
@@ -722,23 +741,28 @@ create policy highlights_delete on public.highlights
     or player_id = public.my_player_id()
   );
 
-revoke all on public.challenges from anon;
-revoke all on public.reactions from anon;
-revoke all on public.koth_claims from anon;
-revoke all on public.notifications from anon;
-revoke all on public.highlights from anon;
+-- Supabase default privileges grant ALL (including TRUNCATE, which ignores RLS) to anon
+-- and authenticated on new tables. Start from nothing, then grant only what is used.
+revoke all on public.challenges from public, anon, authenticated;
+revoke all on public.reactions from public, anon, authenticated;
+revoke all on public.koth_claims from public, anon, authenticated;
+revoke all on public.notifications from public, anon, authenticated;
+revoke all on public.highlights from public, anon, authenticated;
+revoke all on sequence public.reactions_id_seq from public, anon, authenticated;
+revoke all on sequence public.koth_claims_id_seq from public, anon, authenticated;
+revoke all on sequence public.notifications_id_seq from public, anon, authenticated;
 
 grant select, insert, update, delete on public.challenges to authenticated;
 grant select, insert, delete on public.reactions to authenticated;
 grant select, delete on public.koth_claims to authenticated;
-grant select, update on public.notifications to authenticated;
+grant select, update (read_at) on public.notifications to authenticated;
 grant select, insert, update, delete on public.highlights to authenticated;
 
 -- Identity inserts need the sequence. Crown and inbox rows are written by definer functions.
 grant usage, select on sequence public.reactions_id_seq to authenticated;
 
 -- Private bucket. 50 MB is the free-plan object cap. Video types only.
--- Reads are signed-in users (RLS). Uploads only into a folder named with that user's id.
+-- Reads: your own folder, a teammate's folder, or the coach. Uploads only into a folder named with that user's id.
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values (
   'highlights',
@@ -755,7 +779,19 @@ set public = excluded.public,
 drop policy if exists highlights_storage_select on storage.objects;
 create policy highlights_storage_select on storage.objects
   for select to authenticated
-  using (bucket_id = 'highlights');
+  using (
+    bucket_id = 'highlights'
+    and (
+      (storage.foldername(name))[1] = (select auth.uid())::text
+      or public.is_coach()
+      or exists (
+        select 1
+        from public.players p
+        where p.user_id::text = (storage.foldername(objects.name))[1]
+          and public.can_see_player(p.id)
+      )
+    )
+  );
 
 drop policy if exists highlights_storage_insert on storage.objects;
 create policy highlights_storage_insert on storage.objects

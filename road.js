@@ -149,7 +149,31 @@ function roadIsHot(player) {
   return roadImprovementRun(player) >= 3;
 }
 
+/* Sample sessions are dated in the file. Once that last day is older than yesterday,
+   the demo streak reads 0. Slide those dates forward so the newest one is today.
+   Real accounts are left alone. */
+function roadAnchorSampleDates(player) {
+  const auth = globalThis.AntonelliAuth;
+  const demo = !auth || typeof auth.configured !== "function" || !auth.configured() || !auth.user || auth.holdingSample;
+  if (!demo || !player || String(player.id).indexOf("sample-") !== 0 || player.sampleTouched) return;
+  const dates = player.road && player.road.dates;
+  if (!dates) return;
+  const today = roadToday();
+  const yesterday = roadAddDays(today, -1);
+  ["training", "checkin"].forEach((key) => {
+    const list = dates[key];
+    if (!Array.isArray(list) || !list.length) return;
+    const latest = list.slice().sort().pop();
+    if (!latest || latest >= yesterday) return;
+    const from = latest.slice(0, 10).split("-").map(Number);
+    const to = today.slice(0, 10).split("-").map(Number);
+    const gap = Math.round((Date.UTC(to[0], to[1] - 1, to[2]) - Date.UTC(from[0], from[1] - 1, from[2])) / 86400000);
+    if (gap > 1) dates[key] = list.map((stamp) => roadAddDays(stamp, gap));
+  });
+}
+
 function roadRefreshStreaks(player) {
+  roadAnchorSampleDates(player);
   const r = roadEnsure(player);
   const today = roadToday();
   r.streaks.training = roadStreakCount(r.dates.training, today);
@@ -1021,7 +1045,7 @@ function roadWireProfile(player) {
     if (!url) return;
     const done = () => { if (typeof openProfile === "function") openProfile(player.id, { tab: "road" }); };
     if (globalThis.Social && Social.live) {
-      Social.addLink(player.id, url).then(done).catch((err) => alert(err.message || "That link could not be saved."));
+      Social.addLink(player.id, url).then(done).catch((err) => alert(Social.explain(err)));
       return;
     }
     if (typeof markSampleEdited === "function") markSampleEdited(player);
@@ -1035,7 +1059,7 @@ function roadWireProfile(player) {
     if (!clip || !globalThis.DataLayer) return;
     const done = () => { if (typeof openProfile === "function") openProfile(player.id, { tab: "road" }); };
     if (globalThis.Social && Social.live) {
-      Social.uploadClip(player.id, clip).then(done).catch((err) => alert(err.message || "That clip could not be saved."));
+      Social.uploadClip(player.id, clip).then(done).catch((err) => alert(Social.explain(err)));
       return;
     }
     DataLayer.saveVideo(player.id, clip).then((saved) => {

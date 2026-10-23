@@ -122,6 +122,8 @@
   #h2hBoard .h2h{min-height:180px}
   .ch-picks{grid-template-columns:1fr;max-width:420px}
   .trophy-grid{grid-template-columns:1fr 1fr}
+  .trophy-card{position:relative;min-width:0}
+  .trophy-card .award-tip{max-width:100%;width:auto}
   .pr-board .trophy-grid{grid-template-columns:1fr}
   body[data-app="trophies"] .show-panel[data-panel="road"] > .road-card,
   body[data-app="trophies"] #styleLab{display:none}

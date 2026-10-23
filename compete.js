@@ -3,6 +3,7 @@
    A backend replaces that object; the screens stay. */
 
 var COMPETE_REACTIONS = ["🔥", "🥶", "💣", "🚀", "💪", "👑", "😳", "⚾"];
+var COMPETE_CATEGORIES = ["batSpeed", "exitVelo", "tenYard", "throwVelo", "broadJump", "vertical", "flying10"];
 var COMPETE_METRICS = [
   { key: "batSpeed", label: "Bat Speed", unit: "MPH", better: "higher" },
   { key: "exitVelo", label: "Exit Velo", unit: "MPH", better: "higher" },
@@ -605,7 +606,7 @@ function competePaint() {
   const h2h = mine.map((ch) => competeH2H(ch)).join("");
   const options = competeRoster().filter((p) => p.id !== me.id && !(globalThis.Social && Social.live && !Social.sameTeam(me, p))).map((p) => "<option value=\"" + competeEsc(p.id) + "\">" + competeEsc(p.name) + "</option>").join("");
   const metricIcon = { batSpeed: "⚾", exitVelo: "💥", tenYard: "⚡", throwVelo: "🎯", broadJump: "🦘", vertical: "⬆", flying10: "🏃" };
-  const metrics = COMPETE_METRICS.map((m) => "<option value=\"" + m.key + "\">" + (metricIcon[m.key] || "⚾") + " " + m.label + "</option>").join("");
+  const metrics = COMPETE_METRICS.filter((m) => COMPETE_CATEGORIES.indexOf(m.key) >= 0).map((m) => "<option value=\"" + m.key + "\">" + (metricIcon[m.key] || "⚾") + " " + m.label + "</option>").join("");
   const dayMount = document.getElementById("cardsOfDay");
   if (dayMount) {
     dayMount.innerHTML = competeDayCardsHTML(cotd);
@@ -663,17 +664,21 @@ function competePaint() {
     const facilityNow = competeFacility();
     const deadline = document.getElementById("chDeadline").value || competeToday();
     const max = typeof roadAddDays === "function" ? roadAddDays(competeToday(), 31) : deadline;
+    const metric = document.getElementById("chMetric").value;
+    const target = document.getElementById("chWho").value;
+    if (COMPETE_CATEGORIES.indexOf(metric) < 0) return;
+    if (!target || target === me.id) return;
     facilityNow.challenges.push({
       id: "ch-" + Date.now().toString(36),
       from: me.id,
-      to: document.getElementById("chWho").value,
-      metric: document.getElementById("chMetric").value,
+      to: target,
+      metric: metric,
       deadline: deadline > max ? max : deadline,
       status: "pending",
       at: competeToday(),
     });
     DataLayer.saveFacility(facilityNow);
-    DataLayer.notify(document.getElementById("chWho").value, "challenge", me.name.split(" ")[0] + " challenged you. Accept or decline.");
+    DataLayer.notify(target, "challenge", me.name.split(" ")[0] + " challenged you. Accept or decline.");
     competePaint();
   });
   const claimRow = (done, id, amount, label) => (done && !facility.claims[me.id + ":" + id]) ? "<button class=\"btn btn-red\" type=\"button\" data-claim=\"" + id + "\" data-amount=\"" + amount + "\">" + label + "</button>" : "";

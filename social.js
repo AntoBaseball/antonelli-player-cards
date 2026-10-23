@@ -261,7 +261,13 @@ const Social = {
       const prev = this.snapChallenges.get(ch.id);
       if (!prev) {
         if (!ch.to || ch.to === ch.from) {
+          this.dropChallenge(ch.id);
           this.fail(new Error("You can't challenge yourself."));
+          return;
+        }
+        if (["batSpeed", "exitVelo", "tenYard", "throwVelo", "broadJump", "vertical", "flying10"].indexOf(ch.metric) < 0) {
+          this.dropChallenge(ch.id);
+          this.fail(new Error("Pick a category from the list."));
           return;
         }
         this.snapChallenges.set(ch.id, Object.assign({}, ch, { status: "pending" }));
@@ -275,6 +281,7 @@ const Social = {
         }).then(({ error }) => {
           if (error) {
             this.snapChallenges.delete(ch.id);
+            this.dropChallenge(ch.id);
             this.fail(error);
             return;
           }
@@ -285,9 +292,16 @@ const Social = {
       }
       if (prev.status === ch.status) return;
       if (ch.status !== "accepted" && ch.status !== "declined") return;
+      const previous = prev.status;
       prev.status = ch.status;
       client.from("challenges").update({ status: ch.status }).eq("id", ch.id).then(({ error }) => {
-        if (error) this.fail(error);
+        if (error) {
+          prev.status = previous;
+          const row = this.challenges.find((item) => item.id === ch.id);
+          if (row) row.status = previous;
+          this.fail(error);
+          this.repaint();
+        }
         else {
           this.schedule("challenges");
           this.schedule("notes");
@@ -312,7 +326,10 @@ const Social = {
         }).then(({ error }) => {
           if (error) {
             this.snapReactions.delete(key);
+            const list = this.reactions[target] || [];
+            this.reactions[target] = list.filter((item) => !(item.from === row.from && item.emoji === row.emoji && String(item.at || "").slice(0, 10) === at));
             this.fail(error);
+            this.repaint();
             return;
           }
           this.schedule("reactions");
@@ -424,8 +441,47 @@ const Social = {
     await this.pullHighlights();
   },
 
+  dropChallenge(id) {
+    this.challenges = (this.challenges || []).filter((row) => row.id !== id);
+    this.repaint();
+  },
+
+  explain(error) {
+    const raw = String((error && (error.message || error.details)) || "");
+    const text = raw.toLowerCase();
+    if (!raw) return "That could not be saved.";
+    if (text.indexOf("challenge yourself") >= 0 || text.indexOf("challenges_not_self") >= 0) return "You can't challenge yourself.";
+    if (text.indexOf("challenges_category") >= 0 || text.indexOf("category") >= 0 && text.indexOf("check") >= 0) return "Pick a category from the list.";
+    if (text.indexOf("challenge a teammate") >= 0) return "Challenge a teammate on your team.";
+    if (text.indexOf("sent as yourself") >= 0) return "Challenges are sent as yourself.";
+    if (text.indexOf("update is not allowed") >= 0) return "That challenge update is not allowed.";
+    if (text.indexOf("past its end") >= 0 || text.indexOf("end date") >= 0 && text.indexOf("settle") >= 0) return "That challenge can close after its end date.";
+    if (text.indexOf("own card") >= 0 && text.indexOf("react") >= 0 || text.indexOf("reactions_not_self") >= 0) return "You can't react to your own card.";
+    if (text.indexOf("reactions_once") >= 0 || text.indexOf("duplicate key") >= 0 && text.indexOf("reaction") >= 0) return "You already left that reaction today.";
+    if (text.indexOf("reaction limit") >= 0) return "You've used today's reactions. More tomorrow.";
+    if (text.indexOf("react to a teammate") >= 0) return "React to a teammate on your team.";
+    if (text.indexOf("posted as yourself") >= 0) return "Reactions are posted as yourself.";
+    if (text.indexOf("highlights are posted") >= 0) return "Highlights go on your own card.";
+    if (text.indexOf("start with http") >= 0) return "Highlight links have to start with http.";
+    if (text.indexOf("own folder") >= 0) return "Upload the clip into your own folder.";
+    if (text.indexOf("permission denied") >= 0 || text.indexOf("row-level security") >= 0 || (error && error.code) === "42501") return "You don't have permission to do that.";
+    if (text.indexOf("violat") >= 0 || text.indexOf("constraint") >= 0 || (error && (error.code === "23514" || error.code === "23505" || error.code === "P0001"))) {
+      if (text.indexOf("check") >= 0 || error.code === "23514" || error.code === "P0001") {
+        const sentence = raw.replace(/^.*ERROR:\s*/i, "").replace(/\s+/g, " ").trim();
+        if (sentence && sentence.length < 140 && sentence.toLowerCase().indexOf("violat") < 0 && sentence.toLowerCase().indexOf("constraint") < 0) {
+          return sentence.charAt(0).toUpperCase() + sentence.slice(1) + (/\.$/.test(sentence) ? "" : ".");
+        }
+      }
+      return "That could not be saved.";
+    }
+    if (raw.length < 140 && text.indexOf("relation") < 0 && text.indexOf("syntax") < 0) {
+      return raw.charAt(0).toUpperCase() + raw.slice(1) + (/\.$/.test(raw) ? "" : ".");
+    }
+    return "That could not be saved.";
+  },
+
   fail(error) {
-    const message = (error && error.message) || "That could not be saved.";
+    const message = this.explain(error);
     if (typeof alert === "function") alert(message);
   },
 
