@@ -1059,6 +1059,7 @@ function roadHomeHTML(player) {
     roadNextMarkup(next) +
     "<p class=\"tier-need\">" + roadEsc(roadTierNeed(g.overall, player)) + "</p>" +
     "<p class=\"road-bench\">" + roadEsc(roadBenchmarkLine(player)) + "</p></div></div>" +
+    (typeof gamePlanHTML === "function" ? gamePlanHTML(player) : "") +
     "<div class=\"road-card road-chart-card\" id=\"whereStarted\"><h2 class=\"day-title\">WHERE I STARTED</h2>" + roadChangeList(player) + roadMonthSection(player) +
     "<button class=\"btn btn-ghost\" type=\"button\" id=\"roadTilt\">Enable card tilt</button></div></div>";
 }

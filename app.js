@@ -3382,7 +3382,6 @@ function cardBackHTML(player, face, subs, opts, perkCap) {
     </div>
     <div class="back-grades">${gradeLine}</div>
     <div class="back-raws">${hitting}${pitching}</div>
-    ${focusBackHTML(player)}
     ${backPerksHTML(player, face, perkCap)}
     ${typeof competeBackAwards === "function" ? competeBackAwards(player) : ""}
     ${bests}
@@ -3676,71 +3675,85 @@ const FOCUS_METRICS = {
     label: "Bat speed", unit: "mph", digits: 1,
     why: "Raise it with overload/underload bat work, 2–3 times a week.",
     drill: "3 rounds of 10 swings rotating a heavy bat (+10–20%), the game bat, and a light bat (−10–20%). Max intent, full rest between rounds.",
+    steps: ["3 rounds × 10 swings", "Heavy bat (+10–20%), then the game bat, then a light bat (−10–20%)", "Max intent on every swing", "Full rest between rounds", "2–3 times a week"],
   },
   exitVelo: {
     label: "Exit velo", unit: "mph", digits: 1,
     why: "Build bat speed, square the ball up, and add rotational power.",
     drill: "Rotational med-ball scoop and shot-put throws into a wall, 3×8 each side, 2–3 times a week, then 20 max-intent tee swings at hard line drives.",
+    steps: ["Scoop throws into a wall, 3×8 each side", "Shot-put throws into a wall, 3×8 each side", "2–3 times a week", "Then 20 max-intent tee swings", "Aim for hard line drives"],
   },
   tenYard: {
     label: "10-yard", unit: "s", digits: 2, lower: true,
     why: "Add 3 days a week of short max-effort sprints with full recovery.",
     drill: "6–8 × 20-yard sprints from a falling or 2-point start, plus 4 flying 10s (20-yard build-up, then 10 yards at max). Walk back and rest about 1–2 minutes so every rep is full speed. Warm up with A-skips and bounds.",
+    steps: ["Warm up with A-skips and bounds", "6–8 × 20-yard sprints", "Falling start or 2-point start", "4 × flying 10s: 20-yard build-up, then 10 yards at max", "Walk back, then rest about 1–2 minutes", "Every rep is full speed", "3 days a week"],
   },
   throwVelo: {
     label: "Throwing velo", unit: "mph", digits: 1,
     why: "Throw on a consistent program with long toss 3 times a week. No heavy weighted balls.",
     drill: "Progressive long toss: build out to the max comfortable distance on an arc, then pull in with 10–15 firm throws on a line. Band arm-care before throwing.",
+    steps: ["Band arm-care before throwing", "Build out to the max comfortable distance on an arc", "Pull in with 10–15 firm throws on a line", "3 times a week", "No heavy weighted balls"],
   },
   gripDominant: {
     label: "Grip", unit: "lbs", digits: 0,
     why: "Add grip work 3 times a week.",
     drill: "Dead hangs 3× max time, farmer carries 3×30 yards, and plate pinches or towel wrings.",
+    steps: ["Dead hangs, 3× max time", "Farmer carries, 3×30 yards", "Plate pinches or towel wrings", "3 times a week"],
   },
   medBall: {
     label: "Chest pass", unit: "ft", digits: 1,
     why: "Build pushing power with the seated chest pass, 2–3 times a week.",
     drill: "Seated 2 kg chest passes into a wall, 3×8, full rest between sets, then 10 max-intent throws.",
+    steps: ["Seated 2 kg chest passes into a wall, 3×8", "Full rest between sets", "Then 10 max-intent throws", "2–3 times a week"],
   },
   broadJump: {
     label: "Broad jump", unit: "in", digits: 0,
     why: "Add max-effort jumps 2–3 times a week.",
     drill: "5×3 standing broad jumps for distance, full rest between sets, after A-skips and bounds.",
+    steps: ["Warm up with A-skips and bounds", "5×3 standing broad jumps for distance", "Full rest between sets", "2–3 times a week"],
   },
   vertical: {
     label: "Vertical", unit: "in", digits: 0,
     why: "Add short jump sessions 2–3 times a week.",
     drill: "4×5 pogo jumps, then 4×3 max vertical jumps. Reset fully between reps and rest about a minute between sets.",
+    steps: ["4×5 pogo jumps", "Then 4×3 max vertical jumps", "Reset fully between reps", "Rest about a minute between sets", "2–3 times a week"],
   },
   flying10: {
     label: "Flying 10", unit: "s", digits: 2, lower: true,
     why: "Add 3 days a week of short max-effort sprints with full recovery.",
     drill: "6–8 × 20-yard sprints from a falling or 2-point start, plus 4 flying 10s (20-yard build-up, then 10 yards at max). Walk back and rest about 1–2 minutes so every rep is full speed. Warm up with A-skips and bounds.",
+    steps: ["Warm up with A-skips and bounds", "6–8 × 20-yard sprints", "Falling start or 2-point start", "4 × flying 10s: 20-yard build-up, then 10 yards at max", "Walk back, then rest about 1–2 minutes", "Every rep is full speed", "3 days a week"],
   },
   fastballVelo: {
     label: "Fastball", unit: "mph", digits: 1,
     why: "Long toss 3 times a week and build rotational power. Stay inside the youth pitch count.",
     drill: "Progressive long toss out to a comfortable arc, then 10–15 firm throws on a line. Med-ball rotational scoop throws, 3×8 each side. Band arm-care before throwing. No heavy weighted balls.",
+    steps: ["Band arm-care before throwing", "Long toss out to a comfortable arc", "10–15 firm throws on a line", "Med-ball scoop throws, 3×8 each side", "3 times a week", "Stay inside the youth pitch count", "No heavy weighted balls"],
   },
   spinRate: {
     label: "Spin", unit: "rpm", digits: 0,
     why: "Spin comes from a firm, on-time release.",
     drill: "After band arm-care, 3×8 fastballs at 80% intent getting out front through release, then 10 at max intent. Stay inside the pitch count.",
+    steps: ["Band arm-care first", "3×8 fastballs at 80% intent", "Get out front through release", "Then 10 at max intent", "Stay inside the pitch count"],
   },
   strikePct: {
     label: "Strike %", unit: "%", digits: 0,
     why: "Command is repeating one target.",
     drill: "3 times a week, 3×10 fastballs to one spot from the stretch. Count strikes and stop at the day's pitch count.",
+    steps: ["3×10 fastballs to one spot", "Throw from the stretch", "Count the strikes", "3 times a week", "Stop at the day's pitch count"],
   },
   whiffPct: {
     label: "Whiff %", unit: "%", digits: 0,
     why: "The offspeed pitch needs the same release, not a harder throw.",
     drill: "After long toss, 3×8 offspeed pitches to a spot at 80% effort, then 6 at game intent. Stay inside the pitch count.",
+    steps: ["After long toss", "3×8 offspeed pitches to a spot", "80% effort", "Then 6 at game intent", "Stay inside the pitch count"],
   },
   pitchCapacity: {
     label: "Pitch capacity", unit: "pitches", digits: 0,
     why: "Add a few pitches only while velocity stays up.",
     drill: "One bullpen a week that adds 5 pitches past the last comfortable outing, and stop at the first velocity drop. Long toss the other throw days. Stay inside the pitch count.",
+    steps: ["One bullpen a week", "Add 5 pitches past the last comfortable outing", "Stop at the first velocity drop", "Long toss the other throw days", "Stay inside the pitch count"],
   },
 };
 
@@ -3752,21 +3765,28 @@ function focusCatalog(player) {
   return keys.filter((key) => FOCUS_METRICS[key] && metricNumber(player.metrics && player.metrics[key]) != null);
 }
 
-function focusNumber(spec, value) {
+function focusFigure(spec, value) {
   const n = Number(value);
-  let num;
-  if (spec.digits === 2) num = n.toFixed(2);
-  else if (spec.digits === 0) num = String(Math.round(n));
-  else {
-    const rounded = Math.round(n * 10) / 10;
-    num = Number.isInteger(rounded) ? String(Math.round(n)) : rounded.toFixed(1);
-  }
+  if (spec.digits === 2) return n.toFixed(2);
+  if (spec.digits === 0) return String(Math.round(n));
+  const rounded = Math.round(n * 10) / 10;
+  return Number.isInteger(rounded) ? String(Math.round(n)) : rounded.toFixed(1);
+}
+
+function focusNumber(spec, value) {
+  const num = focusFigure(spec, value);
   return spec.unit === "%" ? num + "%" : num + " " + spec.unit;
 }
 
 function focusScore(player, key) {
   const value = metricNumber(player.metrics && player.metrics[key]);
   return normalizeMetric(key, value, activeAgeGroup(player), player.age);
+}
+
+function focusGradeLine(score, group) {
+  if (score >= 80) return `Top of the ${group} group.`;
+  if (score >= 65) return `Strong for the ${group} group.`;
+  return `Leads the tested numbers for the ${group} group.`;
 }
 
 function focusWellLine(row, group) {
@@ -3793,7 +3813,13 @@ function metricFocus(player) {
     const value = metricNumber(player.metrics[key]);
     const score = focusScore(player, key);
     if (score == null) return null;
-    return { key, order, score, label: spec.label, num: focusNumber(spec, value), why: spec.why, drill: spec.drill };
+    return {
+      key, order, score, label: spec.label,
+      figure: focusFigure(spec, value), unit: spec.unit,
+      num: focusNumber(spec, value),
+      gradeLine: focusGradeLine(score, group),
+      why: spec.why, drill: spec.drill, steps: spec.steps || [],
+    };
   }).filter(Boolean).sort((a, b) => b.score - a.score || a.order - b.order);
   const n = ranked.length;
   let well = [];
@@ -3812,21 +3838,22 @@ function metricFocus(player) {
     work = ranked.slice(-2).reverse();
   }
   return {
+    wellRows: well,
+    workRows: work,
     well: well.length ? well.map((row) => focusWellLine(row, group)) : (n ? [] : ["Log a tested number and this line fills in."]),
     work: work.map((row) => focusWorkLine(row, group)),
   };
 }
 
-function focusListHTML(lines) {
-  return lines && lines.length ? lines.map((line) => `<li>${esc(line)}</li>`).join("") : "<li>—</li>";
-}
-
-function focusBackHTML(player) {
+function gamePlanHTML(player) {
   const focus = metricFocus(player);
-  const well = (focus.well || []).filter((line) => line && line.indexOf("Log a tested number") !== 0);
-  const blocks = well.map((line) => `<p><b>Does well.</b> ${esc(line)}</p>`).concat((focus.work || []).map((line) => `<p><b>Work on.</b> ${esc(line)}</p>`));
-  if (!blocks.length) return "";
-  return `<section class="back-focus"><h4>Does well / Work on</h4>${blocks.join("")}</section>`;
+  const tile = (row) => `<article class="plan-tile"><span>${esc(row.label)}</span><b>${esc(row.figure)}<small>${esc(row.unit)}</small></b><p>${esc(row.gradeLine)}</p></article>`;
+  const card = (row) => `<article class="plan-work"><header><span>${esc(row.label)}</span><b>${esc(row.figure)}<small>${esc(row.unit)}</small></b></header><p class="plan-fix">${esc(row.why)}</p><div class="plan-drill"><h4>DRILL</h4><ul>${(row.steps || []).map((step) => `<li>${esc(step)}</li>`).join("")}</ul></div></article>`;
+  const wells = focus.wellRows || [];
+  const works = focus.workRows || [];
+  const wellHTML = wells.length ? wells.map(tile).join("") : `<p class="plan-empty">Log a tested number and this fills in.</p>`;
+  const workHTML = works.length ? works.map(card).join("") : `<p class="plan-empty">Log a tested number and the next drill shows up here.</p>`;
+  return `<section class="road-card road-plan" id="gamePlan"><h2 class="day-title">MY GAME PLAN</h2><div class="plan-grid"><div class="plan-col"><h3>WHAT I DO WELL</h3>${wellHTML}</div><div class="plan-col"><h3>WHAT TO WORK ON NEXT</h3>${workHTML}</div></div></section>`;
 }
 
 function renderRoster() {
@@ -3863,8 +3890,6 @@ function renderRoster() {
         <h3>${esc(p.name)}</h3>
         <div class="meta">${esc(positionLine(p))} • ${esc(p.team)} • Age ${esc(p.age)} • ${esc(activeAgeGroup(p))} • ${esc(p.classYear)}<br>Bats ${esc(p.bats)} / Throws ${esc(p.throws)} • Overall ${overall}</div>
         <div class="pills"><span class="pill red">${esc(p.archetype)}</span><span class="pill">${typeLabel(p.type)}</span><span class="pill${tierClass}">${tier.label}</span></div>
-        <p class="snippet"><strong>Does well:</strong> ${esc((metricFocus(p).well || [])[0] || "—")}</p>
-        <p class="snippet"><strong>Work on:</strong> ${esc((metricFocus(p).work || [])[0] || "—")}</p>
         <button class="btn btn-red roster-profile" type="button" data-open="${esc(p.id)}">View Profile</button>
       </div>
     </article>`;
@@ -4822,9 +4847,10 @@ function openProfile(id, opts) {
         <p class="small" style="line-height:1.6">Overall <strong>${overall} (${tierWord(tier.key)})</strong>. ${built}</p>
         <div class="pills">${subs.map((s) => `<span class="pill">${s.key} ${s.grade ?? "—"} — ${esc(s.label)}</span>`).join("")}</div>
       </div>
-      <div class="two-col">
-        <div class="panel"><h3>What he does well</h3><ul class="list good">${focusListHTML(metricFocus(p).well)}</ul></div>
-        <div class="panel"><h3>What to improve</h3><ul class="list work">${focusListHTML(metricFocus(p).work)}</ul></div>
+      <div class="panel plan-jump">
+        <h3>My game plan</h3>
+        <p>What he does well and what to work on next is on his page, under My Game Plan.</p>
+        <button class="btn btn-red" type="button" id="openGamePlan">Open My Game Plan</button>
       </div>
     </div>
     <div class="show-panel" data-panel="collection" hidden>
@@ -4846,6 +4872,16 @@ function openProfile(id, opts) {
   });
   const editProfileBtn = $("editProfileBtn");
   if (editProfileBtn) editProfileBtn.addEventListener("click", () => openModal(p));
+  const openGamePlan = $("openGamePlan");
+  if (openGamePlan) openGamePlan.addEventListener("click", () => {
+    if (globalThis.DataLayer) DataLayer.saveSession(Object.assign(roadSession(), { playerId: p.id }));
+    closeProfile();
+    if (document.body) document.body.dataset.app = "home";
+    if (typeof roadPaintChrome === "function") roadPaintChrome();
+    if (typeof roadPaint === "function") roadPaint();
+    const plan = document.getElementById("gamePlan");
+    if (plan) plan.scrollIntoView({ block: "start" });
+  });
   document.querySelectorAll("[data-replay]").forEach((btn) => {
     btn.addEventListener("click", () => replayQuirk(p.id, btn.dataset.replay));
   });
@@ -4943,9 +4979,8 @@ function openRetired(id, index) {
         <h3>${esc(card.archetype || "Player")}</h3>
         <p style="line-height:1.65">${esc(ARCHETYPE_INFO[card.archetype] || "Snapshot of how this player was described when the card was retired.")}</p>
       </div>
-      <div class="two-col">
-        <div class="panel"><h3>What he did well</h3><ul class="list good">${focusListHTML(metricFocus(playerFromArchive(card)).well)}</ul></div>
-        <div class="panel"><h3>What to improve</h3><ul class="list work">${focusListHTML(metricFocus(playerFromArchive(card)).work)}</ul></div>
+      <div class="panel">
+        <p>The game plan is on the current card.</p>
       </div>
     </div>`;
   document.querySelectorAll(".show-tab").forEach((btn) => {
