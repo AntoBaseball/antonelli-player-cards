@@ -688,7 +688,7 @@ const AntonelliAuth = {
     const { data, error } = await this.client.auth.signUp({
       email,
       password,
-      options: { data: { name: this.joinName || "" } },
+      options: { data: { name: this.joinName || "", join_token: this.joinToken || "" } },
     });
     if (error) {
       this.setJoinStatus(error.message || "Could not create the account.");

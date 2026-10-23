@@ -89,21 +89,19 @@ language plpgsql
 security definer
 set search_path = public
 as $$
-declare
-  jwt_role text := coalesce(auth.role(), '');
 begin
-  -- Browser sign-up carries the anon key. The dashboard and the service role do not.
-  if jwt_role is distinct from 'anon' and jwt_role is distinct from 'authenticated' then
-    return new;
-  end if;
-
+  -- Supabase Auth inserts users over its own connection, so no request JWT role is
+  -- visible here. Enforce for every insert: the email must be an open invite AND the
+  -- sign-up must carry that invite's personal join token (passed as user metadata).
+  -- Coaches/admins are added by temporarily disabling this trigger in the SQL editor.
   if exists (
     select 1
     from public.player_accounts a
-    where a.email is not null
-      and a.email <> ''
+    where a.status = 'invited'
+      and a.email is not null and a.email <> ''
       and lower(a.email) = lower(coalesce(new.email, ''))
-      and a.status = 'invited'
+      and a.join_token is not null
+      and a.join_token = coalesce(new.raw_user_meta_data->>'join_token', '')
   ) then
     return new;
   end if;
