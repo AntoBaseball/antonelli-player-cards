@@ -417,8 +417,8 @@ const SAMPLE_PLAYERS = [
   {
     id: "sample-mason-carter", name: "Mason Carter", age: 17, ageGroup: "18U", classYear: "Junior / 11th",
     team: "Antonelli 17U", position: "OF", secondaryPosition: "1B", height: "6'1\"", weight: "190 lbs", hometown: "Tampa, FL", bats: "L", throws: "L", type: "hitter", archetype: "Power Hitter", photo: "",
-    strengths: ["Drives the ball in the air to the pull side with real carry", "Strong, physical swing — top bat speed on the team", "Patient in hitter's counts; hunts pitches he can lift"],
-    improvements: ["Stay on plane against breaking balls down and away", "Shorten the two-strike swing without giving up bat speed", "First-step quickness on outfield reads"],
+
+
     coachQuirks: ["dead-red", "unfazed"],
     strengthNote: DEFAULT_STRENGTH_NOTE,
     metrics: {
@@ -447,8 +447,8 @@ const SAMPLE_PLAYERS = [
   {
     id: "sample-eli-ramirez", name: "Eli Ramirez", age: 15, ageGroup: "16U", classYear: "Sophomore / 10th",
     team: "Antonelli 15U", position: "SS", secondaryPosition: "2B", height: "5'9\"", weight: "155 lbs", hometown: "Miami, FL", bats: "R", throws: "R", type: "hitter", archetype: "Contact / Leadoff", photo: "",
-    strengths: ["Short, quick swing that finds the barrel", "Advanced strike-zone awareness for his age", "Instinctive base runner; quick first step out of the box"],
-    improvements: ["Add strength so bat speed can climb toward varsity range", "Keep the bat on plane against high fastballs", "Stay connected when he tries to drive a pitch"],
+
+
     coachQuirks: ["table-setter", "first-pitch"],
     strengthNote: DEFAULT_STRENGTH_NOTE,
     metrics: {
@@ -477,8 +477,8 @@ const SAMPLE_PLAYERS = [
   {
     id: "sample-noah-bennett", name: "Noah Bennett", age: 16, ageGroup: "16U", classYear: "Junior / 11th",
     team: "Antonelli 16U", position: "RHP", secondaryPosition: "", height: "6'2\"", weight: "185 lbs", hometown: "Orlando, FL", bats: "R", throws: "R", type: "pitcher", archetype: "Ace", photo: "",
-    strengths: ["Fastball carries through the top of the zone", "Repeats delivery and pounds the strike zone", "Breaking ball lands for strikes and chase swings"],
-    improvements: ["Hold velocity deeper into outings (5th-6th inning)", "Develop a firm changeup vs. left-handed hitters", "Quicker move to hold runners at first"],
+
+
     coachQuirks: ["outlier-1", "pressure-cooker"],
     metrics: { fastballVelo: 90, spinRate: 2450, strikePct: 69, whiffPct: 38, pitchCapacity: 95 },
     history: {
@@ -491,8 +491,8 @@ const SAMPLE_PLAYERS = [
   {
     id: "sample-connor-walsh", name: "Connor Walsh", age: 17, ageGroup: "18U", classYear: "Senior / 12th",
     team: "Antonelli 17U", position: "RHP", secondaryPosition: "", height: "6'3\"", weight: "200 lbs", hometown: "Jacksonville, FL", bats: "R", throws: "R", type: "pitcher", archetype: "Closer", photo: "",
-    strengths: ["Electric one-inning stuff; fastball jumps on hitters", "Slider generates swing-and-miss in leverage counts", "Attacks hitters — not afraid of contact in the zone"],
-    improvements: ["Command can scatter when he overthrows", "Throw first-pitch strikes more consistently", "Build routine for back-to-back days"],
+
+
     coachQuirks: ["stopper", "outlier-2"],
     metrics: { fastballVelo: 91, spinRate: 2480, strikePct: 61, whiffPct: 41, pitchCapacity: 52 },
     history: {
@@ -504,8 +504,8 @@ const SAMPLE_PLAYERS = [
   {
     id: "sample-dylan-brooks", name: "Dylan Brooks", age: 14, ageGroup: "14U", classYear: "Freshman / 9th",
     team: "Antonelli 14U", position: "C", secondaryPosition: "RHP", height: "5'10\"", weight: "160 lbs", hometown: "Sarasota, FL", bats: "R", throws: "R", type: "two-way", archetype: "Two-Way Player", photo: "",
-    strengths: ["Strong arm behind the plate and on the mound", "Competitive at-bats; battles with two strikes", "Athletic frame with room to add strength"],
-    improvements: ["Receiving and blocking consistency behind the plate", "Bat speed — stay connected through the turn", "Pitching mechanics: stay closed longer to improve command"],
+
+
     coachQuirks: ["pop-time", "unfazed"],
     strengthNote: DEFAULT_STRENGTH_NOTE,
     metrics: {
@@ -538,8 +538,8 @@ const SAMPLE_PLAYERS = [
   {
     id: "sample-jack-morales", name: "Jack Morales", age: 16, ageGroup: "16U", classYear: "2028",
     team: "Antonelli 16U", position: "OF", secondaryPosition: "CF", height: "5'11\"", weight: "175 lbs", hometown: "Boston, MA", bats: "R", throws: "R", type: "hitter", archetype: "Power Hitter", photo: "",
-    strengths: ["Bat speed is climbing month over month", "Competes on every tested rep"],
-    improvements: ["Stay through the ball when he sells out for power", "First-step quickness on the 10-yard"],
+
+
     coachQuirks: ["dead-red"],
     strengthNote: DEFAULT_STRENGTH_NOTE,
     metrics: {
@@ -593,8 +593,8 @@ const SAMPLE_PLAYERS = [
   {
     id: "sample-jake-ellis", name: "Jake Ellis", age: 16, ageGroup: "16U", classYear: "2028",
     team: "Antonelli 16U", position: "CF", secondaryPosition: "OF", height: "6'0\"", weight: "178 lbs", hometown: "Cambridge, MA", bats: "L", throws: "L", type: "hitter", archetype: "Gap-to-Gap Hitter", photo: "",
-    strengths: ["Barrel is loud when he stays on time", "Closes on the ball in the gaps"],
-    improvements: ["Keep the front side closed on the inner half"],
+
+
     coachQuirks: ["dead-red"],
     strengthNote: DEFAULT_STRENGTH_NOTE,
     metrics: {
@@ -612,8 +612,8 @@ const SAMPLE_PLAYERS = [
   {
     id: "sample-sofia-alvarez", name: "Sofia Alvarez", age: 14, ageGroup: "14U", classYear: "2028",
     team: "Antonelli 14U", position: "2B", secondaryPosition: "OF", height: "5'4\"", weight: "125 lbs", hometown: "Providence, RI", bats: "L", throws: "R", type: "hitter", archetype: "Contact / Leadoff", photo: "",
-    strengths: ["Short swing, repeatable contact", "Runs the bases with a plan"],
-    improvements: ["Add strength without slowing the swing down"],
+
+
     coachQuirks: ["table-setter"],
     strengthNote: DEFAULT_STRENGTH_NOTE,
     metrics: {
@@ -629,8 +629,8 @@ const SAMPLE_PLAYERS = [
   {
     id: "sample-miles-carter", name: "Miles Carter", age: 12, ageGroup: "12U", classYear: "2030",
     team: "Antonelli 12U", position: "SS", secondaryPosition: "", height: "5'1\"", weight: "105 lbs", hometown: "Worcester, MA", bats: "R", throws: "R", type: "hitter", archetype: "Contact / Leadoff", photo: "",
-    strengths: ["Quick hands", "Listens and adjusts between reps"],
-    improvements: ["Strength comes with time — keep the swing short"],
+
+
     coachQuirks: ["first-pitch"],
     strengthNote: DEFAULT_STRENGTH_NOTE,
     metrics: {
@@ -646,8 +646,8 @@ const SAMPLE_PLAYERS = [
   {
     id: "sample-andre-blake", name: "Andre Blake", age: 17, ageGroup: "18U", classYear: "2027",
     team: "Antonelli 17U", position: "RHP", secondaryPosition: "", height: "6'2\"", weight: "188 lbs", hometown: "Hartford, CT", bats: "R", throws: "R", type: "pitcher", archetype: "Ace", photo: "",
-    strengths: ["Fastball has carry to the top of the zone", "Strikes early in the count"],
-    improvements: ["Hold the velo deeper into a bullpen"],
+
+
     coachQuirks: ["outlier-1"],
     metrics: { fastballVelo: 87, spinRate: 2300, strikePct: 64, whiffPct: 32, pitchCapacity: 80 },
     history: {
@@ -660,8 +660,8 @@ const SAMPLE_PLAYERS = [
   {
     id: "sample-cole-brennan", name: "Cole Brennan", age: 17, ageGroup: "18U", classYear: "2027",
     team: "Antonelli 17U", position: "RHP", secondaryPosition: "", height: "6'3\"", weight: "195 lbs", hometown: "Quincy, MA", bats: "R", throws: "R", type: "pitcher", archetype: "Ace", photo: "",
-    strengths: ["Fastball lives at the top of the zone", "Repeats the delivery"],
-    improvements: ["Hold the velo into the fifth"],
+
+
     coachQuirks: ["outlier-1"],
     metrics: { fastballVelo: 93, spinRate: 2500, strikePct: 73, whiffPct: 42, pitchCapacity: 103 },
     history: { fastballVelo: metricHistory(93, [88, 90, 92]) },
@@ -673,8 +673,8 @@ const SAMPLE_PLAYERS = [
   {
     id: "sample-roman-hale", name: "Roman Hale", age: 18, ageGroup: "18U", classYear: "2026",
     team: "Antonelli 18U", position: "RHP", secondaryPosition: "", height: "6'4\"", weight: "205 lbs", hometown: "Worcester, MA", bats: "R", throws: "R", type: "pitcher", archetype: "Ace", photo: "",
-    strengths: ["Velocity and a swing-and-miss breaker", "Competes deep into an outing"],
-    improvements: ["Steal a strike with the changeup"],
+
+
     coachQuirks: ["pressure-cooker"],
     metrics: { fastballVelo: 94.5, spinRate: 2550, strikePct: 74, whiffPct: 44, pitchCapacity: 106 },
     history: { fastballVelo: metricHistory(94.5, [89, 91, 93]) },
@@ -760,8 +760,6 @@ function sample12uPlayer(row, index) {
     type: row.type,
     archetype: row.archetype,
     photo: "",
-    strengths: ["Shows up and competes on every rep"],
-    improvements: ["Strength and bat speed come with time"],
     coachQuirks: [index % 2 ? "first-pitch" : "table-setter"],
     strengthNote: DEFAULT_STRENGTH_NOTE,
     metrics: metrics,
@@ -1657,8 +1655,8 @@ function archiveCurrentCard(player, archivedAt) {
     history: structuredClone(player.history || {}),
     perksEarned,
     assignedPerks,
-    strengths: (player.strengths || []).slice(),
-    improvements: (player.improvements || []).slice(),
+    strengths: metricFocus(player).well.slice(),
+    improvements: metricFocus(player).work.slice(),
     archetype: player.archetype || "",
     photo: player.photo || "",
     name: player.name,
@@ -2218,16 +2216,8 @@ const SAMPLE_CAREER = {
           "description": "Shortens up with two strikes and still competes \u2014 the at-bat is not over."
         }
       ],
-      "strengths": [
-        "Drives the ball in the air to the pull side with real carry",
-        "Strong, physical swing \u2014 top bat speed on the team",
-        "Patient in hitter's counts; hunts pitches he can lift"
-      ],
-      "improvements": [
-        "Stay on plane against breaking balls down and away",
-        "Shorten the two-strike swing without giving up bat speed",
-        "First-step quickness on outfield reads"
-      ],
+
+
       "archetype": "Power Hitter",
       "photo": "",
       "name": "Mason Carter",
@@ -2542,16 +2532,8 @@ const SAMPLE_CAREER = {
           "description": "Shortens up with two strikes and still competes \u2014 the at-bat is not over."
         }
       ],
-      "strengths": [
-        "Strong arm behind the plate and on the mound",
-        "Competitive at-bats; battles with two strikes",
-        "Athletic frame with room to add strength"
-      ],
-      "improvements": [
-        "Receiving and blocking consistency behind the plate",
-        "Bat speed \u2014 stay connected through the turn",
-        "Pitching mechanics: stay closed longer to improve command"
-      ],
+
+
       "archetype": "Two-Way Player",
       "photo": "",
       "name": "Dylan Brooks",
@@ -3014,8 +2996,6 @@ function legacySampleEdited(saved, sample) {
   }
   if (!sameSampleMetrics(saved.metrics, sample.metrics)) return true;
   if (!sameSampleValue(saved.coachQuirks || [], sample.coachQuirks || [])) return true;
-  if (!sameSampleValue(saved.strengths || [], sample.strengths || [])) return true;
-  if (!sameSampleValue(saved.improvements || [], sample.improvements || [])) return true;
   if (saved.manualBests && Object.keys(saved.manualBests).length && !sameSampleValue(saved.manualBests, sample.manualBests || {})) return true;
   return readingLogIsUserEdit(saved, sample);
 }
@@ -3402,6 +3382,7 @@ function cardBackHTML(player, face, subs, opts, perkCap) {
     </div>
     <div class="back-grades">${gradeLine}</div>
     <div class="back-raws">${hitting}${pitching}</div>
+    ${focusBackHTML(player)}
     ${backPerksHTML(player, face, perkCap)}
     ${typeof competeBackAwards === "function" ? competeBackAwards(player) : ""}
     ${bests}
@@ -3687,6 +3668,167 @@ function renderTierShowcase() {
   mount.innerHTML = "";
 }
 
+/* Does well / Work on. Same tested categories as the Where I Started charts.
+   Rank uses the overall grade, including the age window. A slower time grades lower.
+   Broad jump, vertical, and flying 10 are charted but not graded, so they stay off these lines. */
+const FOCUS_METRICS = {
+  batSpeed: {
+    label: "Bat speed", unit: "mph", digits: 1,
+    why: "Raise it with overload/underload bat work, 2–3 times a week.",
+    drill: "3 rounds of 10 swings rotating a heavy bat (+10–20%), the game bat, and a light bat (−10–20%). Max intent, full rest between rounds.",
+  },
+  exitVelo: {
+    label: "Exit velo", unit: "mph", digits: 1,
+    why: "Build bat speed, square the ball up, and add rotational power.",
+    drill: "Rotational med-ball scoop and shot-put throws into a wall, 3×8 each side, 2–3 times a week, then 20 max-intent tee swings at hard line drives.",
+  },
+  tenYard: {
+    label: "10-yard", unit: "s", digits: 2, lower: true,
+    why: "Add 3 days a week of short max-effort sprints with full recovery.",
+    drill: "6–8 × 20-yard sprints from a falling or 2-point start, plus 4 flying 10s (20-yard build-up, then 10 yards at max). Walk back and rest about 1–2 minutes so every rep is full speed. Warm up with A-skips and bounds.",
+  },
+  throwVelo: {
+    label: "Throwing velo", unit: "mph", digits: 1,
+    why: "Throw on a consistent program with long toss 3 times a week. No heavy weighted balls.",
+    drill: "Progressive long toss: build out to the max comfortable distance on an arc, then pull in with 10–15 firm throws on a line. Band arm-care before throwing.",
+  },
+  gripDominant: {
+    label: "Grip", unit: "lbs", digits: 0,
+    why: "Add grip work 3 times a week.",
+    drill: "Dead hangs 3× max time, farmer carries 3×30 yards, and plate pinches or towel wrings.",
+  },
+  medBall: {
+    label: "Chest pass", unit: "ft", digits: 1,
+    why: "Build pushing power with the seated chest pass, 2–3 times a week.",
+    drill: "Seated 2 kg chest passes into a wall, 3×8, full rest between sets, then 10 max-intent throws.",
+  },
+  broadJump: {
+    label: "Broad jump", unit: "in", digits: 0,
+    why: "Add max-effort jumps 2–3 times a week.",
+    drill: "5×3 standing broad jumps for distance, full rest between sets, after A-skips and bounds.",
+  },
+  vertical: {
+    label: "Vertical", unit: "in", digits: 0,
+    why: "Add short jump sessions 2–3 times a week.",
+    drill: "4×5 pogo jumps, then 4×3 max vertical jumps. Reset fully between reps and rest about a minute between sets.",
+  },
+  flying10: {
+    label: "Flying 10", unit: "s", digits: 2, lower: true,
+    why: "Add 3 days a week of short max-effort sprints with full recovery.",
+    drill: "6–8 × 20-yard sprints from a falling or 2-point start, plus 4 flying 10s (20-yard build-up, then 10 yards at max). Walk back and rest about 1–2 minutes so every rep is full speed. Warm up with A-skips and bounds.",
+  },
+  fastballVelo: {
+    label: "Fastball", unit: "mph", digits: 1,
+    why: "Long toss 3 times a week and build rotational power. Stay inside the youth pitch count.",
+    drill: "Progressive long toss out to a comfortable arc, then 10–15 firm throws on a line. Med-ball rotational scoop throws, 3×8 each side. Band arm-care before throwing. No heavy weighted balls.",
+  },
+  spinRate: {
+    label: "Spin", unit: "rpm", digits: 0,
+    why: "Spin comes from a firm, on-time release.",
+    drill: "After band arm-care, 3×8 fastballs at 80% intent getting out front through release, then 10 at max intent. Stay inside the pitch count.",
+  },
+  strikePct: {
+    label: "Strike %", unit: "%", digits: 0,
+    why: "Command is repeating one target.",
+    drill: "3 times a week, 3×10 fastballs to one spot from the stretch. Count strikes and stop at the day's pitch count.",
+  },
+  whiffPct: {
+    label: "Whiff %", unit: "%", digits: 0,
+    why: "The offspeed pitch needs the same release, not a harder throw.",
+    drill: "After long toss, 3×8 offspeed pitches to a spot at 80% effort, then 6 at game intent. Stay inside the pitch count.",
+  },
+  pitchCapacity: {
+    label: "Pitch capacity", unit: "pitches", digits: 0,
+    why: "Add a few pitches only while velocity stays up.",
+    drill: "One bullpen a week that adds 5 pitches past the last comfortable outing, and stop at the first velocity drop. Long toss the other throw days. Stay inside the pitch count.",
+  },
+};
+
+function focusCatalog(player) {
+  const type = player && player.type;
+  const hitting = ["batSpeed", "exitVelo", "tenYard", "throwVelo", "gripDominant", "medBall", "broadJump", "vertical", "flying10"];
+  const pitching = ["fastballVelo", "spinRate", "strikePct", "whiffPct", "pitchCapacity"];
+  const keys = type === "pitcher" ? pitching : (type === "hitter" ? hitting : hitting.concat(pitching));
+  return keys.filter((key) => FOCUS_METRICS[key] && metricNumber(player.metrics && player.metrics[key]) != null);
+}
+
+function focusNumber(spec, value) {
+  const n = Number(value);
+  let num;
+  if (spec.digits === 2) num = n.toFixed(2);
+  else if (spec.digits === 0) num = String(Math.round(n));
+  else {
+    const rounded = Math.round(n * 10) / 10;
+    num = Number.isInteger(rounded) ? String(Math.round(n)) : rounded.toFixed(1);
+  }
+  return spec.unit === "%" ? num + "%" : num + " " + spec.unit;
+}
+
+function focusScore(player, key) {
+  const value = metricNumber(player.metrics && player.metrics[key]);
+  return normalizeMetric(key, value, activeAgeGroup(player), player.age);
+}
+
+function focusWellLine(row, group) {
+  const base = `${row.label} of ${row.num}`;
+  if (row.score >= 80) return `${base} is top of the ${group} group.`;
+  if (row.score >= 65) return `${base} is strong for the ${group} group.`;
+  return `${base} leads the tested numbers for the ${group} group.`;
+}
+
+function focusWorkLine(row, group) {
+  const base = `${row.label} of ${row.num}`;
+  const lead = row.score < 50
+    ? `${base} is behind the ${group} group.`
+    : row.score < 65
+      ? `${base} is a step behind the ${group} group.`
+      : `${base} is the next number to raise for the ${group} group.`;
+  return `${lead} ${row.why} Drill: ${row.drill}`;
+}
+
+function metricFocus(player) {
+  const group = activeAgeGroup(player);
+  const ranked = focusCatalog(player).map((key, order) => {
+    const spec = FOCUS_METRICS[key];
+    const value = metricNumber(player.metrics[key]);
+    const score = focusScore(player, key);
+    if (score == null) return null;
+    return { key, order, score, label: spec.label, num: focusNumber(spec, value), why: spec.why, drill: spec.drill };
+  }).filter(Boolean).sort((a, b) => b.score - a.score || a.order - b.order);
+  const n = ranked.length;
+  let well = [];
+  let work = [];
+  if (n === 1) {
+    if (ranked[0].score >= 65) well = [ranked[0]];
+    else work = [ranked[0]];
+  } else if (n === 2) {
+    well = [ranked[0]];
+    work = [ranked[1]];
+  } else if (n === 3) {
+    well = [ranked[0]];
+    work = [ranked[n - 1]];
+  } else {
+    well = ranked.slice(0, 2);
+    work = ranked.slice(-2).reverse();
+  }
+  return {
+    well: well.length ? well.map((row) => focusWellLine(row, group)) : (n ? [] : ["Log a tested number and this line fills in."]),
+    work: work.map((row) => focusWorkLine(row, group)),
+  };
+}
+
+function focusListHTML(lines) {
+  return lines && lines.length ? lines.map((line) => `<li>${esc(line)}</li>`).join("") : "<li>—</li>";
+}
+
+function focusBackHTML(player) {
+  const focus = metricFocus(player);
+  const well = (focus.well || []).filter((line) => line && line.indexOf("Log a tested number") !== 0);
+  const blocks = well.map((line) => `<p><b>Does well.</b> ${esc(line)}</p>`).concat((focus.work || []).map((line) => `<p><b>Work on.</b> ${esc(line)}</p>`));
+  if (!blocks.length) return "";
+  return `<section class="back-focus"><h4>Does well / Work on</h4>${blocks.join("")}</section>`;
+}
+
 function renderRoster() {
   renderTierShowcase();
   renderHeroStats(); renderTeamFilter();
@@ -3721,8 +3863,8 @@ function renderRoster() {
         <h3>${esc(p.name)}</h3>
         <div class="meta">${esc(positionLine(p))} • ${esc(p.team)} • Age ${esc(p.age)} • ${esc(activeAgeGroup(p))} • ${esc(p.classYear)}<br>Bats ${esc(p.bats)} / Throws ${esc(p.throws)} • Overall ${overall}</div>
         <div class="pills"><span class="pill red">${esc(p.archetype)}</span><span class="pill">${typeLabel(p.type)}</span><span class="pill${tierClass}">${tier.label}</span></div>
-        <p class="snippet"><strong>Does well:</strong> ${esc((p.strengths || [])[0] || "—")}</p>
-        <p class="snippet"><strong>Work on:</strong> ${esc((p.improvements || [])[0] || "—")}</p>
+        <p class="snippet"><strong>Does well:</strong> ${esc((metricFocus(p).well || [])[0] || "—")}</p>
+        <p class="snippet"><strong>Work on:</strong> ${esc((metricFocus(p).work || [])[0] || "—")}</p>
         <button class="btn btn-red roster-profile" type="button" data-open="${esc(p.id)}">View Profile</button>
       </div>
     </article>`;
@@ -4681,8 +4823,8 @@ function openProfile(id, opts) {
         <div class="pills">${subs.map((s) => `<span class="pill">${s.key} ${s.grade ?? "—"} — ${esc(s.label)}</span>`).join("")}</div>
       </div>
       <div class="two-col">
-        <div class="panel"><h3>What he does well</h3><ul class="list good">${(p.strengths || []).map((s) => `<li>${esc(s)}</li>`).join("") || "<li>—</li>"}</ul></div>
-        <div class="panel"><h3>What to improve</h3><ul class="list work">${(p.improvements || []).map((s) => `<li>${esc(s)}</li>`).join("") || "<li>—</li>"}</ul></div>
+        <div class="panel"><h3>What he does well</h3><ul class="list good">${focusListHTML(metricFocus(p).well)}</ul></div>
+        <div class="panel"><h3>What to improve</h3><ul class="list work">${focusListHTML(metricFocus(p).work)}</ul></div>
       </div>
     </div>
     <div class="show-panel" data-panel="collection" hidden>
@@ -4802,8 +4944,8 @@ function openRetired(id, index) {
         <p style="line-height:1.65">${esc(ARCHETYPE_INFO[card.archetype] || "Snapshot of how this player was described when the card was retired.")}</p>
       </div>
       <div class="two-col">
-        <div class="panel"><h3>What he did well</h3><ul class="list good">${(card.strengths || []).map((s) => `<li>${esc(s)}</li>`).join("") || "<li>—</li>"}</ul></div>
-        <div class="panel"><h3>What to improve</h3><ul class="list work">${(card.improvements || []).map((s) => `<li>${esc(s)}</li>`).join("") || "<li>—</li>"}</ul></div>
+        <div class="panel"><h3>What he did well</h3><ul class="list good">${focusListHTML(metricFocus(playerFromArchive(card)).well)}</ul></div>
+        <div class="panel"><h3>What to improve</h3><ul class="list work">${focusListHTML(metricFocus(playerFromArchive(card)).work)}</ul></div>
       </div>
     </div>`;
   document.querySelectorAll(".show-tab").forEach((btn) => {
@@ -5212,7 +5354,6 @@ function formPlayerLike() {
     classYear: $("f-class").value, team: $("f-team").value || "Antonelli Baseball", position: $("f-position").value || "—",
     secondaryPosition: $("f-secondary").value.trim(), height: $("f-height").value.trim(), weight: $("f-weight").value.trim(), hometown: $("f-hometown").value.trim(),
     bats: $("f-bats").value, throws: $("f-throws").value, type, archetype: $("f-archetype").value,
-    strengths: linesToArray($("f-strengths").value), improvements: linesToArray($("f-improvements").value),
     photo: pendingPhotoData || "",
     strengthNote: noteEl ? noteEl.value.trim() : "",
     metrics, history: {},
@@ -5249,8 +5390,6 @@ function openModal(player) {
   $("f-throws").value = isEdit ? player.throws : "R";
   $("f-type").value = isEdit ? player.type : "hitter";
   fillArchetypes($("f-type").value, isEdit ? player.archetype : undefined);
-  $("f-strengths").value = isEdit ? (player.strengths || []).join("\n") : "";
-  $("f-improvements").value = isEdit ? (player.improvements || []).join("\n") : "";
   editingDefaults = isEdit ? structuredClone(player) : null;
   pendingPhotoData = isEdit ? (player.photo || "") : "";
   const photoInput = $("f-photo"); if (photoInput) photoInput.value = "";
