@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ROAD TO 99 — Antonelli Baseball</title>
 <meta name="description" content="ROAD TO 99. Antonelli Baseball player development: train, test, and level up a baseball card. Overall is earned in testing. Level is earned by showing up.">
-<link rel="stylesheet" href="styles.css?v=20261022z">
-<link rel="stylesheet" href="road.css?v=20261022z">
-<link rel="stylesheet" href="compete.css?v=20261022z">
-<link rel="stylesheet" href="style.css?v=20261022z">
-<link rel="stylesheet" href="vision.css?v=20261022z">
+<link rel="stylesheet" href="styles.css?v=20261023a">
+<link rel="stylesheet" href="road.css?v=20261023a">
+<link rel="stylesheet" href="compete.css?v=20261023a">
+<link rel="stylesheet" href="style.css?v=20261023a">
+<link rel="stylesheet" href="vision.css?v=20261023a">
 </head>
 <body data-app="home">
 <header class="topbar">
@@ -43,14 +43,15 @@
       <button class="btn btn-ghost" id="signInSheetBtn" type="button">Sign in</button>
       <button class="btn btn-red" id="addPlayerBtn" type="button">+ Add Player</button>
       <div id="coachAccounts" class="coach-accounts" hidden>
-        <p class="sheet-label">Roster accounts</p>
+        <button class="btn btn-red" id="showJoinLinks" type="button">Sign-up links</button>
+        <p class="sheet-label">Add a player</p>
         <form id="inviteOne" class="invite-one">
           <input id="inviteName" type="text" placeholder="Player name" required>
           <input id="inviteTeam" type="text" placeholder="Team">
           <input id="inviteAge" type="text" placeholder="Age group, e.g. 12U">
           <input id="invitePosition" type="text" placeholder="Position">
           <input id="inviteEmail" type="email" placeholder="Email (parent for 12U)" required>
-          <button class="btn btn-red" type="submit">Add player and invite</button>
+          <button class="btn btn-red" type="submit">Add player</button>
         </form>
         <label class="sheet-field">CSV import
           <input id="inviteCsv" type="file" accept=".csv,text/csv">
@@ -331,6 +332,36 @@
   <div class="sd-results" id="showdownResults" hidden></div>
 </div>
 
+<div id="joinScreen" class="sign-screen" hidden>
+  <form id="joinForm" class="sign-card join-card">
+    <p class="sign-kicker">ANTONELLI BASEBALL</p>
+    <h2 class="day-title join-title" id="joinTitle">CREATE YOUR ACCOUNT</h2>
+    <p class="sign-lead" id="joinLead">Choose a password. For 12U and younger, this is a parent's email.</p>
+    <div id="joinCard" class="join-preview"></div>
+    <label class="sign-field">Email
+      <input id="joinEmail" class="join-email" type="email" autocomplete="username" readonly>
+    </label>
+    <label class="sign-field" id="joinPasswordLabel">Password
+      <input id="joinPassword" type="password" autocomplete="new-password" minlength="8" required>
+    </label>
+    <label class="sign-field" id="joinPassword2Label">Confirm password
+      <input id="joinPassword2" type="password" autocomplete="new-password" minlength="8" required>
+    </label>
+    <p id="joinStatus" class="sign-status" role="status"></p>
+    <button class="btn btn-red" id="joinSubmit" type="submit">Create account</button>
+    <button class="btn btn-ghost" id="joinClose" type="button">Back to the roster</button>
+  </form>
+</div>
+<div id="joinLinks" class="sign-screen" hidden>
+  <div class="links-card sign-card">
+    <p class="sign-kicker">COACH</p>
+    <h2 class="day-title join-title" id="joinLinksTitle">SIGN-UP LINKS</h2>
+    <p class="sign-lead">Email each player their link from your own Gmail. A link works once.</p>
+    <button class="btn btn-red" id="joinLinksCsv" type="button">Download CSV</button>
+    <div id="joinLinksBody" class="links-list"></div>
+    <button class="btn btn-ghost" id="joinLinksClose" type="button">Close</button>
+  </div>
+</div>
 <div id="signInScreen" class="sign-screen" hidden>
   <form id="signInForm" class="sign-card">
     <p class="sign-kicker">ANTONELLI BASEBALL</p>
@@ -358,14 +389,14 @@
   <button type="button" data-app="train"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13 2 4 14h7l-1 8 10-14h-7l0-6z"/></svg><span>Train</span></button>
 </nav>
 
-<script src="config.js?v=20261022z"></script>
-<script src="store.js?v=20261022z"></script>
-<script src="road.js?v=20261022z"></script>
-<script src="compete.js?v=20261022z"></script>
-<script src="vendor/qrcode.js?v=20261022z"></script>
-<script src="style.js?v=20261022z"></script>
-<script src="vision.js?v=20261022z"></script>
-<script src="app.js?v=20261022z"></script>
-<script src="auth.js?v=20261022z"></script>
+<script src="config.js?v=20261023a"></script>
+<script src="store.js?v=20261023a"></script>
+<script src="road.js?v=20261023a"></script>
+<script src="compete.js?v=20261023a"></script>
+<script src="vendor/qrcode.js?v=20261023a"></script>
+<script src="style.js?v=20261023a"></script>
+<script src="vision.js?v=20261023a"></script>
+<script src="app.js?v=20261023a"></script>
+<script src="auth.js?v=20261023a"></script>
 </body>
 </html>

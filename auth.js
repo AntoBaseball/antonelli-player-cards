@@ -17,7 +17,11 @@ const AntonelliAuth = {
   boot() {
     this.wire();
     this.lockSession();
-    if (!this.configured()) return;
+    if (!this.configured()) {
+      const join = new URLSearchParams(location.search).get("join");
+      if (join) this.showJoinMessage("Accounts aren't connected yet. This browser is still using the sample roster.");
+      return;
+    }
     this.loadSdk().then(() => this.startCloud()).catch((err) => {
       this.setStatus(err.message || "Accounts could not start. The sample roster is still on this browser.");
     });
@@ -57,6 +61,8 @@ const AntonelliAuth = {
       await this.refreshRoster();
     }
     this.lockSession();
+    const join = new URLSearchParams(location.search).get("join");
+    if (join) await this.loadJoin(join);
   },
 
   wire() {
@@ -86,6 +92,27 @@ const AntonelliAuth = {
     if (csv) csv.addEventListener("change", () => this.inviteCsv(csv));
     const upload = document.getElementById("uploadLocalRoster");
     if (upload) upload.addEventListener("click", () => this.uploadLocal());
+    const linksBtn = document.getElementById("showJoinLinks");
+    if (linksBtn) linksBtn.addEventListener("click", () => this.loadJoinLinks());
+    const linksClose = document.getElementById("joinLinksClose");
+    if (linksClose) linksClose.addEventListener("click", () => this.closeLinks());
+    const linksCsv = document.getElementById("joinLinksCsv");
+    if (linksCsv) linksCsv.addEventListener("click", () => this.downloadLinks());
+    const linksScreen = document.getElementById("joinLinks");
+    if (linksScreen) linksScreen.addEventListener("click", (event) => {
+      if (event.target === linksScreen) this.closeLinks();
+    });
+    const joinForm = document.getElementById("joinForm");
+    if (joinForm) joinForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      this.submitJoin();
+    });
+    const joinClose = document.getElementById("joinClose");
+    if (joinClose) joinClose.addEventListener("click", () => this.closeJoin());
+    const joinScreen = document.getElementById("joinScreen");
+    if (joinScreen) joinScreen.addEventListener("click", (event) => {
+      if (event.target === joinScreen) this.closeJoin();
+    });
     const screen = document.getElementById("signInScreen");
     if (screen) screen.addEventListener("click", (event) => {
       if (event.target === screen) this.close();
@@ -403,7 +430,14 @@ const AntonelliAuth = {
       this.setAccountStatus("Name and email are required.");
       return;
     }
-    this.invite([row]);
+    this.saveAccounts([row]).then((ok) => {
+      if (ok) {
+        ["inviteName", "inviteTeam", "inviteAge", "invitePosition", "inviteEmail"].forEach((id) => {
+          const field = document.getElementById(id);
+          if (field) field.value = "";
+        });
+      }
+    });
   },
 
   inviteCsv(input) {
@@ -417,9 +451,258 @@ const AntonelliAuth = {
         this.setAccountStatus("No players found. The header row should be name, team, ageGroup, position, email.");
         return;
       }
-      this.invite(rows);
+      this.saveAccounts(rows);
     };
     reader.readAsText(file);
+  },
+
+  joinUrl(token) {
+    return "https://antobaseball.github.io/antonelli-player-cards/?join=" + encodeURIComponent(token);
+  },
+
+  async saveAccounts(rows) {
+    if (!this.client || this.role !== "coach") {
+      this.setAccountStatus("Sign in as a coach first.");
+      return false;
+    }
+    const list = rows.slice(0, 200);
+    this.setAccountStatus("Saving " + list.length + " player" + (list.length === 1 ? "" : "s") + "…");
+    let made = 0;
+    const problems = [];
+    for (const row of list) {
+      try {
+        await this.saveAccount(row);
+        made += 1;
+      } catch (err) {
+        problems.push((row.name || "Player") + ": " + (err.message || "could not save"));
+      }
+    }
+    this.setAccountStatus("Saved " + made + " of " + list.length + "." + (problems.length ? " " + problems[0] : " Sign-up links are ready."));
+    await this.refreshRoster();
+    if (made) await this.loadJoinLinks();
+    return made > 0;
+  },
+
+  async saveAccount(row) {
+    const email = String(row.email || "").trim().toLowerCase();
+    const name = String(row.name || "").trim();
+    if (!name || !email) throw new Error("Name and email are required.");
+    const id = String(row.id || "").trim() || ("player-" + crypto.randomUUID());
+    const { error: playerError } = await this.client.from("players").upsert({
+      id,
+      name,
+      team: row.team || "",
+      age_group: row.ageGroup || "",
+      position: row.position || "",
+    }, { onConflict: "id" });
+    if (playerError) throw playerError;
+    const { error: privateError } = await this.client.from("player_private").upsert({ player_id: id }, { onConflict: "player_id" });
+    if (privateError) throw privateError;
+    const { error: accountError } = await this.client.from("player_accounts").upsert({
+      player_id: id,
+      email,
+      invited_at: new Date().toISOString(),
+    }, { onConflict: "player_id" });
+    if (accountError) throw accountError;
+  },
+
+  async loadJoinLinks() {
+    if (!this.client || this.role !== "coach") {
+      this.setAccountStatus("Sign in as a coach first.");
+      return;
+    }
+    const accounts = await this.client.from("player_accounts").select("player_id, email, status, join_token");
+    if (accounts.error) {
+      this.setAccountStatus(accounts.error.message);
+      return;
+    }
+    const pubs = await this.client.from("players").select("id, name, team");
+    const byId = new Map((pubs.data || []).map((player) => [player.id, player]));
+    const rows = (accounts.data || []).map((account) => {
+      const player = byId.get(account.player_id) || {};
+      return {
+        name: player.name || "Player",
+        email: account.email || "",
+        team: player.team || "",
+        status: account.status === "joined" ? "joined" : "invited",
+        link: account.join_token ? this.joinUrl(account.join_token) : "",
+      };
+    }).sort((a, b) => a.name.localeCompare(b.name));
+    this.renderLinks(rows);
+  },
+
+  renderLinks(rows) {
+    this.linkRows = rows || [];
+    const body = document.getElementById("joinLinksBody");
+    const screen = document.getElementById("joinLinks");
+    if (!body || !screen) return;
+    body.replaceChildren();
+    if (!this.linkRows.length) {
+      const empty = document.createElement("p");
+      empty.className = "sign-lead";
+      empty.textContent = "No sign-up links yet. Add a player with an email, or import a CSV.";
+      body.appendChild(empty);
+    }
+    this.linkRows.forEach((row) => {
+      const item = document.createElement("div");
+      item.className = "link-row";
+      const who = document.createElement("div");
+      const name = document.createElement("b");
+      name.textContent = row.name;
+      const meta = document.createElement("span");
+      meta.textContent = [row.email, row.team, row.status === "joined" ? "Joined" : "Invited"].filter(Boolean).join(" · ");
+      who.append(name, meta);
+      const code = document.createElement("code");
+      code.textContent = row.link || "No link yet";
+      const copy = document.createElement("button");
+      copy.className = "btn btn-ghost";
+      copy.type = "button";
+      copy.textContent = "Copy";
+      copy.addEventListener("click", () => this.copyLink(row.link, copy));
+      item.append(who, copy, code);
+      body.appendChild(item);
+    });
+    screen.hidden = false;
+  },
+
+  async copyLink(link, button) {
+    if (!link) return;
+    try {
+      await navigator.clipboard.writeText(link);
+    } catch (err) {
+      const area = document.createElement("textarea");
+      area.value = link;
+      document.body.appendChild(area);
+      area.select();
+      document.execCommand("copy");
+      area.remove();
+    }
+    const previous = button.textContent;
+    button.textContent = "Copied";
+    setTimeout(() => { button.textContent = previous; }, 1200);
+  },
+
+  downloadLinks() {
+    const rows = this.linkRows || [];
+    const escape = (value) => "\"" + String(value || "").replace(/"/g, "\"\"") + "\"";
+    const lines = ["name,email,team,link"].concat(rows.map((row) => [row.name, row.email, row.team, row.link].map(escape).join(",")));
+    const blob = new Blob([lines.join("\n")], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "antonelli-signup-links.csv";
+    link.click();
+    URL.revokeObjectURL(url);
+  },
+
+  closeLinks() {
+    const screen = document.getElementById("joinLinks");
+    if (screen) screen.hidden = true;
+  },
+
+  async loadJoin(token) {
+    this.joinToken = token;
+    if (!this.client) {
+      this.showJoinMessage("Accounts are still starting. Reload this link in a moment.");
+      return;
+    }
+    const { data, error } = await this.client.rpc("lookup_join_token", { token });
+    const row = Array.isArray(data) ? data[0] : data;
+    if (error || !row || !row.player_id) {
+      this.showJoinMessage("This sign-up link is invalid or has already been used.");
+      return;
+    }
+    let player = { id: row.player_id, name: row.name || "Player", team: "", age: "", classYear: "", bats: "R", throws: "R", position: "", archetype: "", metricsHidden: true, publicGrades: { overall: null, subs: [], tier: "bronze" } };
+    const pub = await this.client.from("players").select("*").eq("id", row.player_id).maybeSingle();
+    if (pub.data) player = this.hydrate(pub.data, null);
+    player.name = row.name || player.name;
+    this.showJoinForm({ name: player.name, email: row.email || "", player });
+  },
+
+  showJoinMessage(text) {
+    this.showJoinForm({ name: "", email: "", player: null, locked: true });
+    this.setJoinStatus(text);
+  },
+
+  showJoinForm(opts) {
+    const options = opts || {};
+    const screen = document.getElementById("joinScreen");
+    const lead = document.getElementById("joinLead");
+    const email = document.getElementById("joinEmail");
+    const card = document.getElementById("joinCard");
+    const locked = !!options.locked;
+    if (lead) {
+      lead.textContent = options.name
+        ? options.name + " — choose a password. For 12U and younger, this is a parent's email."
+        : "Choose a password. For 12U and younger, this is a parent's email.";
+    }
+    if (email) {
+      email.value = options.email || "";
+      email.readOnly = true;
+    }
+    if (card) {
+      card.replaceChildren();
+      if (options.player && typeof cardHTML === "function") {
+        card.innerHTML = cardHTML(options.player, false);
+      }
+    }
+    ["joinPasswordLabel", "joinPassword2Label", "joinSubmit"].forEach((id) => {
+      const node = document.getElementById(id);
+      if (node) node.hidden = locked;
+    });
+    const emailLabel = email && email.closest("label");
+    if (emailLabel) emailLabel.hidden = locked && !options.email;
+    this.joinName = options.name || "";
+    this.joinEmail = options.email || "";
+    this.setJoinStatus("");
+    if (screen) screen.hidden = false;
+  },
+
+  closeJoin() {
+    const screen = document.getElementById("joinScreen");
+    if (screen) screen.hidden = true;
+  },
+
+  setJoinStatus(text) {
+    const node = document.getElementById("joinStatus");
+    if (node) node.textContent = text || "";
+  },
+
+  async submitJoin() {
+    const email = (document.getElementById("joinEmail").value || "").trim();
+    const password = document.getElementById("joinPassword").value || "";
+    const confirm = document.getElementById("joinPassword2").value || "";
+    if (!this.configured() || !this.client) {
+      this.setJoinStatus("Accounts aren't connected yet.");
+      return;
+    }
+    if (password.length < 8) {
+      this.setJoinStatus("Use at least 8 characters.");
+      return;
+    }
+    if (password !== confirm) {
+      this.setJoinStatus("Those passwords don't match.");
+      return;
+    }
+    this.setJoinStatus("Creating your account…");
+    const { data, error } = await this.client.auth.signUp({
+      email,
+      password,
+      options: { data: { name: this.joinName || "" } },
+    });
+    if (error) {
+      this.setJoinStatus(error.message || "Could not create the account.");
+      return;
+    }
+    if (!data || !data.session) {
+      this.setJoinStatus("Account created, but email confirmation is still on. Open the confirmation email, then sign in. Turn Confirm email off in the Supabase dashboard so this link signs the player in immediately.");
+      return;
+    }
+    const url = new URL(location.href);
+    url.searchParams.delete("join");
+    history.replaceState({}, "", url.pathname + url.search + url.hash);
+    this.closeJoin();
+    await this.afterSignIn(data.session, true);
   },
 
   parseCsv(text) {

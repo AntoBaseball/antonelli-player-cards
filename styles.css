@@ -425,13 +425,26 @@ th{font-size:11px;letter-spacing:.7px;text-transform:uppercase;color:var(--muted
 .card-shell.tier-diamond .back-grade{background:rgba(4,20,48,.38);border-color:rgba(212,175,55,.6)}
 .card-shell.tier-diamond .back-grade b{color:#f2d060}
 .card-shell.tier-diamond .pb-block{background:rgba(4,20,48,.35)}
-.sign-screen{position:fixed;inset:0;z-index:80;display:grid;place-items:center;padding:24px 16px;background:rgba(5,5,5,.78);backdrop-filter:blur(8px)}
+.sign-screen{position:fixed;inset:0;z-index:80;display:grid;place-items:center;padding:24px 16px;background:rgba(5,5,5,.78);backdrop-filter:blur(8px);overflow:auto}
 .sign-screen[hidden]{display:none !important}
 .sign-card{width:min(440px,100%);display:flex;flex-direction:column;gap:12px;padding:28px 22px 22px;border-radius:22px;background:linear-gradient(160deg,#070707,#14110c 60%,#1a1208);border:1px solid rgba(212,175,55,.55);box-shadow:0 24px 60px rgba(0,0,0,.45);color:#f6f1e4}
 .sign-card .day-title{font-size:clamp(40px,8vw,64px);white-space:nowrap;margin:0}
+.sign-card .day-title.join-title{font-size:clamp(22px,5.6vw,36px);letter-spacing:0;text-align:center}
+.join-preview{width:min(240px,100%);margin:0 auto}
+.join-preview:empty{display:none}
+.join-preview .bb-card{width:100%}
+.links-card{width:min(720px,100%)}
+.links-list{display:flex;flex-direction:column;gap:0;max-height:min(52vh,480px);overflow:auto;text-align:left}
+.link-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;align-items:center;padding:10px 0;border-bottom:1px solid rgba(212,175,55,.28)}
+.link-row b{display:block;color:#fff}
+.link-row span{color:#b7aa8a;font-size:13px}
+.link-row code{grid-column:1 / -1;font-size:12px;line-height:1.4;word-break:break-all;color:#f7ecc8}
+.link-row .btn{width:auto;padding:8px 12px}
+.join-email[readonly]{opacity:.9}
 .sign-kicker{margin:0;letter-spacing:2px;font-size:11px;font-weight:800;color:#f2d060;text-align:center}
 .sign-lead{margin:0;text-align:center;line-height:1.5;color:#f7ecc8}
 .sign-field{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:#f2d060}
+.sign-field[hidden],.sign-card .btn[hidden]{display:none !important}
 .sign-card .btn{width:100%}
 .sign-status{min-height:1.4em;margin:0;text-align:center;line-height:1.45;color:#f2d060}
 .coach-accounts{display:flex;flex-direction:column;gap:8px;width:100%;padding-top:8px;border-top:1px solid rgba(212,175,55,.35)}
