@@ -26,6 +26,9 @@ Already applied, in this order. Do not run them again.
 6. `supabase/migrations/20261023190000_metrics_coach_only.sql` — a player cannot change `metrics` or `history`.
 7. `supabase/migrations/20261023200000_document_allowlist.sql` — a player can change only `readingLog`, `earnedQuirks`, `gradeSeen`, and the player-owned keys inside `road`.
 8. `supabase/migrations/20261023210000_pin_helper_search_path.sql` — empty `search_path` on `jsonb_is_blank`, `player_road_keys`, and `player_document_keys`.
+9. `supabase/migrations/20261024000000_arcade.sql` — Quick Eyes scores, the daily row, team codes, and head-to-head. Reads use `can_see_player`. Scores are insert-only. A daily update keeps the higher score. Dates must be within a day of UTC today.
+10. `supabase/migrations/20261024000100_arcade_road_key.sql` — `arcade` is a player road key.
+11. `supabase/migrations/20261024000200_core_grants_tighten.sql` — anon can only read public player cards. Client roles cannot truncate or alter tables.
 
 The first migration created:
 
@@ -102,7 +105,7 @@ Realtime is on for `notifications` and `challenges` only. Reactions, crowns, and
 
 `supabase/migrations/20261023210000_pin_helper_search_path.sql` is applied. `jsonb_is_blank`, `player_road_keys`, and `player_document_keys` use an empty `search_path`.
 
-`supabase/migrations/20261024000000_arcade.sql` is not applied. It adds Quick Eyes scores, the daily row, team codes, and head-to-head, and it adds `arcade` to `player_road_keys()`. Do not treat it as live. The browser keeps arcade rounds in `localStorage` until that file is applied and the client is allowed to send `road.arcade`.
+`supabase/migrations/20261024000000_arcade.sql`, `20261024000100_arcade_road_key.sql`, and `20261024000200_core_grants_tighten.sql` are applied. A signed-in player inserts their own scores and upserts today's daily row. The server keeps the better daily score. `played_on` has to fall within a day of UTC today. Team boards and the daily board only return rows `can_see_player` allows. The player save sends `road.arcade`. Rounds still stay in `localStorage` when nobody is signed in.
 
 Demo mode (empty config, or signed out) does not call these tables. Sample challenges, reactions, and the Cage session link stay in `localStorage`. Demo highlight files stay in IndexedDB and still cap at about 1.2 MB. Quest XP claims and personal reminders (streak, XP close, rival) stay on the device even after the migration, because they are not team posts.
 

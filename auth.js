@@ -373,15 +373,14 @@ const AntonelliAuth = {
   },
 
   /* Keep these in sync with player_document_keys() and player_road_keys().
-     A player save sends only these keys.
-     road.arcade stays off this list until 20261024000000_arcade.sql is applied.
-     Sending it earlier makes the live guard reject the whole save. */
+     A player save sends only these keys. arcade is allowlisted. */
   documentKeys: ["readingLog", "earnedQuirks", "gradeSeen", "road"],
   roadKeys: [
     "xp", "streaks", "dates", "missions", "missionDay", "dailyBonus",
     "trainingLog", "miniDay", "miniXp", "streakPaid", "hotUntil",
     "prs", "challenges", "trophies", "rivalry", "videos", "vision",
     "skin", "celebration", "signature", "autograph", "autographTier",
+    "arcade",
   ],
 
   playerRoad(player) {

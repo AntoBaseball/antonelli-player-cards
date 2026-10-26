@@ -1,7 +1,7 @@
 /* Quick Eyes Arcade — eight reaction games on one engine.
-   Scores live on this device (localStorage + player.road.arcade).
-   Shared boards wait on supabase/migrations/20261024000000_arcade.sql.
-   The client does not upload road.arcade until that allowlist is applied. */
+   This device keeps every round in localStorage and mirrors it to player.road.arcade.
+   Signed-in rounds also insert a score, and a daily round upserts today's best.
+   Reads are whatever can_see_player allows: your card, your roster team, or the coach. */
 
 const ARCADE_COLORS = [
   { id: "red", name: "RED", hex: "#E63946", letter: "R" },
@@ -1258,35 +1258,43 @@ function arcadePointer(ev) {
   }
 }
 
+function arcadeAuth() {
+  if (typeof AntonelliAuth !== "undefined") return AntonelliAuth;
+  return globalThis.AntonelliAuth || null;
+}
+
 function arcadePublish(S, row) {
-  const auth = globalThis.AntonelliAuth;
+  const auth = arcadeAuth();
   if (!auth || !auth.client || !auth.user || auth.holdingSample || !auth.playerId) return;
+  const avg = Math.max(0, Math.min(60000, Math.round(row.avg || 0)));
+  const fastest = Math.max(0, Math.min(avg, Math.round(row.fastest || 0)));
+  const vision = Math.max(0, Math.min(99, Math.round(row.vision || 0)));
   const payload = {
     player_id: auth.playerId,
     game: row.game,
     played_on: row.date,
     seed: S.daily ? "arcade-daily-" + row.date : "",
-    score: row.score,
-    accuracy: row.accuracy,
-    avg_ms: row.avg,
-    fastest_ms: row.fastest,
-    highest_level: row.highest,
-    best_combo: row.bestCombo,
-    vision: row.vision,
-    grade: row.grade,
+    score: Math.max(0, Math.min(1000000, Math.round(row.score || 0))),
+    accuracy: Math.max(0, Math.min(1, Math.round((Number(row.accuracy) || 0) * 1000) / 1000)),
+    avg_ms: avg,
+    fastest_ms: fastest,
+    highest_level: Math.max(1, Math.min(10, Math.round(row.highest || 1))),
+    best_combo: Math.max(0, Math.min(10000, Math.round(row.bestCombo || 0))),
+    vision: vision,
+    grade: arcadeGrade(vision),
   };
   auth.client.from("arcade_scores").insert(payload).then(function () {}, function () {});
-  if (S.h2h && S.guest) {
+  if (S.h2h && S.guest && row.game !== "warmup") {
     auth.client.from("arcade_h2h").insert({
       player_id: auth.playerId,
-      game: S.game.id,
+      game: row.game,
       played_on: row.date,
       seed: payload.seed,
       score_a: row.score,
-      score_b: S.guest.score,
+      score_b: Math.max(0, Math.round(S.guest.score || 0)),
     }).then(function () {}, function () {});
   }
-  if (S.daily) {
+  if (S.daily && row.game !== "warmup") {
     auth.client.from("arcade_daily").upsert({
       played_on: row.date,
       player_id: auth.playerId,
@@ -1321,7 +1329,7 @@ function arcadeHomeHTML(player) {
     "<div class=\"arcade-settings\"><p class=\"arcade-kicker\">ROUND</p><div class=\"arcade-pills\" id=\"arcadeSeconds\">" +
     [30, 45, 60].map((n) => "<button type=\"button\" data-seconds=\"" + n + "\"" + (n === seconds ? " class=\"is-on\"" : "") + ">" + n + "s</button>").join("") +
     "</div><button type=\"button\" class=\"btn btn-ghost\" id=\"arcadeBlind\">" + (bag.settings.colorblind ? "Color letters on" : "Color letters off") + "</button><button type=\"button\" class=\"btn btn-ghost\" id=\"arcadeCal\">Calibrate" + (bag.settings.baseline ? " · " + bag.settings.baseline + " ms" : "") + "</button></div>" +
-    "<div class=\"arcade-team\"><p class=\"arcade-kicker\">TEAM BOARD</p><p class=\"arcade-note\">A 4–8 letter code keeps a weekly board with your team. The shared board turns on after the arcade tables are applied.</p><form id=\"arcadeTeamForm\"><input id=\"arcadeTeamCode\" maxlength=\"8\" placeholder=\"Team code\" value=\"" + arcadeEsc(bag.teamCode) + "\"><button class=\"btn btn-ghost\" type=\"submit\">Save code</button></form><div id=\"arcadeBoard\"></div></div>" +
+    "<div class=\"arcade-team\"><p class=\"arcade-kicker\">TEAM BOARD</p><p class=\"arcade-note\">A 4–8 letter code keeps this week's scores with players you already share a roster with.</p><form id=\"arcadeTeamForm\"><input id=\"arcadeTeamCode\" maxlength=\"8\" placeholder=\"Team code\" value=\"" + arcadeEsc(bag.teamCode) + "\"><button class=\"btn btn-ghost\" type=\"submit\">Save code</button></form><div id=\"arcadeBoard\"></div></div>" +
     "<h3>Coaching tips</h3><ul class=\"arcade-tips\">" + tips + "</ul>";
 }
 
@@ -1390,8 +1398,8 @@ function arcadePaintBoard() {
   const mine = (bag.rounds || []).filter((r) => String(r.date || "").slice(0, 8) === week);
   const best = mine.reduce((m, r) => Math.max(m, r.score || 0), 0);
   box.innerHTML = "<p class=\"arcade-note\">Code " + arcadeEsc(code) + ". This browser, this week: " + (best ? "best " + best : "no rounds yet") + ".</p>";
-  const auth = globalThis.AntonelliAuth;
-  if (!auth || !auth.client || !auth.user) return;
+  const auth = arcadeAuth();
+  if (!auth || !auth.client || !auth.user || auth.holdingSample) return;
   auth.client.from("arcade_week_board").select("name, player_id, score, game, played_on, code").eq("code", code).order("score", { ascending: false }).limit(20).then((res) => {
     if (!res || res.error || !box.isConnected) return;
     const rows = res.data || [];
@@ -1401,25 +1409,40 @@ function arcadePaintBoard() {
 }
 
 function arcadeJoinTeam(code) {
-  const auth = globalThis.AntonelliAuth;
+  const auth = arcadeAuth();
   if (!code || code.length < 4 || !auth || !auth.client || !auth.user || auth.holdingSample || !auth.playerId) return;
-  auth.client.from("arcade_teams").insert({ code: code, name: code, created_by: auth.playerId }).then(() => {
+  const join = () => {
     auth.client.from("arcade_team_members").upsert({ code: code, player_id: auth.playerId }, { onConflict: "code,player_id" }).then(function () {}, function () {});
-  }, function () {});
+  };
+  auth.client.from("arcade_teams").insert({ code: code, name: code, created_by: auth.playerId }).then(join, join);
 }
 
 function arcadePaintDaily() {
   const box = document.getElementById("arcadeDailyBoard");
   if (!box) return;
-  box.innerHTML = "<p class=\"arcade-note\">Today's shared board uses the date as the seed. It fills in after the arcade tables are applied.</p>";
-  const auth = globalThis.AntonelliAuth;
-  if (!auth || !auth.client || !auth.user) return;
-  auth.client.from("arcade_daily_board").select("name, player_id, score, game").eq("played_on", arcadeToday()).order("score", { ascending: false }).limit(10).then((res) => {
-    if (!res || res.error || !box.isConnected) return;
+  const day = arcadeToday();
+  const head = "<p class=\"arcade-kicker\">TODAY'S BOARD</p>";
+  const auth = arcadeAuth();
+  if (!auth || !auth.client || !auth.user || auth.holdingSample) {
+    box.innerHTML = head + "<p class=\"arcade-note\">Sign in to see your team's scores for " + arcadeEsc(day) + ".</p>";
+    return;
+  }
+  box.innerHTML = head + "<p class=\"arcade-note\">Loading " + arcadeEsc(day) + ".</p>";
+  auth.client.from("arcade_daily_board").select("name, player_id, score, game").eq("played_on", day).order("score", { ascending: false }).limit(10).then((res) => {
+    if (!box.isConnected) return;
+    if (!res || res.error) {
+      box.innerHTML = head + "<p class=\"arcade-note\">Today's board did not load.</p>";
+      return;
+    }
     const rows = res.data || [];
-    if (!rows.length) return;
-    box.innerHTML = "<ol class=\"arcade-board\">" + rows.map((r) => "<li>" + arcadeEsc(r.name || r.player_id) + " · " + r.score + "</li>").join("") + "</ol>";
-  }, function () {});
+    if (!rows.length) {
+      box.innerHTML = head + "<p class=\"arcade-note\">No scores yet for " + arcadeEsc(day) + ".</p>";
+      return;
+    }
+    box.innerHTML = head + "<ol class=\"arcade-board\">" + rows.map((r) => "<li>" + arcadeEsc(r.name || r.player_id) + " · " + r.score + "</li>").join("") + "</ol>";
+  }, function () {
+    if (box.isConnected) box.innerHTML = head + "<p class=\"arcade-note\">Today's board did not load.</p>";
+  });
 }
 
 function arcadePre(id, opts) {
