@@ -1036,6 +1036,8 @@ function roadProfileHTML(player) {
     "<p class=\"next-num\">" + g.overall + " OVR</p><p>Road to 99: " + (99 - g.overall) + " overall points left. Overall never moves from XP.</p>" +
     edit +
     "<h3>Development coach</h3>" + coach +
+    (typeof arcadeTipsHTML === "function" ? arcadeTipsHTML() : "") +
+    "<div class=\"road-actions\"><button class=\"btn btn-red\" type=\"button\" id=\"arcadeProfile\">Quick Eyes</button></div>" +
     roadNextMarkup(next) +
     "<h3>Where I started</h3>" + roadChangeList(player) +
     "<h3>Age-group percentiles</h3>" + pct("Exit velo", "exitVelo") + pct("Bat speed", "batSpeed") + pct("10-yard", "tenYard") + pct("Throw", "throwVelo") +
@@ -1093,6 +1095,8 @@ function roadWireProfile(player) {
   });
   const preview = document.getElementById("roadEvoPreview");
   if (preview) preview.addEventListener("click", () => roadPreviewLegend(player));
+  const eyes = document.getElementById("arcadeProfile");
+  if (eyes) eyes.addEventListener("click", () => roadSetApp("eyes"));
   if (typeof competeWire === "function") competeWire(player);
   if (typeof styleWire === "function") styleWire(player);
 }
@@ -1128,12 +1132,15 @@ function roadHomeHTML(player) {
     "<div class=\"road-track\" id=\"xpTrack\"><span style=\"width:" + widthXp + "%\"></span></div></div></div></div>" +
     "<h3 class=\"road-hello\">" + roadEsc(roadGreeting()) + ", " + roadEsc(roadFirstName(player)) + "</h3>" +
     "<p class=\"road-streak\">DAY " + (player.road.streaks.training || 0) + " STREAK 🔥" + hot + "</p>" +
-    ((roadSession().mode === "coach" || player.id === "sample-mason-carter") ? "<div class=\"road-actions vision-try\"><button class=\"btn btn-red\" type=\"button\" id=\"visionTry\">Pitch Recognition</button></div>" : "") +
+    "<div class=\"road-actions vision-try\"><button class=\"btn btn-red\" type=\"button\" id=\"arcadeTry\">Quick Eyes</button>" +
+    ((roadSession().mode === "coach" || player.id === "sample-mason-carter") ? "<button class=\"btn btn-ghost\" type=\"button\" id=\"visionTry\">Pitch Recognition</button>" : "") +
+    "</div>" +
     "<p class=\"road-quote\">" + roadEsc(roadQuote()) + "</p>" +
     "<div class=\"road-grid\">" +
     "<div class=\"road-card road-missions\"><h3>Today's mission <b>" + done + "/4</b></h3><ul class=\"mission-list\">" + list + "</ul>" +
     "<div class=\"road-actions\"><button class=\"btn btn-red\" type=\"button\" id=\"roadTrain\"" + (can ? "" : " disabled") + ">Log training</button></div>" + coachTools + "</div>" +
     "<div class=\"road-card road-coach\"><h2 class=\"day-title\">DEVELOPMENT COACH</h2><p class=\"coach-line\">" + roadEsc(coach) + "</p>" +
+    (typeof arcadeTipsHTML === "function" ? arcadeTipsHTML() : "") +
     roadNextMarkup(next) +
     "<p class=\"tier-need\">" + roadEsc(roadTierNeed(g.overall, player)) + "</p>" +
     "<p class=\"road-bench\">" + roadEsc(roadBenchmarkLine(player)) + "</p></div></div>" +
@@ -1187,6 +1194,8 @@ function roadPaint() {
   });
   const tryGames = document.getElementById("visionTry");
   if (tryGames) tryGames.addEventListener("click", () => { if (typeof visionOpen === "function") visionOpen(player); });
+  const tryEyes = document.getElementById("arcadeTry");
+  if (tryEyes) tryEyes.addEventListener("click", () => roadSetApp("eyes"));
   const train = document.getElementById("roadTrain");
   if (train) train.addEventListener("click", () => roadTrain(player));
   const tilt = document.getElementById("roadTilt");
@@ -1232,10 +1241,17 @@ function roadSetApp(name) {
   const tab = name || "home";
   document.body.dataset.app = tab;
   roadSyncTabs();
+  if (tab !== "eyes" && typeof arcadeStop === "function") arcadeStop();
   const sheet = document.getElementById("settingsSheet");
   if (sheet) sheet.classList.remove("is-open");
   const menu = document.getElementById("menuBtn");
   if (menu) menu.setAttribute("aria-expanded", "false");
+  if (tab === "eyes") {
+    if (typeof closeProfile === "function") closeProfile();
+    window.scrollTo(0, 0);
+    if (typeof arcadeOpen === "function") arcadeOpen(roadSignedIn());
+    return;
+  }
   if (tab === "card" || tab === "trophies") {
     const player = roadSignedIn();
     if (player && typeof openProfile === "function") {
@@ -1432,7 +1448,10 @@ function roadBoot() {
       DataLayer.saveSession(session);
       const tab = document.body.dataset.app || "home";
       if (tab === "card" || tab === "trophies") roadSetApp(tab);
-      else {
+      else if (tab === "eyes") {
+        if (typeof arcadeStop === "function") arcadeStop();
+        if (typeof arcadeOpen === "function") arcadeOpen(roadSignedIn());
+      } else {
         roadPaint();
         if (typeof renderRoster === "function") renderRoster();
       }
@@ -1463,6 +1482,11 @@ function roadBoot() {
     visionNav.addEventListener("click", () => {
       if (typeof visionOpen === "function") visionOpen(roadSignedIn());
     });
+  }
+  const arcadeNav = document.getElementById("arcadeNav");
+  if (arcadeNav && !arcadeNav.dataset.wired) {
+    arcadeNav.dataset.wired = "1";
+    arcadeNav.addEventListener("click", () => roadSetApp("eyes"));
   }
   if (bell && !bell.dataset.wired) {
     bell.dataset.wired = "1";

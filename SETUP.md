@@ -102,6 +102,8 @@ Realtime is on for `notifications` and `challenges` only. Reactions, crowns, and
 
 `supabase/migrations/20261023210000_pin_helper_search_path.sql` is applied. `jsonb_is_blank`, `player_road_keys`, and `player_document_keys` use an empty `search_path`.
 
+`supabase/migrations/20261024000000_arcade.sql` is not applied. It adds Quick Eyes scores, the daily row, team codes, and head-to-head, and it adds `arcade` to `player_road_keys()`. Do not treat it as live. The browser keeps arcade rounds in `localStorage` until that file is applied and the client is allowed to send `road.arcade`.
+
 Demo mode (empty config, or signed out) does not call these tables. Sample challenges, reactions, and the Cage session link stay in `localStorage`. Demo highlight files stay in IndexedDB and still cap at about 1.2 MB. Quest XP claims and personal reminders (streak, XP close, rival) stay on the device even after the migration, because they are not team posts.
 
 The public pages (roster, card faces, leaderboards, Card of the Day) read the shared `players` rows. While that table is empty they keep showing the sample cards. The personal page (My Game Plan, Where I Started, the reading log, missions, XP, Development Coach) reads `player_private`.

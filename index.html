@@ -6,11 +6,12 @@
 <title>ROAD TO 99 — Antonelli Baseball</title>
 <meta name="description" content="ROAD TO 99. Antonelli Baseball player development: train, test, and level up a baseball card. Overall is earned in testing. Level is earned by showing up.">
 <link rel="icon" href="assets/antonelli-a-star.png">
-<link rel="stylesheet" href="styles.css?v=20261023f">
-<link rel="stylesheet" href="road.css?v=20261023f">
-<link rel="stylesheet" href="compete.css?v=20261023f">
-<link rel="stylesheet" href="style.css?v=20261023f">
-<link rel="stylesheet" href="vision.css?v=20261023f">
+<link rel="stylesheet" href="styles.css?v=20261024a">
+<link rel="stylesheet" href="road.css?v=20261024a">
+<link rel="stylesheet" href="compete.css?v=20261024a">
+<link rel="stylesheet" href="style.css?v=20261024a">
+<link rel="stylesheet" href="vision.css?v=20261024a">
+<link rel="stylesheet" href="arcade.css?v=20261024a">
 </head>
 <body data-app="home">
 <header class="topbar">
@@ -39,6 +40,7 @@
         </select>
       </label>
       <button class="btn btn-ghost vision-nav" id="visionNav" type="button">Pitch Recognition</button>
+      <button class="btn btn-ghost vision-nav" id="arcadeNav" type="button">Quick Eyes</button>
       <button class="btn btn-ghost" id="roadMute" type="button">Sound off</button>
       <button class="btn btn-ghost" id="resetBtn" type="button">Reset Sample Data</button>
       <button class="btn btn-ghost" id="signInSheetBtn" type="button">Sign in</button>
@@ -79,6 +81,7 @@
     <section id="cardsOfDay" class="cards-day" aria-label="Cards of the day"></section>
     <section class="tier-showcase" id="tierShowcase" aria-label="Diamond and Legend cards" hidden></section>
     <div id="trainGames"></div>
+    <div id="arcadeHub"></div>
     <div id="competeHome"></div>
     <div class="hero">
       <div>
@@ -388,17 +391,19 @@
   <button type="button" data-app="compete"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 19h4V9H4v10zm6 0h4V4h-4v15zm6 0h4v-7h-4v7z"/></svg><span>Compete</span></button>
   <button type="button" data-app="trophies"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 3h10v2h3v3a5 5 0 0 1-4 4.9V15h2v2H6v-2h2v-2.1A5 5 0 0 1 4 8V5h3V3zm0 4H6v1a3 3 0 0 0 1.6 2.7C7.2 9.6 7 8.8 7 8V7zm10 0v1c0 .8-.2 1.6-.6 2.7A3 3 0 0 0 18 8V7h-1z"/></svg><span>Trophies</span></button>
   <button type="button" data-app="train"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13 2 4 14h7l-1 8 10-14h-7l0-6z"/></svg><span>Train</span></button>
+  <button type="button" data-app="eyes"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 5C6.2 5 2.4 9.2 1.2 12c1.2 2.8 5 7 10.8 7s9.6-4.2 10.8-7C21.6 9.2 17.8 5 12 5zm0 11.2A4.2 4.2 0 1 1 12 7.8a4.2 4.2 0 0 1 0 8.4z"/></svg><span>Eyes</span></button>
 </nav>
 
-<script src="config.js?v=20261023f"></script>
-<script src="store.js?v=20261023f"></script>
-<script src="road.js?v=20261023f"></script>
-<script src="compete.js?v=20261023f"></script>
-<script src="vendor/qrcode.js?v=20261023f"></script>
-<script src="style.js?v=20261023f"></script>
-<script src="vision.js?v=20261023f"></script>
-<script src="app.js?v=20261023f"></script>
-<script src="social.js?v=20261023f"></script>
-<script src="auth.js?v=20261023f"></script>
+<script src="config.js?v=20261024a"></script>
+<script src="store.js?v=20261024a"></script>
+<script src="road.js?v=20261024a"></script>
+<script src="compete.js?v=20261024a"></script>
+<script src="vendor/qrcode.js?v=20261024a"></script>
+<script src="style.js?v=20261024a"></script>
+<script src="vision.js?v=20261024a"></script>
+<script src="arcade.js?v=20261024a"></script>
+<script src="app.js?v=20261024a"></script>
+<script src="social.js?v=20261024a"></script>
+<script src="auth.js?v=20261024a"></script>
 </body>
 </html>

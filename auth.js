@@ -372,9 +372,10 @@ const AntonelliAuth = {
     };
   },
 
-  /* Keep these in sync with player_document_keys() and player_road_keys()
-     in supabase/migrations/20261023200000_document_allowlist.sql.
-     A player save sends only these keys. */
+  /* Keep these in sync with player_document_keys() and player_road_keys().
+     A player save sends only these keys.
+     road.arcade stays off this list until 20261024000000_arcade.sql is applied.
+     Sending it earlier makes the live guard reject the whole save. */
   documentKeys: ["readingLog", "earnedQuirks", "gradeSeen", "road"],
   roadKeys: [
     "xp", "streaks", "dates", "missions", "missionDay", "dailyBonus",

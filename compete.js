@@ -719,7 +719,9 @@ function competeProfileHTML(player) {
   const evos = ((player.road && player.road.evolutions) || []).map((m) => "<button type=\"button\" class=\"btn btn-ghost\" data-replay-evo=\"" + competeEsc(m.id) + "\">Replay " + competeEsc(m.toTier) + "</button>").join(" ") || "<p>No evolution yet. Cross a tier and the replay lands here.</p>";
   const trophies = ((player.road && player.road.trophies) || []).map((t) => "<div class=\"lb-row\"><span>" + competeEsc(competePrettyDate(t.at)) + "</span><b>" + competeEsc(t.note) + "</b></div>").join("") || "<p>Win a challenge, a quest, or an event and it lands here.</p>";
   const you = records.rank ? "<p class=\"rank-line\">YOU ARE #" + records.rank + " ALL-TIME</p><p>Age " + records.age + " · " + competeEsc(records.spec.label) + ", inside this facility.</p>" : "";
+  const eyes = typeof arcadeTrophyHTML === "function" ? arcadeTrophyHTML(player) : "";
   return "<div class=\"panel compete-board\" id=\"trophyCase\"><h3>My trophy case</h3><div class=\"trophy-grid\">" + awards + "</div><h3>Achievements</h3><div class=\"trophy-grid\">" + ach + "</div>" + hiddenNote +
+    "<h3>Quick Eyes</h3><div class=\"trophy-grid\">" + eyes + "</div>" +
     "<h3>Evolutions</h3><div class=\"road-actions\">" + evos + "</div><h3>Quests, events, challenges</h3>" + trophies +
     "<h3>Reactions</h3><p class=\"react-row\">" + reactions + "</p><div class=\"road-actions\">" + reactBtns + "</div>" +
     "<h3>Career card collection</h3><div class=\"age-row\">" + (ages || "<p>No age cards yet.</p>") + "</div>" + ageNote +

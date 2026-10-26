@@ -1,0 +1,80 @@
+/* Quick Eyes — night game inside Road to 99 type. */
+#arcadeHub{display:none;margin:0 0 18px;padding:16px 12px 18px;border-radius:18px;border:1px solid rgba(212,175,55,.45);background:
+  radial-gradient(900px 280px at 50% 0%, rgba(244,196,48,.1), transparent 55%),
+  linear-gradient(180deg,#07111c,#0c2418 70%);
+  color:#f6f1e4}
+body[data-app="eyes"] #arcadeHub{display:block}
+body[data-app="eyes"] #roadHome,
+body[data-app="eyes"] #trainGames,
+body[data-app="eyes"] #competeHome,
+body[data-app="eyes"] .hero,
+body[data-app="eyes"] .controls,
+body[data-app="eyes"] .section-head,
+body[data-app="eyes"] #rosterGrid,
+body[data-app="eyes"] #emptyState,
+body[data-app="eyes"] .tier-showcase,
+body[data-app="eyes"] #cardsOfDay{display:none !important}
+.arcade-kicker{margin:0 0 4px;letter-spacing:2.4px;font-size:11px;font-weight:800;color:#f2d060;text-align:center}
+#arcadeHub h2,.arcade-stage h2{margin:0 0 8px;text-align:center;font-family:Impact,"Arial Black",system-ui,sans-serif;font-style:italic;font-size:clamp(36px,8vw,56px);line-height:.9;color:#fff}
+#arcadeHub h3{margin:16px 0 8px;text-align:center;font-family:Impact,"Arial Black",system-ui,sans-serif;font-style:italic;font-size:28px;color:#fff}
+.arcade-lead,.arcade-note{margin:0 auto 12px;max-width:48ch;text-align:center;color:#f7ecc8;line-height:1.45}
+.arcade-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.arcade-card{display:flex;flex-direction:column;gap:6px;text-align:left;min-height:118px;padding:12px;border-radius:14px;border:1px solid rgba(244,196,48,.35);background:rgba(7,12,18,.72);color:#fff;cursor:pointer}
+.arcade-card b{font-family:Impact,"Arial Black",system-ui,sans-serif;font-style:italic;font-size:22px;letter-spacing:.3px}
+.arcade-card span{color:#d9d0b8;font-size:13px;line-height:1.35}
+.arcade-card em{margin-top:auto;color:#f4c430;font-style:normal;font-weight:800;font-size:12px}
+.arcade-actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:14px 0}
+.arcade-pills{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:8px 0}
+.arcade-pills button,.arcade-settings .btn{min-height:44px;padding:0 14px;border-radius:999px;border:1px solid rgba(244,196,48,.55);background:rgba(255,255,255,.05);color:#fff;font-weight:900;cursor:pointer}
+.arcade-pills button.is-on{background:linear-gradient(180deg,#8f6f0e,#f4c430);color:#111}
+.arcade-settings,.arcade-team{display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:8px}
+.arcade-team form{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.arcade-team input{min-height:44px;border-radius:12px;border:1px solid rgba(244,196,48,.45);background:#071018;color:#fff;padding:0 12px}
+.arcade-tips{margin:0 auto;max-width:52ch;padding:0;list-style:none}
+.arcade-tips li{margin:0 0 8px;padding:8px 10px;border-radius:12px;background:rgba(0,0,0,.28);color:#f7ecc8;line-height:1.4}
+.arcade-help{margin:0 auto 12px;max-width:46ch;color:#f7ecc8}
+.arcade-check{display:flex;gap:8px;align-items:center;justify-content:center;margin:8px 0;font-weight:800;color:#f4c430}
+.arcade-stage{display:flex;flex-direction:column;gap:8px;min-height:70vh}
+.arcade-hud{display:flex;align-items:center;gap:8px;color:#f4c430;font-family:Impact,"Arial Black",system-ui,sans-serif;font-style:italic;font-size:22px}
+.arcade-hud button{width:40px;height:40px;border-radius:999px;border:1px solid #f4c430;background:rgba(0,0,0,.45);color:#f4c430;font-weight:900;cursor:pointer}
+.arcade-hud span{min-width:52px}
+#arcadeTime.is-late{color:#E63946}
+.arcade-flame{flex:1;height:12px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(244,196,48,.4);overflow:hidden}
+.arcade-flame i{display:block;height:100%;width:0;background:linear-gradient(90deg,#8f3b12,#f4c430)}
+.arcade-banner{margin:0;min-height:1.3em;text-align:center;font-weight:900;letter-spacing:.8px;color:#fff}
+.arcade-canvas{width:100%;flex:1;min-height:320px;border-radius:16px;background:#07111c;touch-action:none;display:block}
+.arcade-count{position:absolute;left:0;right:0;top:38%;margin:0;text-align:center;font-family:Impact,"Arial Black",system-ui,sans-serif;font-style:italic;font-size:clamp(64px,12vw,120px);color:#f4c430;pointer-events:none}
+.arcade-stage{position:relative}
+.arcade-score{margin:0;text-align:center;font-family:Impact,"Arial Black",system-ui,sans-serif;font-style:italic;font-size:72px;line-height:.85;color:#fff}
+.arcade-best{margin:0;text-align:center;color:#f4c430;font-weight:900;letter-spacing:.4px}
+.arcade-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
+.arcade-stats div{padding:8px 4px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(244,196,48,.28);text-align:center}
+.arcade-stats b{display:block;font-family:Impact,"Arial Black",system-ui,sans-serif;font-style:italic;font-size:28px;color:#fff}
+.arcade-stats span{font-size:10px;font-weight:800;letter-spacing:.5px;color:#f4c430}
+.arcade-heat{display:grid;gap:4px;max-width:280px;margin:0 auto 12px}
+.arcade-heat i{display:grid;place-items:center;min-height:36px;border:1px solid rgba(244,241,234,.4);color:#f4c430;font-style:normal;font-weight:800;font-size:12px}
+.arcade-progress{list-style:none;margin:0;padding:0}
+.arcade-progress li{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid rgba(244,196,48,.2)}
+.arcade-progress span{color:#d9d0b8}
+.arcade-bars{display:flex;align-items:flex-end;justify-content:center;gap:6px;min-height:88px;margin:8px 0 16px}
+.arcade-bars i{display:block;width:18px;background:#f4c430;border-radius:6px 6px 0 0}
+.arcade-cal{min-height:180px;margin:12px auto;max-width:520px;border-radius:18px;display:grid;place-items:center;background:#07111c;border:1px solid rgba(244,196,48,.4);font-family:Impact,"Arial Black",system-ui,sans-serif;font-style:italic;font-size:42px;color:#f4c430}
+.arcade-cal.is-hot{background:#f4f1ea;color:#111}
+.arcade-board{margin:8px auto;max-width:360px;color:#f7ecc8}
+@media (max-width:600px){
+  .arcade-grid{grid-template-columns:1fr}
+  .app-tabs{grid-template-columns:repeat(6,1fr)}
+  .app-tabs button{font-size:9px;letter-spacing:0}
+}
+html.arcade-playing,body.arcade-playing{overflow:hidden;height:100%}
+body.arcade-playing .topbar,
+body.arcade-playing .app-tabs,
+body.arcade-playing .sample-banner,
+body.arcade-playing .cele-overlay,
+body.arcade-playing .xp-float,
+body.arcade-playing .inbox,
+body.arcade-playing #evoShow{display:none !important}
+body.arcade-playing{padding-bottom:0 !important}
+body.arcade-playing #arcadeHub{position:fixed;inset:0;z-index:220;margin:0;width:100%;height:100dvh;max-height:100dvh;box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden;border-radius:0;border:0;padding:10px 12px calc(12px + env(safe-area-inset-bottom))}
+body.arcade-playing .arcade-stage{flex:1;min-height:0}
+body.arcade-playing .arcade-canvas{flex:1;min-height:0;height:auto}
