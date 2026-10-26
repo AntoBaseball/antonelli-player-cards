@@ -158,6 +158,35 @@ function visionPopSound() {
   src.start(t);
 }
 
+function visionCrackSound() {
+  if (!visionAudio) return;
+  const ctx = visionAudio;
+  const t = ctx.currentTime;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = "square";
+  osc.frequency.setValueAtTime(180, t);
+  osc.frequency.exponentialRampToValueAtTime(70, t + 0.09);
+  gain.gain.setValueAtTime(0.0001, t);
+  gain.gain.exponentialRampToValueAtTime(0.45, t + 0.004);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(t);
+  osc.stop(t + 0.13);
+  const len = Math.max(1, Math.floor(ctx.sampleRate * 0.07));
+  const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2);
+  const src = ctx.createBufferSource();
+  const ng = ctx.createGain();
+  src.buffer = buf;
+  ng.gain.value = 0.7;
+  src.connect(ng);
+  ng.connect(ctx.destination);
+  src.start(t);
+}
+
 function visionRand(list) {
   return list[Math.floor(Math.random() * list.length)];
 }
@@ -615,7 +644,7 @@ function visionIqList() {
 function visionChoices(kind) {
   if (kind === "vanish") return [{ id: "FB", name: "Fastball" }, { id: "CB", name: "Curve" }, { id: "CH", name: "Changeup" }];
   if (kind === "flash") return [{ id: "FB", name: "Fastball" }, { id: "SL", name: "Slider" }, { id: "CB", name: "Curve" }];
-  if (kind === "gauntlet" || kind === "depth" || kind === "rhythm") return [{ id: "go", name: kind === "gauntlet" ? "Swing" : "Tap" }];
+  if (kind === "gauntlet" || kind === "depth" || kind === "rhythm") return [{ id: "go", name: "SWING" }];
   if (kind === "matrix") return [{ id: "w", name: "Up" }, { id: "a", name: "Left" }, { id: "s", name: "Down" }, { id: "d", name: "Right" }];
   if (kind === "ghost") return [{ id: "left", name: "Left" }, { id: "mid", name: "Middle" }, { id: "right", name: "Right" }];
   if (kind === "tracer") return [{ id: "clear", name: "Clear" }, { id: "done", name: "Done" }];
@@ -666,6 +695,211 @@ function visionBindSpeed(root) {
   });
 }
 
+let visionHand = "R";
+let visionHandPinned = false;
+try {
+  const savedHand = localStorage.getItem("antonelli-vision-hand");
+  if (savedHand === "L" || savedHand === "R") { visionHand = savedHand; visionHandPinned = true; }
+} catch (e) { /* right-handed stays the default */ }
+
+function visionHandFor(player) {
+  const bats = String((player && player.bats) || "R").toUpperCase();
+  return bats.charAt(0) === "L" ? "L" : "R";
+}
+
+function visionUseHand(player) {
+  if (!visionHandPinned) visionHand = visionHandFor(player);
+}
+
+function visionHandHTML() {
+  return "<div class=\"vision-hands\" id=\"visionHands\">" + ["R", "L"].map((id) => "<button type=\"button\" data-hand=\"" + id + "\"" + (id === visionHand ? " class=\"is-on\"" : "") + ">" + (id === "R" ? "RHB" : "LHB") + "</button>").join("") + "</div>";
+}
+
+function visionTuneHTML() {
+  return "<div class=\"vision-tune\">" + visionSpeedHTML() + visionHandHTML() + "</div>";
+}
+
+function visionBindHand(root) {
+  if (!root) return;
+  root.querySelectorAll("[data-hand]").forEach((btn) => {
+    btn.addEventListener("pointerdown", (ev) => {
+      ev.preventDefault();
+      const next = btn.dataset.hand;
+      if (next !== "L" && next !== "R") return;
+      visionHand = next;
+      visionHandPinned = true;
+      try { localStorage.setItem("antonelli-vision-hand", visionHand); } catch (e) { /* the button still shows the side */ }
+      root.querySelectorAll("[data-hand]").forEach((b) => b.classList.toggle("is-on", b === btn));
+    });
+  });
+}
+
+function visionUmp(text) {
+  const el = document.getElementById("visionUmp");
+  if (el) el.textContent = text || "";
+}
+
+function visionPaintAb(run) {
+  const el = document.getElementById("visionAb");
+  if (el && run && run.ab) el.textContent = run.ab.b + "–" + run.ab.s;
+}
+
+function visionWord(result) {
+  if (!result) return "";
+  if (result.id === "take") return result.strike ? "TAKE · STRIKE!" : "TAKE · BALL";
+  if (result.id === "chase") return "CHASE";
+  if (result.id === "barrel") return "BARREL";
+  if (result.id === "squared") return "SQUARED UP";
+  if (result.id === "early") return "EARLY · pulled foul";
+  if (result.id === "whiff") return "LATE · whiff";
+  return "LATE · foul";
+}
+
+function visionTiming(dt) {
+  const scale = visionScale();
+  const tight = 28 * scale;
+  const band = 55 * scale;
+  const miss = 120 * scale;
+  if (dt < -band) return { id: "early", contact: true, foul: true, spray: -1 };
+  if (dt < -tight) return { id: "squared", contact: true, foul: false, spray: -0.35 };
+  if (dt <= tight) return { id: "barrel", contact: true, foul: false, spray: 0.08 };
+  if (dt <= miss) return { id: "late-foul", contact: true, foul: true, spray: 1 };
+  return { id: "whiff", contact: false, foul: false, spray: 0 };
+}
+
+function visionBumpCount(run, result) {
+  const ab = run.ab;
+  if (!ab) return;
+  if (result.id === "barrel" || result.id === "squared") { ab.b = 0; ab.s = 0; }
+  else if (result.id === "take" && !result.strike) ab.b += 1;
+  else if (result.foul) { if (ab.s < 2) ab.s += 1; }
+  else ab.s += 1;
+  if (ab.b >= 4 || ab.s >= 3) ab.pending = true;
+  visionPaintAb(run);
+}
+
+function visionSettle(run, now) {
+  if (run.batJudged) return run.batResult;
+  run.batJudged = true;
+  const strike = !!(run.pitch && run.pitch.strike);
+  let result;
+  if (!run.swung && !run.batSwing) result = { id: "take", contact: false, foul: false, strike: strike, spray: 0 };
+  else {
+    const swing = run.batSwing;
+    const arrival = run.arriveAt || now;
+    const contactAt = swing ? swing.t0 + swing.dur * 0.45 : arrival;
+    result = visionTiming(contactAt - arrival);
+    result.strike = strike;
+    if (!strike) result.id = "chase";
+  }
+    run.batResult = result;
+  if (result.contact) visionCrackSound();
+  else visionPopSound();
+  if (result.contact && run.pitch && run.game && (run.game.kind === "gauntlet" || run.game.kind === "matrix")) {
+    const sign = visionHand === "L" ? -1 : 1;
+    const band = visionBand(visionPlayer);
+    run.fly = {
+      t0: now,
+      dur: 720,
+      x: result.spray * sign * 1.5,
+      y: band.zoneBot + band.zoneH * 0.55,
+      z: 1,
+      vx: result.spray * sign * 36,
+      vy: result.foul ? 14 : 42,
+      vz: result.foul ? -0.25 : -0.7,
+    };
+    run.hidePitch = true;
+  }
+  visionBumpCount(run, result);
+  const ump = result.id === "take" ? (result.strike ? "STRIKE!" : "BALL")
+    : (result.id === "whiff" || (result.id === "chase" && !result.contact)) ? "STRIKE!"
+    : (result.foul || result.id === "early" || result.id === "late-foul") ? "FOUL"
+    : result.id === "barrel" ? "BARREL"
+    : result.id === "squared" ? "SQUARED UP"
+    : result.id === "chase" ? "CHASE"
+    : "STRIKE!";
+  visionUmp(ump);
+  return result;
+}
+
+function visionTrack(run, now) {
+  if (!run || run.batJudged || !run.arriveAt || run.phase === "ready") return;
+  if (run.batSwing) {
+    if (now < run.batSwing.t0 + run.batSwing.dur * 0.45) return;
+    visionSettle(run, now);
+    return;
+  }
+  if (now >= run.arriveAt) visionSettle(run, now);
+}
+
+function visionStartSwing(run) {
+  if (!run || run.phase === "ready" || run.batJudged) return false;
+  const now = performance.now();
+  if (run.batSwing && now - run.batSwing.t0 < run.batSwing.dur * 0.75) return false;
+  run.batSwing = { t0: now, dur: 200 * visionScale() };
+  run.swung = true;
+  if (!run.swingAt) run.swingAt = now - (run.t0 || now);
+  return true;
+}
+
+function visionDrawBat(ctx, w, h, now, run) {
+  if (!run || !run.game || run.game.kind === "reflex") return;
+  visionTrack(run, now);
+  const band = visionBand(visionPlayer);
+  const sign = visionHand === "L" ? -1 : 1;
+  const pivotX = sign * 16;
+  const pivotY = band.zoneBot + band.zoneH * 0.42;
+  const len = 18;
+  const swing = run.batSwing;
+  const u = swing ? Math.max(0, Math.min(1, (now - swing.t0) / swing.dur)) : 0;
+  const readyA = Math.atan2(0.42, 0.72);
+  const contactA = Math.PI;
+  const followA = Math.PI + 0.95;
+  let angle = readyA;
+  if (u > 0 && u < 0.45) angle = readyA + (contactA - readyA) * (u / 0.45);
+  else if (u >= 0.45) angle = contactA + (followA - contactA) * ((u - 0.45) / 0.55);
+  if (sign < 0) angle = Math.PI - angle;
+  const barrelX = pivotX + Math.cos(angle) * len;
+  const barrelY = pivotY + Math.sin(angle) * len;
+  const z = 1.012;
+  const grip = visionProject(w, h, pivotX, pivotY, z);
+  const barrel = visionProject(w, h, barrelX, barrelY, z);
+  const dx = barrel.x - grip.x;
+  const dy = barrel.y - grip.y;
+  const mag = Math.hypot(dx, dy) || 1;
+  const nx = -dy / mag;
+  const ny = dx / mag;
+  const hw0 = Math.max(2.5, grip.r * 0.22);
+  const hw1 = Math.max(4, barrel.r * 0.62);
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(grip.x + nx * hw0, grip.y + ny * hw0);
+  ctx.lineTo(barrel.x + nx * hw1, barrel.y + ny * hw1);
+  ctx.lineTo(barrel.x - nx * hw1, barrel.y - ny * hw1);
+  ctx.lineTo(grip.x - nx * hw0, grip.y - ny * hw0);
+  ctx.closePath();
+  ctx.fillStyle = "#d39245";
+  ctx.fill();
+  ctx.strokeStyle = "rgba(40,22,8,.85)";
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  ctx.fillStyle = "#f3e6c8";
+  ctx.beginPath();
+  ctx.arc(barrel.x, barrel.y, hw1 * 0.92, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+  const fly = run.fly;
+  if (fly) {
+    const sec = (now - fly.t0) / 1000;
+    if (sec >= 0 && sec < fly.dur / 1000) {
+      const x = fly.x + fly.vx * sec;
+      const y = fly.y + fly.vy * sec - 48 * sec * sec;
+      const zf = Math.max(0.02, fly.z + fly.vz * sec);
+      visionBall(ctx, visionProject(w, h, x, y, zf));
+    }
+  }
+}
+
 function visionExitHTML() {
   return "<button type=\"button\" class=\"vision-exit\" id=\"visionExit\">✕ All games</button>";
 }
@@ -673,17 +907,19 @@ function visionExitHTML() {
 function visionStageHTML(game, mode) {
   const choices = visionChoices(game.kind);
   const cols = choices.length === 1 ? " is-one" : choices.length === 3 ? " is-3" : choices.length >= 4 ? " is-4" : "";
-  const pads = choices.map((c) => "<button type=\"button\" data-pick=\"" + c.id + "\">" + visionEsc(c.name) + "</button>").join("");
+  const pads = choices.map((c) => "<button type=\"button\" class=\"" + (c.id === "go" ? "vision-swing" : "") + "\" data-pick=\"" + c.id + "\">" + visionEsc(c.name) + "</button>").join("");
+  const swingExtra = game.kind === "reflex" || choices.some((c) => c.id === "go") || game.kind === "matrix" ? "" : "<button type=\"button\" class=\"vision-swing\" id=\"visionSwing\">SWING</button>";
   if (mode === "intro") {
-    return "<div class=\"vision-stage\" data-kind=\"" + game.kind + "\"><div class=\"vision-hud\"><span class=\"vision-kicker\">PITCH RECOGNITION</span>" + visionExitHTML() + "</div><h2>" + visionEsc(game.name) + "</h2>" + visionSpeedHTML() + "<p class=\"vision-copy\">" + visionEsc(game.benefit) + "</p><p class=\"vision-controls-note\">" + visionEsc(game.controls) + "</p>" +
+    return "<div class=\"vision-stage\" data-kind=\"" + game.kind + "\"><div class=\"vision-hud\"><span class=\"vision-kicker\">PITCH RECOGNITION</span>" + visionExitHTML() + "</div><h2>" + visionEsc(game.name) + "</h2>" + visionTuneHTML() + "<p class=\"vision-copy\">" + visionEsc(game.benefit) + "</p><p class=\"vision-controls-note\">" + visionEsc(game.controls) + "</p>" +
       (game.kind === "rhythm" ? "<p class=\"vision-sound\" id=\"visionSound\">Tap Start to turn sound on.</p>" : "") +
       "<div class=\"vision-actions\"><button class=\"btn btn-red\" type=\"button\" id=\"visionStart\">Start</button><button class=\"btn btn-ghost\" type=\"button\" id=\"visionBack\">All games</button></div></div>";
   }
-  return "<div class=\"vision-stage\" data-kind=\"" + game.kind + "\"><div class=\"vision-hud\"><span id=\"visionCount\">1 / " + game.rounds + "</span><span id=\"visionLiveScore\">0</span><span id=\"visionStreak\">Streak 0</span>" + visionExitHTML() + "</div>" + visionSpeedHTML() +
+  return "<div class=\"vision-stage\" data-kind=\"" + game.kind + "\"><div class=\"vision-hud\"><span id=\"visionCount\">1 / " + game.rounds + "</span><span id=\"visionAb\">0–0</span><span id=\"visionLiveScore\">0</span><span id=\"visionStreak\">Streak 0</span>" + visionExitHTML() + "</div>" + visionTuneHTML() +
     (game.kind === "rhythm" ? "<p class=\"vision-sound\" id=\"visionSound\">" + (visionSoundOn ? "Sound on" : "Tap to turn sound on") + "</p>" : "") +
-    "<p class=\"vision-call\" id=\"visionCall\"></p>" +
+    "<p class=\"vision-ump\" id=\"visionUmp\"></p><p class=\"vision-call\" id=\"visionCall\"></p>" +
     "<canvas class=\"vision-canvas\" id=\"visionCanvas\" width=\"640\" height=\"480\"></canvas>" +
-    (choices.length ? "<div class=\"vision-pad" + cols + "\" id=\"visionPad\">" + pads + (game.kind === "matrix" ? "<button type=\"button\" data-pick=\"go\">Swing</button>" : "") + "</div>" : "<p class=\"vision-controls-note\">Tap the ball.</p>") +
+    swingExtra +
+    (choices.length ? "<div class=\"vision-pad" + cols + "\" id=\"visionPad\">" + pads + (game.kind === "matrix" ? "<button type=\"button\" class=\"vision-swing\" data-pick=\"go\">SWING</button>" : "") + "</div>" : (game.kind === "reflex" ? "<p class=\"vision-controls-note\">Tap the ball.</p>" : "")) +
     "</div>";
 }
 
@@ -731,6 +967,7 @@ function visionStop() {
 
 function visionPlay(player, game) {
   visionPlayer = player;
+  visionUseHand(player);
   visionStop();
   const hub = document.getElementById("visionHub");
   if (!hub) return;
@@ -739,6 +976,7 @@ function visionPlay(player, game) {
   visionShell(true);
   visionBindLeave();
   visionBindSpeed(hub);
+  visionBindHand(hub);
   const canvas = document.getElementById("visionCanvas");
   const ctx = canvas.getContext("2d");
   const fit = () => {
@@ -754,7 +992,8 @@ function visionPlay(player, game) {
     reactions: [], chases: { swings: 0, balls: 0 }, pathScores: [], words: [],
     hits: 0, misses: 0, speedSum: 0, dualFlash: 0, dualSwing: 0,
     aim: { x: 0, y: 0.5 }, stroke: [], truePath: [], drawing: false,
-    bang: "", iq: [],
+    bang: "", iq: [], ab: { b: 0, s: 0, pending: false },
+    batSwing: null, batJudged: false, batResult: null, fly: null, hidePitch: false, arriveAt: 0,
   };
   visionRun = run;
   const say = (text) => {
@@ -769,6 +1008,7 @@ function visionPlay(player, game) {
     if (count) count.textContent = Math.min(game.rounds, run.index + 1) + " / " + game.rounds;
     if (score) score.textContent = String(run.score);
     if (streak) streak.textContent = "Streak " + run.streak;
+    visionPaintAb(run);
   };
   const later = (ms, fn) => {
     if (run.timer) clearTimeout(run.timer);
@@ -845,14 +1085,16 @@ function visionPlay(player, game) {
     loop(gen, (now) => {
       if (run.phase === "ready") {
         visionField(ctx, canvas.width, canvas.height);
+        visionDrawBat(ctx, canvas.width, canvas.height, now, run);
         if (now - run.t0 < run.readyFor) return;
         run.phase = "show";
         run.t0 = now;
+        run.arriveAt = now + run.pitch.flight * 0.5;
         say("Name it before it vanishes");
       }
       const t = (now - run.t0) / run.pitch.flight;
       visionField(ctx, canvas.width, canvas.height);
-      if (t < 0.5) {
+      if (!run.hidePitch && t < 0.5) {
         const s = visionSpot(run.pitch, t);
         visionBall(ctx, visionProject(canvas.width, canvas.height, s.x, s.y, s.z));
       } else if (run.phase === "show") {
@@ -869,6 +1111,7 @@ function visionPlay(player, game) {
       }
       if (!run.locked && run.phase === "type" && t > 2.2) gradeVanish("", null);
       if (!run.locked && run.phase === "locate" && t > 3.5) gradeVanish(run.typePick, null);
+      visionDrawBat(ctx, canvas.width, canvas.height, now, run);
     });
   };
   const gradeVanish = (typeId, plate) => {
@@ -928,6 +1171,7 @@ function visionPlay(player, game) {
       const s = visionSpot(run.pitch, 0.12);
       const p = visionProject(canvas.width, canvas.height, s.x, s.y, s.z);
       visionBall(ctx, p, show ? colors[run.pitch.id] : "#f7f4ee", show ? "#111" : "#c4121a");
+      visionDrawBat(ctx, canvas.width, canvas.height, now, run);
       if (run.flashAt && now - run.flashAt > 1500 * visionScale() && !run.locked) gradeFlash("");
     });
   };
@@ -968,32 +1212,40 @@ function visionPlay(player, game) {
     loop(gen, (now) => {
       visionField(ctx, canvas.width, canvas.height);
       if (run.phase === "ready") {
+        visionDrawBat(ctx, canvas.width, canvas.height, now, run);
         if (now - run.t0 < run.readyFor) return;
         run.phase = "live";
         run.t0 = now;
+        run.arriveAt = now + run.pitch.flight;
         say("Swing strikes. Take balls.");
       }
       const t = (now - run.t0) / run.pitch.flight;
-      const s = visionSpot(run.pitch, Math.min(1, t));
-      visionBall(ctx, visionProject(canvas.width, canvas.height, s.x, s.y, s.z));
+      if (!run.hidePitch) {
+        const s = visionSpot(run.pitch, Math.min(1, t));
+        visionBall(ctx, visionProject(canvas.width, canvas.height, s.x, s.y, s.z));
+      }
+      visionDrawBat(ctx, canvas.width, canvas.height, now, run);
       if (t >= 1 && !run.locked) gradeGauntlet(false);
     });
   };
   const gradeGauntlet = (swung) => {
-    if (run.locked || run.phase === "ready") return;
-    if (swung && (performance.now() - run.t0) < run.pitch.flight) { run.swung = true; say("Swing"); return; }
-    if (!swung && !run.swung && (performance.now() - run.t0) < run.pitch.flight) return;
+    if (run.phase === "ready") return;
+    if (swung && !run.batJudged && (performance.now() - run.t0) < run.pitch.flight) { run.swung = true; return; }
+    if (run.locked) return;
+    if (!run.swung && (performance.now() - run.t0) < run.pitch.flight) return;
     run.locked = true;
-    run.alive = false;
+    const result = visionSettle(run, performance.now());
     run.asked += 1;
-    const swing = run.swung;
-    const strike = run.pitch.strike;
+    const swing = !!run.swung;
+    const strike = !!run.pitch.strike;
     if (!strike) { run.chases.balls += 1; if (swing) run.chases.swings += 1; }
     const ok = swing === strike;
-    if (ok) { run.right += 1; bumpStreak(true); run.score += 100; say("+100"); }
-    else { bumpStreak(false); run.score -= 200; say(swing ? "Chase −200" : "Frozen −200"); }
+    const pts = ok ? 100 : -200;
+    if (ok) { run.right += 1; bumpStreak(true); run.score += 100; }
+    else { bumpStreak(false); run.score -= 200; }
+    say(visionWord(result) + (pts > 0 ? " +" + pts : " −" + Math.abs(pts)));
     paintHud();
-    later(visionGap(), () => { run.alive = true; next(); });
+    later(visionGap(), () => { run.locked = false; run.alive = true; next(); });
   };
 
   const beginMatrix = () => {
@@ -1017,6 +1269,7 @@ function visionPlay(player, game) {
       assigned[p] = p === match ? cue : used.find((id) => id !== cue && !Object.values(assigned).includes(id)) || cue;
     });
     run.matrix = { cue, match, assigned };
+    run.arriveAt = run.t0 + 980 * visionScale();
     say("Cue " + cue + " · swing the middle");
     const gen = run.gen;
     loop(gen, (now) => {
@@ -1038,8 +1291,11 @@ function visionPlay(player, game) {
         if (flashing) visionSymbol(ctx, run.matrix.assigned[key], p.x, p.y, 54, "#fff");
       });
       visionSymbol(ctx, run.matrix.cue, w * 0.5, h * 0.08, 28, "#f2d060");
-      const s = visionSpot(run.pitch, Math.min(1, t));
-      visionBall(ctx, visionProject(w, h, s.x, s.y, s.z));
+      if (!run.hidePitch) {
+        const s = visionSpot(run.pitch, Math.min(1, t));
+        visionBall(ctx, visionProject(w, h, s.x, s.y, s.z));
+      }
+      visionDrawBat(ctx, w, h, now, run);
       if (t >= 1.35 && !run.locked) gradeMatrix();
     });
   };
@@ -1082,13 +1338,13 @@ function visionPlay(player, game) {
       ctx.arc(w * 0.5, h * 0.48, base * 1.5, 0, Math.PI * 2);
       ctx.stroke();
       visionBall(ctx, { x: w * 0.5, y: h * 0.48, r: base * scale });
+      visionDrawBat(ctx, w, h, now, run);
       if (u >= 1 && !run.locked) gradeDepth(run.dur + 80);
     });
   };
   const gradeDepth = (when) => {
     if (run.locked || run.phase !== "grow") return;
     run.locked = true;
-    run.alive = false;
     run.asked += 1;
     const target = run.dur * ((1.5 - 0.1) / 1.9);
     const dt = (when == null ? performance.now() - run.t0 : when) - target;
@@ -1120,17 +1376,19 @@ function visionPlay(player, game) {
     run.pitch = visionMakePitch(visionRand(["SL", "CH", "CB"]));
     run.phase = "live";
     run.t0 = performance.now();
+    run.arriveAt = run.t0 + 1100 * visionScale();
     run.locked = false;
     say("Track the true ball");
     const gen = run.gen;
     loop(gen, (now) => {
       const t = (now - run.t0) / (1100 * visionScale());
       visionField(ctx, canvas.width, canvas.height);
-      ghostBalls(Math.min(1.05, t)).forEach((ball) => {
+      if (!run.hidePitch) ghostBalls(Math.min(1.05, t)).forEach((ball) => {
         const p = visionProject(canvas.width, canvas.height, ball.spot.x, ball.spot.y, ball.spot.z);
         visionBall(ctx, p, null, null, ball.id);
         ball.px = p;
       });
+      visionDrawBat(ctx, canvas.width, canvas.height, now, run);
       run.ghost = ghostBalls(Math.min(1, Math.max(0.5, t)));
       if (run.bang) {
         ctx.fillStyle = "rgba(0,0,0,.55)";
@@ -1193,15 +1451,15 @@ function visionPlay(player, game) {
       ctx.strokeStyle = "rgba(242,208,96,.7)";
       ctx.strokeRect(w * 0.28, h * 0.34, w * 0.44, h * 0.28);
       if (run.popAt && now - run.popAt < 280) visionBall(ctx, { x: w * 0.5, y: h * 0.48, r: Math.min(w, h) * 0.07 }, "#f2d060", "#111");
+      visionDrawBat(ctx, w, h, now, run);
       if (run.popAt && now - run.popAt > 900 * visionScale() && !run.locked) gradeRhythm(false);
     });
   };
   const gradeRhythm = (tapped) => {
     if (run.locked) return;
     if (!run.popAt) { run.locked = true; run.asked += 1; bumpStreak(false); say("Too early"); paintHud(); run.alive = false; later(300, () => { run.alive = true; next(); }); return; }
-    if (!tapped) { run.locked = true; run.asked += 1; bumpStreak(false); say("Late"); paintHud(); run.alive = false; later(280, () => { run.alive = true; next(); }); return; }
+    if (!tapped) { run.locked = true; run.asked += 1; bumpStreak(false); say("Late"); paintHud(); later(280, () => { run.alive = true; next(); }); return; }
     run.locked = true;
-    run.alive = false;
     run.asked += 1;
     const reaction = (performance.now() - run.popAt) / visionScale();
     run.reactions.push(reaction);
@@ -1219,6 +1477,7 @@ function visionPlay(player, game) {
     run.pitch = visionMakePitch(tracerShapes[run.index % 3]);
     run.phase = "show";
     run.t0 = performance.now();
+    run.arriveAt = run.t0 + 980 * visionScale();
     run.truePath = [];
     run.stroke = [];
     run.locked = false;
@@ -1233,9 +1492,12 @@ function visionPlay(player, game) {
         visionField(ctx, w, h);
         const s = visionSpot(run.pitch, Math.min(1, Math.max(0, t)));
         const p = visionProject(w, h, s.x, s.y, s.z);
-        visionBall(ctx, p);
-        if (t >= 0 && t <= 1) run.truePath.push({ x: p.x / w, y: p.y / h });
+        if (!run.hidePitch) {
+          visionBall(ctx, p);
+          if (t >= 0 && t <= 1) run.truePath.push({ x: p.x / w, y: p.y / h });
+        }
         if (t >= 1.05) { run.phase = "draw"; say("Draw the path, then Done"); }
+        visionDrawBat(ctx, w, h, now, run);
       } else {
         visionDim(ctx, w, h, 0.4);
         ctx.strokeStyle = "rgba(242,208,96,.55)";
@@ -1288,11 +1550,16 @@ function visionPlay(player, game) {
     loop(gen, (now) => {
       const t = Math.min(1, (now - run.t0) / (700 * visionScale()));
       visionField(ctx, canvas.width, canvas.height);
-      if (run.phase === "choose") {
+      if (run.phase === "choose" && !run.hidePitch) {
         const s = visionSpot(run.pitch, t);
         visionBall(ctx, visionProject(canvas.width, canvas.height, s.x, s.y, s.z));
       }
-      if (run.phase === "read" && now - run.t0 > (visionReduce() ? 700 : 1200) * visionScale()) { run.phase = "choose"; say("Pull, middle, oppo, or take"); }
+      if (run.phase === "read" && now - run.t0 > (visionReduce() ? 700 : 1200) * visionScale()) {
+        run.phase = "choose";
+        run.arriveAt = now + 420 * Math.min(visionScale(), 1.8);
+        say("Pull, middle, oppo, or take");
+      }
+      visionDrawBat(ctx, canvas.width, canvas.height, now, run);
     });
   };
   const gradeIq = (pick) => {
@@ -1375,6 +1642,15 @@ function visionPlay(player, game) {
   };
 
   const begin = () => {
+    if (run.ab && run.ab.pending) { run.ab.b = 0; run.ab.s = 0; run.ab.pending = false; }
+    run.batSwing = null;
+    run.batJudged = false;
+    run.batResult = null;
+    run.fly = null;
+    run.hidePitch = false;
+    run.arriveAt = 0;
+    run.swung = false;
+    visionUmp("");
     paintHud();
     visionTrailReset();
     run.gen += 1;
@@ -1439,6 +1715,16 @@ function visionPlay(player, game) {
   };
 
   hub.querySelectorAll("[data-pick]").forEach((btn) => btn.addEventListener("click", () => pick(btn.dataset.pick)));
+  const swingBtn = document.getElementById("visionSwing");
+  if (swingBtn) swingBtn.addEventListener("pointerdown", (ev) => {
+    ev.preventDefault();
+    visionStartSwing(run);
+  });
+  hub.querySelectorAll("[data-pick='go']").forEach((btn) => btn.addEventListener("pointerdown", (ev) => {
+    ev.preventDefault();
+    visionStartSwing(run);
+    pick("go");
+  }));
   canvas.addEventListener("pointerdown", (e) => {
     const rect = canvas.getBoundingClientRect();
     const px = (e.clientX - rect.left) * (canvas.width / rect.width);
@@ -1453,21 +1739,24 @@ function visionPlay(player, game) {
         if (!best || d < best.d) best = { d, id: ball.id };
       });
       if (best && best.d < 80) gradeGhost(best.id);
-    } else if (game.kind === "depth") gradeDepth(performance.now() - run.t0);
-    else if (game.kind === "rhythm") gradeRhythm(true);
-    else if (game.kind === "matrix") {
+      else visionStartSwing(run);
+    } else if (game.kind === "depth") {
+      visionStartSwing(run);
+      gradeDepth(performance.now() - run.t0);
+    } else if (game.kind === "rhythm") {
+      visionStartSwing(run);
+      gradeRhythm(true);
+    } else if (game.kind === "matrix") {
       const w = canvas.width;
       const h = canvas.height;
-      if (Math.hypot(px - w * 0.5, py - h * 0.5) < Math.min(w, h) * 0.16) {
-        if (!run.swingAt) run.swingAt = performance.now() - run.t0;
-        run.swung = true;
-      }
+      let symbol = false;
       const spots = { w: [0.5, 0.16], a: [0.14, 0.48], s: [0.5, 0.84], d: [0.86, 0.48] };
       Object.keys(spots).forEach((key) => {
         const sx = spots[key][0] * w;
         const sy = spots[key][1] * h;
-        if (Math.abs(px - sx) < 40 && Math.abs(py - sy) < 40) run.flashPick = key;
+        if (Math.abs(px - sx) < 40 && Math.abs(py - sy) < 40) { run.flashPick = key; symbol = true; }
       });
+      if (!symbol && Math.hypot(px - w * 0.5, py - h * 0.5) < Math.min(w, h) * 0.22) visionStartSwing(run);
     } else if (game.kind === "tracer" && run.phase === "draw") {
       run.drawing = true;
       run.stroke.push({ x: px / canvas.width, y: py / canvas.height });
@@ -1478,7 +1767,10 @@ function visionPlay(player, game) {
       const c = Math.floor((px - pad) / (gw / 4));
       const r = Math.floor((py - 18 - pad) / (gh / 4));
       if (c >= 0 && c < 4 && r >= 0 && r < 4) gradeReflex(r * 4 + c);
-    } else if (game.kind === "gauntlet") gradeGauntlet(true);
+    } else if (game.kind === "gauntlet") {
+      visionStartSwing(run);
+      gradeGauntlet(true);
+    } else if (game.kind !== "reflex") visionStartSwing(run);
   });
   canvas.addEventListener("pointermove", (e) => {
     if (game.kind !== "tracer" || !run.drawing || run.phase !== "draw") return;
@@ -1491,6 +1783,12 @@ function visionPlay(player, game) {
   canvas.addEventListener("pointerup", up);
   canvas.addEventListener("pointerleave", up);
   run.key = (e) => {
+    if (e.repeat) return;
+    const locate = game.kind === "vanish" && run.phase === "locate" && (e.code === "Space" || e.key === " ");
+    if ((e.code === "Space" || e.key === " ") && !locate) {
+      e.preventDefault();
+      visionStartSwing(run);
+    }
     const id = visionKeyMap(game.kind, e.code, e.key);
     if (!id) return;
     e.preventDefault();
@@ -1516,6 +1814,7 @@ function visionPlay(player, game) {
 
 function visionShowIntro(player, gameId) {
   visionPlayer = player;
+  visionUseHand(player);
   visionStop();
   const game = VISION_GAMES.find((g) => g.id === gameId) || visionFeatured().game;
   const hub = document.getElementById("visionHub");
@@ -1525,6 +1824,7 @@ function visionShowIntro(player, gameId) {
   visionShell(true);
   visionBindLeave();
   visionBindSpeed(hub);
+  visionBindHand(hub);
   const start = document.getElementById("visionStart");
   if (start) start.addEventListener("click", () => {
     if (game.kind === "rhythm") {

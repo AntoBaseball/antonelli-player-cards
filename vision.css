@@ -25,9 +25,13 @@
 .vision-exit{margin-left:auto;min-height:40px;padding:0 12px;border-radius:999px;border:1px solid #f2d060;background:rgba(0,0,0,.55);color:#f2d060;font-weight:900;letter-spacing:.2px;cursor:pointer}
 .vision-canvas{width:100%;height:min(46vh,380px);border-radius:16px;background:#071018;border:1px solid rgba(212,175,55,.55);touch-action:none;display:block}
 .vision-call{margin:0;min-height:1.2em;text-align:center;color:#fff;font-size:13px;font-weight:800}
-.vision-speeds{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
-.vision-speeds button{min-height:36px;padding:0 12px;border-radius:999px;border:1px solid rgba(242,208,96,.55);background:rgba(0,0,0,.35);color:#f2d060;font-weight:800;cursor:pointer}
-.vision-speeds button.is-on{background:#f2d060;color:#111}
+.vision-tune{display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap}
+.vision-speeds,.vision-hands{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.vision-speeds button,.vision-hands button{min-height:36px;padding:0 12px;border-radius:999px;border:1px solid rgba(242,208,96,.55);background:rgba(0,0,0,.35);color:#f2d060;font-weight:800;cursor:pointer}
+.vision-speeds button.is-on,.vision-hands button.is-on{background:#f2d060;color:#111}
+.vision-ump{margin:0;min-height:1em;text-align:center;font-family:Impact,"Arial Black",system-ui,sans-serif;font-style:italic;font-size:clamp(26px,6vw,40px);line-height:.9;color:#fff;letter-spacing:.4px}
+.vision-swing{min-height:72px;width:100%;border:0;border-radius:16px;background:linear-gradient(180deg,#8d1212,#e10600);color:#fff;font-family:Impact,"Arial Black",system-ui,sans-serif;font-style:italic;font-size:32px;letter-spacing:1px;cursor:pointer;touch-action:manipulation}
+.vision-pad .vision-swing{min-height:72px}
 .vision-pad{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .vision-pad.is-one{grid-template-columns:1fr}
 .vision-pad.is-3{grid-template-columns:1fr 1fr 1fr}
@@ -53,7 +57,7 @@ body.vision-playing .topbar,body.vision-playing .app-tabs,body.vision-playing .s
 body.vision-playing{padding-bottom:0 !important}
 body.vision-playing #visionHub{position:fixed;inset:0;z-index:200;margin:0;width:100%;height:100dvh;max-height:100dvh;box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden;border-radius:0;border:0;padding:10px 12px calc(12px + env(safe-area-inset-bottom));background:radial-gradient(900px 420px at 50% 0%, rgba(242,208,96,.08), transparent 50%), linear-gradient(180deg,#071018,#100e0a)}
 body.vision-playing .vision-stage{flex:1;min-height:0;display:flex;flex-direction:column;gap:8px}
-body.vision-playing .vision-hud,body.vision-playing .vision-call,body.vision-playing .vision-sound,body.vision-playing .vision-pad,body.vision-playing .vision-controls-note,body.vision-playing .vision-actions{flex:none}
+body.vision-playing .vision-hud,body.vision-playing .vision-call,body.vision-playing .vision-ump,body.vision-playing .vision-tune,body.vision-playing .vision-swing,body.vision-playing .vision-sound,body.vision-playing .vision-pad,body.vision-playing .vision-controls-note,body.vision-playing .vision-actions{flex:none}
 body.vision-playing .vision-canvas{flex:1 1 0;height:0;min-height:140px;max-height:none;width:100%;border-radius:18px}
 body.vision-playing .vision-stage:not(:has(.vision-canvas)){justify-content:center;overflow:auto}
 @media (max-width:380px){
