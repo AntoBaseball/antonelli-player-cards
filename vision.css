@@ -25,6 +25,9 @@
 .vision-exit{margin-left:auto;min-height:40px;padding:0 12px;border-radius:999px;border:1px solid #f2d060;background:rgba(0,0,0,.55);color:#f2d060;font-weight:900;letter-spacing:.2px;cursor:pointer}
 .vision-canvas{width:100%;height:min(46vh,380px);border-radius:16px;background:#071018;border:1px solid rgba(212,175,55,.55);touch-action:none;display:block}
 .vision-call{margin:0;min-height:1.2em;text-align:center;color:#fff;font-size:13px;font-weight:800}
+.vision-speeds{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.vision-speeds button{min-height:36px;padding:0 12px;border-radius:999px;border:1px solid rgba(242,208,96,.55);background:rgba(0,0,0,.35);color:#f2d060;font-weight:800;cursor:pointer}
+.vision-speeds button.is-on{background:#f2d060;color:#111}
 .vision-pad{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .vision-pad.is-one{grid-template-columns:1fr}
 .vision-pad.is-3{grid-template-columns:1fr 1fr 1fr}
@@ -46,7 +49,7 @@
   .vision-grid{grid-template-columns:1fr}
 }
 html.vision-playing,body.vision-playing{overflow:hidden;height:100%;overscroll-behavior:none}
-body.vision-playing .topbar,body.vision-playing .app-tabs{display:none !important}
+body.vision-playing .topbar,body.vision-playing .app-tabs,body.vision-playing .sample-banner,body.vision-playing .cele-overlay,body.vision-playing .xp-float,body.vision-playing .inbox{display:none !important}
 body.vision-playing{padding-bottom:0 !important}
 body.vision-playing #visionHub{position:fixed;inset:0;z-index:200;margin:0;width:100%;height:100dvh;max-height:100dvh;box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden;border-radius:0;border:0;padding:10px 12px calc(12px + env(safe-area-inset-bottom));background:radial-gradient(900px 420px at 50% 0%, rgba(242,208,96,.08), transparent 50%), linear-gradient(180deg,#071018,#100e0a)}
 body.vision-playing .vision-stage{flex:1;min-height:0;display:flex;flex-direction:column;gap:8px}

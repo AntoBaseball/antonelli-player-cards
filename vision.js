@@ -162,19 +162,145 @@ function visionRand(list) {
   return list[Math.floor(Math.random() * list.length)];
 }
 
-function visionProject(w, h, x, y, z) {
-  const depth = 0.2 + z * 0.8;
+const VISION_SPEEDS = {
+  learn: { label: "Learn", mult: 2.5 },
+  game: { label: "Game", mult: 1.5 },
+  real: { label: "Real", mult: 1 },
+};
+let visionSpeed = "learn";
+let visionPlayer = null;
+try {
+  const savedSpeed = localStorage.getItem("antonelli-vision-speed");
+  if (VISION_SPEEDS[savedSpeed]) visionSpeed = savedSpeed;
+} catch (e) { /* Learn stays the default */ }
+
+function visionScale() {
+  return (VISION_SPEEDS[visionSpeed] || VISION_SPEEDS.learn).mult;
+}
+
+function visionReady() {
+  return (420 + Math.random() * 80) * Math.min(visionScale(), 1.8);
+}
+
+function visionGap() {
+  return visionReduce() ? 420 : 1650;
+}
+
+function visionBand(player) {
+  const group = String((player && player.ageGroup) || "");
+  const age = Number(player && player.age) || 0;
+  let key = "16U";
+  if (/12/.test(group) || (age > 0 && age <= 12)) key = "12U";
+  else if (/13|14/.test(group) || (age > 0 && age <= 14)) key = "14U";
+  const rows = {
+    "12U": { band: "12U", zoneH: 18, zoneBot: 17, distFt: 46, mph: 55, release: 48 },
+    "14U": { band: "14U", zoneH: 20, zoneBot: 18, distFt: 57, mph: 65, release: 54 },
+    "16U": { band: "16U", zoneH: 22, zoneBot: 19, distFt: 60.5, mph: 80, release: 60 },
+  };
+  const row = rows[key];
+  const dist = row.distFt * 12;
   return {
-    x: w * 0.5 + x * (w * 0.08 + depth * w * 0.38),
-    y: h * (0.2 + z * 0.62) - y * h * (0.12 + depth * 0.28),
-    r: 3.2 + depth * (Math.min(w, h) * 0.045),
+    band: row.band,
+    zoneH: row.zoneH,
+    zoneBot: row.zoneBot,
+    dist: dist,
+    mph: row.mph,
+    release: row.release,
+    real: row.distFt / (row.mph * 5280 / 3600),
+  };
+}
+
+function visionFlightMs(band, id) {
+  const factor = id === "CB" ? 0.82 : id === "CH" ? 0.88 : (id === "SL" || id === "SWEEP") ? 0.92 : 1;
+  return (band.real / factor) * visionScale() * 1000;
+}
+
+function visionIsStrike(x, y, band) {
+  const ball = 1.45;
+  return Math.abs(x) <= 8.5 + ball && y >= band.zoneBot - ball && y <= band.zoneBot + band.zoneH + ball;
+}
+
+function visionCross(a, b) {
+  return { x: a.y * b.z - a.z * b.y, y: a.z * b.x - a.x * b.z, z: a.x * b.y - a.y * b.x };
+}
+
+function visionNorm(v) {
+  const len = Math.hypot(v.x, v.y, v.z) || 1;
+  return { x: v.x / len, y: v.y / len, z: v.z / len };
+}
+
+function visionDot(a, b) {
+  return a.x * b.x + a.y * b.y + a.z * b.z;
+}
+
+function visionScene(w, h, player) {
+  const band = visionBand(player || visionPlayer);
+  const lookY = band.zoneBot + band.zoneH / 2;
+  const cam = { x: 0, y: lookY + 14, z: -78 };
+  const fwd = visionNorm({ x: 0, y: lookY - cam.y, z: 0 - cam.z });
+  const right = visionNorm(visionCross({ x: 0, y: 1, z: 0 }, fwd));
+  const up = visionNorm(visionCross(fwd, right));
+  const project = (x, y, zIn) => {
+    const rel = { x: x - cam.x, y: y - cam.y, z: zIn - cam.z };
+    return {
+      cx: visionDot(rel, right),
+      cy: visionDot(rel, up),
+      cz: Math.max(0.01, visionDot(rel, fwd)),
+    };
+  };
+  const edgeL = project(-8.5, lookY, 0);
+  const edgeR = project(8.5, lookY, 0);
+  const spread = edgeR.cx / edgeR.cz - edgeL.cx / edgeL.cz;
+  const top = project(0, band.zoneBot + band.zoneH, 0);
+  const point = project(0, 0, -17);
+  const release = project(0, band.release, band.dist);
+  const topN = top.cy / top.cz;
+  const pointN = point.cy / point.cz;
+  const rise = Math.abs(topN - pointN) || 0.001;
+  const focal = Math.min((0.225 * w) / spread, (0.86 * h) / rise, (0.25 * w) / spread);
+  let midN = (topN + pointN) / 2;
+  const screenY = (ndc) => h * 0.5 - (ndc - midN) * focal;
+  if (screenY(release.cy / release.cz) < h * 0.03) {
+    const lifted = release.cy / release.cz - (h * 0.47) / focal;
+    if (screenY(pointN) - (lifted - midN) * focal < h * 0.96 && screenY(topN) - (lifted - midN) * focal > h * 0.02) midN = lifted;
+  }
+  return { band: band, focal: focal, midN: midN, project: project, cam: cam, right: right, up: up, fwd: fwd, lookY: lookY };
+}
+
+let visionSceneCache = null;
+function visionView(w, h) {
+  const band = visionBand(visionPlayer);
+  const key = w + "x" + h + ":" + band.band + ":" + band.dist;
+  if (!visionSceneCache || visionSceneCache.key !== key) visionSceneCache = { key: key, scene: visionScene(w, h, visionPlayer) };
+  return visionSceneCache.scene;
+}
+
+function visionProject(w, h, x, y, z) {
+  const scene = visionView(w, h);
+  const zIn = (1 - z) * scene.band.dist;
+  const p = scene.project(x, y, zIn);
+  const along = Math.max(0, Math.min(1, z));
+  const plate = scene.project(0, scene.lookY, 0);
+  const trueR = 1.45 * (scene.focal / p.cz);
+  const plateR = 1.45 * (scene.focal / plate.cz);
+  return {
+    x: w * 0.5 + (p.cx / p.cz) * scene.focal,
+    y: h * 0.5 - (p.cy / p.cz - scene.midN) * scene.focal,
+    r: Math.max(trueR, plateR * (0.42 + 0.58 * along)),
   };
 }
 
 function visionPlateFromPx(w, h, px, py) {
-  const x = ((px / w) - 0.5) / 0.384;
-  const y = (0.82 - (py / h)) / 0.344;
-  return { x, y };
+  const scene = visionView(w, h);
+  const nx = (px - w * 0.5) / scene.focal;
+  const ny = (h * 0.5 - py) / scene.focal + scene.midN;
+  const dir = {
+    x: scene.right.x * nx + scene.up.x * ny + scene.fwd.x,
+    y: scene.right.y * nx + scene.up.y * ny + scene.fwd.y,
+    z: scene.right.z * nx + scene.up.z * ny + scene.fwd.z,
+  };
+  const t = (0 - scene.cam.z) / dir.z;
+  return { x: scene.cam.x + dir.x * t, y: scene.cam.y + dir.y * t };
 }
 
 function visionSpot(pitch, t, extra) {
@@ -191,27 +317,35 @@ function visionSpot(pitch, t, extra) {
 }
 
 function visionMakePitch(profile) {
+  const band = visionBand(visionPlayer);
   const book = {
-    FB: { x: 0.03, y: 0.05 },
-    CB: { x: 0.1, y: -0.52 },
-    CH: { x: -0.26, y: -0.16 },
-    SL: { x: 0.5, y: -0.06 },
-    CUT: { x: 0.22, y: 0.04 },
-    SWEEP: { x: 0.62, y: -0.12 },
+    FB: { x: 0.6, y: -2 },
+    CB: { x: 2, y: -14 },
+    CH: { x: -5, y: -8 },
+    SL: { x: 10, y: -3 },
+    CUT: { x: 4.5, y: -1 },
+    SWEEP: { x: 13, y: -4 },
   };
   const id = profile || visionRand(["FB", "CB", "CH"]);
-  const x1 = (Math.random() * 1.35 - 0.68);
-  const y1 = 0.28 + Math.random() * 0.5;
+  const x1 = Math.max(-20, Math.min(20, Math.random() * 36 - 18));
+  const y1 = Math.max(band.zoneBot - 8, Math.min(band.zoneBot + band.zoneH + 8, band.zoneBot - 6 + Math.random() * (band.zoneH + 12)));
   return {
-    id,
+    id: id,
     breaks: book[id] || book.FB,
-    x0: -0.18,
-    y0: 0.78,
-    x1: Math.max(-0.9, Math.min(0.9, x1)),
-    y1: Math.max(0.2, Math.min(0.84, y1)),
-    strike: Math.abs(x1) < 0.42 && y1 > 0.36 && y1 < 0.7,
-    flight: id === "FB" || id === "CUT" ? 640 : id === "CB" ? 900 : 760,
+    x0: 0,
+    y0: band.release,
+    x1: x1,
+    y1: y1,
+    strike: visionIsStrike(x1, y1, band),
+    flight: visionFlightMs(band, id),
   };
+}
+
+function visionRestamp(pitch) {
+  const band = visionBand(visionPlayer);
+  pitch.strike = visionIsStrike(pitch.x1, pitch.y1, band);
+  pitch.flight = visionFlightMs(band, pitch.id);
+  return pitch;
 }
 
 function visionPaintStadium(g, w, h) {
@@ -263,7 +397,7 @@ function visionPaintStadium(g, w, h) {
   g.lineTo(w * 0.18, h * 0.94);
   g.closePath();
   g.fill();
-  const mound = visionProject(w, h, 0, 0.12, 0.06);
+  const mound = visionProject(w, h, 0, 10, 0.03);
   g.fillStyle = "#8d6840";
   g.beginPath();
   g.ellipse(mound.x, mound.y + h * 0.012, w * 0.085, Math.max(6, h * 0.02), 0, 0, Math.PI * 2);
@@ -286,7 +420,10 @@ function visionPaintStadium(g, w, h) {
   g.fill();
   g.fillRect(px - s * 0.36, py - s * 0.32, s * 0.26, s * 1.05);
   g.fillRect(px + s * 0.08, py - s * 0.32, s * 0.26, s * 1.05);
-  const plate = [[-0.18, 0.06], [0.18, 0.06], [0.18, 0.2], [0, 0.32], [-0.18, 0.2]].map((pair) => visionProject(w, h, pair[0], pair[1], 1));
+  const band = visionBand(visionPlayer);
+  const zSide = 1 + 8.5 / band.dist;
+  const zPoint = 1 + 17 / band.dist;
+  const plate = [[-8.5, 0, 1], [8.5, 0, 1], [8.5, 0, zSide], [0, 0, zPoint], [-8.5, 0, zSide]].map((pair) => visionProject(w, h, pair[0], pair[1], pair[2]));
   g.fillStyle = "#f7f4ee";
   g.beginPath();
   plate.forEach((p, i) => (i ? g.lineTo(p.x, p.y) : g.moveTo(p.x, p.y)));
@@ -295,11 +432,12 @@ function visionPaintStadium(g, w, h) {
   g.strokeStyle = "rgba(20,16,12,.45)";
   g.lineWidth = 1;
   g.stroke();
+  const zoneTop = band.zoneBot + band.zoneH;
   const zone = [
-    visionProject(w, h, -0.42, 0.7, 1),
-    visionProject(w, h, 0.42, 0.7, 1),
-    visionProject(w, h, 0.42, 0.36, 1),
-    visionProject(w, h, -0.42, 0.36, 1),
+    visionProject(w, h, -8.5, zoneTop, 1),
+    visionProject(w, h, 8.5, zoneTop, 1),
+    visionProject(w, h, 8.5, band.zoneBot, 1),
+    visionProject(w, h, -8.5, band.zoneBot, 1),
   ];
   g.strokeStyle = "rgba(242,208,96,.9)";
   g.lineWidth = Math.max(2, w * 0.004);
@@ -310,16 +448,16 @@ function visionPaintStadium(g, w, h) {
   g.strokeStyle = "rgba(242,208,96,.28)";
   g.lineWidth = 1;
   for (let i = 1; i <= 2; i++) {
-    const y = 0.36 + (0.34 * i) / 3;
-    const a = visionProject(w, h, -0.42, y, 1);
-    const b = visionProject(w, h, 0.42, y, 1);
+    const y = band.zoneBot + (band.zoneH * i) / 3;
+    const a = visionProject(w, h, -8.5, y, 1);
+    const b = visionProject(w, h, 8.5, y, 1);
     g.beginPath();
     g.moveTo(a.x, a.y);
     g.lineTo(b.x, b.y);
     g.stroke();
-    const x = -0.42 + (0.84 * i) / 3;
-    const c = visionProject(w, h, x, 0.7, 1);
-    const d = visionProject(w, h, x, 0.36, 1);
+    const x = -8.5 + (17 * i) / 3;
+    const c = visionProject(w, h, x, zoneTop, 1);
+    const d = visionProject(w, h, x, band.zoneBot, 1);
     g.beginPath();
     g.moveTo(c.x, c.y);
     g.lineTo(d.x, d.y);
@@ -328,7 +466,8 @@ function visionPaintStadium(g, w, h) {
 }
 
 function visionField(ctx, w, h) {
-  const key = w + "x" + h;
+  const band = visionBand(visionPlayer);
+  const key = w + "x" + h + ":" + band.band + ":" + band.zoneH + ":" + band.dist;
   if (!visionField.layer || visionField.key !== key) {
     const layer = document.createElement("canvas");
     layer.width = w;
@@ -509,6 +648,24 @@ function visionKeyMap(kind, code, key) {
   return four[idx] ? four[idx].id : "";
 }
 
+function visionSpeedHTML() {
+  return "<div class=\"vision-speeds\" id=\"visionSpeeds\">" + ["learn", "game", "real"].map((id) => "<button type=\"button\" data-speed=\"" + id + "\"" + (id === visionSpeed ? " class=\"is-on\"" : "") + ">" + VISION_SPEEDS[id].label + "</button>").join("") + "</div>";
+}
+
+function visionBindSpeed(root) {
+  if (!root) return;
+  root.querySelectorAll("[data-speed]").forEach((btn) => {
+    btn.addEventListener("pointerdown", (ev) => {
+      ev.preventDefault();
+      const next = btn.dataset.speed;
+      if (!VISION_SPEEDS[next]) return;
+      visionSpeed = next;
+      try { localStorage.setItem("antonelli-vision-speed", visionSpeed); } catch (e) { /* the button still shows the choice */ }
+      root.querySelectorAll("[data-speed]").forEach((b) => b.classList.toggle("is-on", b === btn));
+    });
+  });
+}
+
 function visionExitHTML() {
   return "<button type=\"button\" class=\"vision-exit\" id=\"visionExit\">✕ All games</button>";
 }
@@ -518,11 +675,11 @@ function visionStageHTML(game, mode) {
   const cols = choices.length === 1 ? " is-one" : choices.length === 3 ? " is-3" : choices.length >= 4 ? " is-4" : "";
   const pads = choices.map((c) => "<button type=\"button\" data-pick=\"" + c.id + "\">" + visionEsc(c.name) + "</button>").join("");
   if (mode === "intro") {
-    return "<div class=\"vision-stage\" data-kind=\"" + game.kind + "\"><div class=\"vision-hud\"><span class=\"vision-kicker\">PITCH RECOGNITION</span>" + visionExitHTML() + "</div><h2>" + visionEsc(game.name) + "</h2><p class=\"vision-copy\">" + visionEsc(game.benefit) + "</p><p class=\"vision-controls-note\">" + visionEsc(game.controls) + "</p>" +
+    return "<div class=\"vision-stage\" data-kind=\"" + game.kind + "\"><div class=\"vision-hud\"><span class=\"vision-kicker\">PITCH RECOGNITION</span>" + visionExitHTML() + "</div><h2>" + visionEsc(game.name) + "</h2>" + visionSpeedHTML() + "<p class=\"vision-copy\">" + visionEsc(game.benefit) + "</p><p class=\"vision-controls-note\">" + visionEsc(game.controls) + "</p>" +
       (game.kind === "rhythm" ? "<p class=\"vision-sound\" id=\"visionSound\">Tap Start to turn sound on.</p>" : "") +
       "<div class=\"vision-actions\"><button class=\"btn btn-red\" type=\"button\" id=\"visionStart\">Start</button><button class=\"btn btn-ghost\" type=\"button\" id=\"visionBack\">All games</button></div></div>";
   }
-  return "<div class=\"vision-stage\" data-kind=\"" + game.kind + "\"><div class=\"vision-hud\"><span id=\"visionCount\">1 / " + game.rounds + "</span><span id=\"visionLiveScore\">0</span><span id=\"visionStreak\">Streak 0</span>" + visionExitHTML() + "</div>" +
+  return "<div class=\"vision-stage\" data-kind=\"" + game.kind + "\"><div class=\"vision-hud\"><span id=\"visionCount\">1 / " + game.rounds + "</span><span id=\"visionLiveScore\">0</span><span id=\"visionStreak\">Streak 0</span>" + visionExitHTML() + "</div>" + visionSpeedHTML() +
     (game.kind === "rhythm" ? "<p class=\"vision-sound\" id=\"visionSound\">" + (visionSoundOn ? "Sound on" : "Tap to turn sound on") + "</p>" : "") +
     "<p class=\"vision-call\" id=\"visionCall\"></p>" +
     "<canvas class=\"vision-canvas\" id=\"visionCanvas\" width=\"640\" height=\"480\"></canvas>" +
@@ -573,6 +730,7 @@ function visionStop() {
 }
 
 function visionPlay(player, game) {
+  visionPlayer = player;
   visionStop();
   const hub = document.getElementById("visionHub");
   if (!hub) return;
@@ -580,6 +738,7 @@ function visionPlay(player, game) {
   hub.innerHTML = visionStageHTML(game, "play");
   visionShell(true);
   visionBindLeave();
+  visionBindSpeed(hub);
   const canvas = document.getElementById("visionCanvas");
   const ctx = canvas.getContext("2d");
   const fit = () => {
@@ -677,12 +836,20 @@ function visionPlay(player, game) {
 
   const beginVanish = () => {
     run.pitch = visionMakePitch(visionRand(["FB", "CB", "CH"]));
-    run.phase = "show";
+    run.phase = "ready";
     run.t0 = performance.now();
+    run.readyFor = visionReady();
     run.aim = { x: run.pitch.x1, y: run.pitch.y1 };
-    say("Name it before it vanishes");
+    say("Ready");
     const gen = run.gen;
     loop(gen, (now) => {
+      if (run.phase === "ready") {
+        visionField(ctx, canvas.width, canvas.height);
+        if (now - run.t0 < run.readyFor) return;
+        run.phase = "show";
+        run.t0 = now;
+        say("Name it before it vanishes");
+      }
       const t = (now - run.t0) / run.pitch.flight;
       visionField(ctx, canvas.width, canvas.height);
       if (t < 0.5) {
@@ -718,7 +885,7 @@ function visionPlay(player, game) {
       bumpStreak(false);
       say("Late");
       paintHud();
-      later(280, () => { run.locked = false; run.alive = true; next(); });
+      later(visionGap(), () => { run.locked = false; run.alive = true; next(); });
       return;
     }
     if (run.phase !== "locate" || run.locked) return;
@@ -728,8 +895,8 @@ function visionPlay(player, game) {
     const typeOk = run.typePick === run.pitch.id;
     let loc = 0;
     if (plate) {
-      const dist = Math.hypot(plate.x - run.pitch.x1, (plate.y - run.pitch.y1) * 0.85);
-      const prox = 1 - Math.min(1, dist / 1.1);
+      const dist = Math.hypot(plate.x - run.pitch.x1, plate.y - run.pitch.y1);
+      const prox = 1 - Math.min(1, dist / 24);
       loc = Math.round(50 + prox * 150);
     }
     if (typeOk) run.right += 1;
@@ -739,7 +906,7 @@ function visionPlay(player, game) {
     say(typeOk ? "Type +" + typePts + " · location +" + loc : "Missed the type · location +" + loc);
     paintHud();
     run.phase = "wait";
-    later(visionReduce() ? 220 : 480, () => { run.locked = false; run.alive = true; next(); });
+    later(visionGap(), () => { run.locked = false; run.alive = true; next(); });
   };
 
   const beginFlash = () => {
@@ -761,7 +928,7 @@ function visionPlay(player, game) {
       const s = visionSpot(run.pitch, 0.12);
       const p = visionProject(canvas.width, canvas.height, s.x, s.y, s.z);
       visionBall(ctx, p, show ? colors[run.pitch.id] : "#f7f4ee", show ? "#111" : "#c4121a");
-      if (run.flashAt && now - run.flashAt > 1500 && !run.locked) gradeFlash("");
+      if (run.flashAt && now - run.flashAt > 1500 * visionScale() && !run.locked) gradeFlash("");
     });
   };
   const gradeFlash = (id) => {
@@ -774,40 +941,46 @@ function visionPlay(player, game) {
       run.score -= 70;
       say("Early −70");
       paintHud();
-      later(visionReduce() ? 200 : 420, () => { run.alive = true; next(); });
+      later(visionGap(), () => { run.alive = true; next(); });
       return;
     }
     run.locked = true;
     run.asked += 1;
-    const reaction = performance.now() - run.flashAt;
+    const reaction = (performance.now() - run.flashAt) / visionScale();
     run.reactions.push(reaction);
     const ok = id === run.pitch.id;
     const factor = 1 / Math.max(0.12, reaction / 1000);
     if (ok) { run.right += 1; bumpStreak(true); run.score += Math.round(100 * factor); say("+" + Math.round(100 * factor)); }
     else { bumpStreak(false); run.score += Math.round(-70 * factor); say("Wrong " + Math.round(-70 * factor)); }
     paintHud();
-    later(visionReduce() ? 200 : 420, next);
+    later(visionGap(), next);
   };
 
   const beginGauntlet = () => {
     run.pitch = visionMakePitch(visionRand(["FB", "FB", "SL", "CB", "CH"]));
-    run.phase = "live";
+    run.phase = "ready";
     run.t0 = performance.now();
+    run.readyFor = visionReady();
     run.swung = false;
     run.locked = false;
-    say(run.pitch.strike ? "" : "");
-    say("Swing strikes. Take balls.");
+    say("Ready");
     const gen = run.gen;
     loop(gen, (now) => {
-      const t = (now - run.t0) / run.pitch.flight;
       visionField(ctx, canvas.width, canvas.height);
+      if (run.phase === "ready") {
+        if (now - run.t0 < run.readyFor) return;
+        run.phase = "live";
+        run.t0 = now;
+        say("Swing strikes. Take balls.");
+      }
+      const t = (now - run.t0) / run.pitch.flight;
       const s = visionSpot(run.pitch, Math.min(1, t));
       visionBall(ctx, visionProject(canvas.width, canvas.height, s.x, s.y, s.z));
       if (t >= 1 && !run.locked) gradeGauntlet(false);
     });
   };
   const gradeGauntlet = (swung) => {
-    if (run.locked) return;
+    if (run.locked || run.phase === "ready") return;
     if (swung && (performance.now() - run.t0) < run.pitch.flight) { run.swung = true; say("Swing"); return; }
     if (!swung && !run.swung && (performance.now() - run.t0) < run.pitch.flight) return;
     run.locked = true;
@@ -820,13 +993,15 @@ function visionPlay(player, game) {
     if (ok) { run.right += 1; bumpStreak(true); run.score += 100; say("+100"); }
     else { bumpStreak(false); run.score -= 200; say(swing ? "Chase −200" : "Frozen −200"); }
     paintHud();
-    later(visionReduce() ? 120 : 240, () => { run.alive = true; next(); });
+    later(visionGap(), () => { run.alive = true; next(); });
   };
 
   const beginMatrix = () => {
-    run.pitch = visionMakePitch("FB");
-    run.pitch.x1 = (Math.random() * 0.16 - 0.08);
-    run.pitch.y1 = 0.52;
+    run.pitch = visionRestamp(visionMakePitch("FB"));
+    const band = visionBand(visionPlayer);
+    run.pitch.x1 = Math.random() * 3 - 1.5;
+    run.pitch.y1 = band.zoneBot + band.zoneH * 0.5;
+    visionRestamp(run.pitch);
     run.phase = "live";
     run.t0 = performance.now();
     run.locked = false;
@@ -845,7 +1020,7 @@ function visionPlay(player, game) {
     say("Cue " + cue + " · swing the middle");
     const gen = run.gen;
     loop(gen, (now) => {
-      const t = (now - run.t0) / 980;
+      const t = (now - run.t0) / (980 * visionScale());
       const w = canvas.width;
       const h = canvas.height;
       visionField(ctx, w, h);
@@ -874,7 +1049,7 @@ function visionPlay(player, game) {
     run.alive = false;
     run.asked += 1;
     const flashOk = run.flashPick === run.matrix.match;
-    const swingOk = run.swung && run.swingAt > 700 && run.swingAt < 1100;
+    const swingOk = run.swung && run.swingAt > 700 * visionScale() && run.swingAt < 1100 * visionScale();
     if (flashOk) run.dualFlash += 1;
     if (swingOk) run.dualSwing += 1;
     if (flashOk && swingOk) run.right += 1;
@@ -884,13 +1059,13 @@ function visionPlay(player, game) {
     run.score += pts;
     say(flashOk ? "Flash held · " + pts : "Flash missed · combo broken");
     paintHud();
-    later(visionReduce() ? 200 : 420, () => { run.alive = true; next(); });
+    later(visionGap(), () => { run.alive = true; next(); });
   };
 
   const beginDepth = () => {
     run.phase = "grow";
     run.t0 = performance.now();
-    run.dur = 500 + Math.random() * 700;
+    run.dur = (500 + Math.random() * 700) * visionScale();
     run.locked = false;
     say("Tap when the ball fills the ring");
     const gen = run.gen;
@@ -917,7 +1092,7 @@ function visionPlay(player, game) {
     run.asked += 1;
     const target = run.dur * ((1.5 - 0.1) / 1.9);
     const dt = (when == null ? performance.now() - run.t0 : when) - target;
-    const abs = Math.abs(dt);
+    const abs = Math.abs(dt) / visionScale();
     let word = "Late";
     let pts = 0;
     if (abs <= 20) { word = "Perfect"; pts = 220; run.right += 1; }
@@ -928,7 +1103,7 @@ function visionPlay(player, game) {
     run.score += Math.round(pts * (pts ? mult() : 1));
     say(word + (pts ? " +" + pts : ""));
     paintHud();
-    later(visionReduce() ? 200 : 460, () => { run.alive = true; next(); });
+    later(visionGap(), () => { run.alive = true; next(); });
   };
 
   const ghostBalls = (t) => {
@@ -937,8 +1112,8 @@ function visionPlay(player, game) {
     const u = Math.min(1, t);
     return [
       { id: "true", spot: visionSpot(pitch, u) },
-      { id: "decoy-a", spot: visionSpot(pitch, u, { x: -0.7, y: 0.05 }) },
-      { id: "decoy-b", spot: visionSpot(pitch, u, { x: 0.45, y: -0.55 }) },
+      { id: "decoy-a", spot: visionSpot(pitch, u, { x: -14, y: 2 }) },
+      { id: "decoy-b", spot: visionSpot(pitch, u, { x: 11, y: -12 }) },
     ];
   };
   const beginGhost = () => {
@@ -949,7 +1124,7 @@ function visionPlay(player, game) {
     say("Track the true ball");
     const gen = run.gen;
     loop(gen, (now) => {
-      const t = (now - run.t0) / 1100;
+      const t = (now - run.t0) / (1100 * visionScale());
       visionField(ctx, canvas.width, canvas.height);
       ghostBalls(Math.min(1.05, t)).forEach((ball) => {
         const p = visionProject(canvas.width, canvas.height, ball.spot.x, ball.spot.y, ball.spot.z);
@@ -973,7 +1148,7 @@ function visionPlay(player, game) {
   };
   const gradeGhost = (which) => {
     if (run.locked || run.phase !== "live") return;
-    const t = (performance.now() - run.t0) / 1100;
+    const t = (performance.now() - run.t0) / (1100 * visionScale());
     if (t < 0.5) return;
     run.locked = true;
     run.asked += 1;
@@ -986,13 +1161,13 @@ function visionPlay(player, game) {
       say("True ball +" + pts);
       paintHud();
       run.alive = false;
-      later(280, () => { run.alive = true; next(); });
+      later(visionGap(), () => { run.alive = true; next(); });
     } else {
       bumpStreak(false);
       run.bang = "out";
       say("Strikeout");
       paintHud();
-      later(visionReduce() ? 280 : 720, () => { run.bang = ""; run.alive = false; later(40, () => { run.alive = true; next(); }); });
+      later(visionGap(), () => { run.bang = ""; run.alive = false; later(40, () => { run.alive = true; next(); }); });
     }
   };
 
@@ -1018,7 +1193,7 @@ function visionPlay(player, game) {
       ctx.strokeStyle = "rgba(242,208,96,.7)";
       ctx.strokeRect(w * 0.28, h * 0.34, w * 0.44, h * 0.28);
       if (run.popAt && now - run.popAt < 280) visionBall(ctx, { x: w * 0.5, y: h * 0.48, r: Math.min(w, h) * 0.07 }, "#f2d060", "#111");
-      if (run.popAt && now - run.popAt > 900 && !run.locked) gradeRhythm(false);
+      if (run.popAt && now - run.popAt > 900 * visionScale() && !run.locked) gradeRhythm(false);
     });
   };
   const gradeRhythm = (tapped) => {
@@ -1028,7 +1203,7 @@ function visionPlay(player, game) {
     run.locked = true;
     run.alive = false;
     run.asked += 1;
-    const reaction = performance.now() - run.popAt;
+    const reaction = (performance.now() - run.popAt) / visionScale();
     run.reactions.push(reaction);
     run.right += 1;
     bumpStreak(true);
@@ -1036,7 +1211,7 @@ function visionPlay(player, game) {
     run.score += pts;
     say("+" + pts);
     paintHud();
-    later(visionReduce() ? 200 : 400, () => { run.alive = true; next(); });
+    later(visionGap(), () => { run.alive = true; next(); });
   };
 
   const tracerShapes = ["CB", "SWEEP", "CUT"];
@@ -1054,7 +1229,7 @@ function visionPlay(player, game) {
       const w = canvas.width;
       const h = canvas.height;
       if (run.phase === "show") {
-        const t = (now - run.t0) / 980;
+        const t = (now - run.t0) / (980 * visionScale());
         visionField(ctx, w, h);
         const s = visionSpot(run.pitch, Math.min(1, Math.max(0, t)));
         const p = visionProject(w, h, s.x, s.y, s.z);
@@ -1091,7 +1266,7 @@ function visionPlay(player, game) {
     run.score += Math.round(pct * (pct >= 60 ? mult() : 1));
     say("Path " + pct + "%");
     paintHud();
-    later(420, () => { run.alive = true; next(); });
+    later(visionGap(), () => { run.alive = true; next(); });
   };
 
   const beginIq = () => {
@@ -1102,20 +1277,22 @@ function visionPlay(player, game) {
     run.locked = false;
     say(row.text);
     run.pitch = visionMakePitch(row.zone === "pull" ? "FB" : row.zone === "oppo" ? "CH" : "SL");
-    if (row.zone === "pull") run.pitch.x1 = -0.35;
-    if (row.zone === "oppo") run.pitch.x1 = 0.38;
-    if (row.zone === "middle") run.pitch.x1 = 0.02;
-    if (row.zone === "ball") { run.pitch.x1 = 0.72; run.pitch.y1 = 0.3; }
+    const band = visionBand(visionPlayer);
+    if (row.zone === "pull") run.pitch.x1 = -7;
+    if (row.zone === "oppo") run.pitch.x1 = 7.5;
+    if (row.zone === "middle") run.pitch.x1 = 0.4;
+    if (row.zone === "ball") { run.pitch.x1 = 14.5; run.pitch.y1 = band.zoneBot - 4; }
+    visionRestamp(run.pitch);
     run.t0 = performance.now();
     const gen = run.gen;
     loop(gen, (now) => {
-      const t = Math.min(1, (now - run.t0) / 700);
+      const t = Math.min(1, (now - run.t0) / (700 * visionScale()));
       visionField(ctx, canvas.width, canvas.height);
       if (run.phase === "choose") {
         const s = visionSpot(run.pitch, t);
         visionBall(ctx, visionProject(canvas.width, canvas.height, s.x, s.y, s.z));
       }
-      if (run.phase === "read" && now - run.t0 > (visionReduce() ? 700 : 1200)) { run.phase = "choose"; say("Pull, middle, oppo, or take"); }
+      if (run.phase === "read" && now - run.t0 > (visionReduce() ? 700 : 1200) * visionScale()) { run.phase = "choose"; say("Pull, middle, oppo, or take"); }
     });
   };
   const gradeIq = (pick) => {
@@ -1132,7 +1309,7 @@ function visionPlay(player, game) {
     run.score += pts;
     say((contextual ? "Plan +" : "Off the plan") + (execution ? " · executed" : "") + " " + pts);
     paintHud();
-    later(420, () => { run.alive = true; next(); });
+    later(visionGap(), () => { run.alive = true; next(); });
   };
 
   const reflexWindow = () => Math.max(200, 800 - run.level * 100);
@@ -1142,7 +1319,8 @@ function visionPlay(player, game) {
     run.cell = Math.floor(Math.random() * 16);
     run.t0 = performance.now();
     run.locked = false;
-    run.window = reflexWindow();
+    run.windowRaw = reflexWindow();
+    run.window = run.windowRaw * visionScale();
     say("Level " + (run.level + 1));
     const gen = run.gen;
     loop(gen, (now) => {
@@ -1181,7 +1359,7 @@ function visionPlay(player, game) {
       run.hits += 1;
       run.right += 1;
       bumpStreak(true);
-      const tier = run.window <= 250 ? 40 : run.window <= 450 ? 25 : 12;
+      const tier = run.windowRaw <= 250 ? 40 : run.windowRaw <= 450 ? 25 : 12;
       run.speedSum += tier;
       run.score += 10 + tier + run.streak * 4;
       if (run.hits % 3 === 0) run.level = Math.min(6, run.level + 1);
@@ -1193,7 +1371,7 @@ function visionPlay(player, game) {
       say("Miss");
     }
     paintHud();
-    later(visionReduce() ? 90 : 160, () => { run.alive = true; next(); });
+    later(Math.round(220 * visionScale()), () => { run.alive = true; next(); });
   };
 
   const begin = () => {
@@ -1222,10 +1400,10 @@ function visionPlay(player, game) {
       if (id && id.indexOf("aim:") === 0) {
         const k = id.slice(4);
         if (run.phase !== "locate") return;
-        if (k === "arrowleft" || k === "a") run.aim.x -= 0.06;
-        if (k === "arrowright" || k === "d") run.aim.x += 0.06;
-        if (k === "arrowup" || k === "w") run.aim.y += 0.05;
-        if (k === "arrowdown" || k === "s") run.aim.y -= 0.05;
+        if (k === "arrowleft" || k === "a") run.aim.x -= 1.5;
+        if (k === "arrowright" || k === "d") run.aim.x += 1.5;
+        if (k === "arrowup" || k === "w") run.aim.y += 1.2;
+        if (k === "arrowdown" || k === "s") run.aim.y -= 1.2;
         return;
       }
       if (run.phase === "locate") return;
@@ -1337,6 +1515,7 @@ function visionPlay(player, game) {
 }
 
 function visionShowIntro(player, gameId) {
+  visionPlayer = player;
   visionStop();
   const game = VISION_GAMES.find((g) => g.id === gameId) || visionFeatured().game;
   const hub = document.getElementById("visionHub");
@@ -1345,6 +1524,7 @@ function visionShowIntro(player, gameId) {
   hub.innerHTML = visionStageHTML(game, "intro");
   visionShell(true);
   visionBindLeave();
+  visionBindSpeed(hub);
   const start = document.getElementById("visionStart");
   if (start) start.addEventListener("click", () => {
     if (game.kind === "rhythm") {
