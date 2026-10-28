@@ -453,9 +453,16 @@ function styleStartGame(player, id) {
   if (id === "pitch") return stylePitch(player, host);
   if (id === "react") return styleReact(player, host);
   if (id === "iq") return styleQuiz(player, host, [
-    { q: "Runner on first, no outs. Ground ball to short. Where is the play?", a: ["First", "Second", "Home"], ok: 1 },
-    { q: "A foul tip that stays in the catcher's mitt on strike three is...", a: ["A foul", "An out", "A ball"], ok: 1 },
-    { q: "Cutoff on a base hit to right with a runner on first is usually...", a: ["Pitcher", "First baseman", "Shortstop"], ok: 1 },
+    { t: "Cutoffs & Relays", q: "There is a runner on 2nd base, and the batter hits a ground ball single to right field. Who is the cutoff man for the throw coming to home plate?", a: ["The Pitcher", "The First Baseman", "The Third Baseman"], ok: 1, why: "On throws coming from right field to home plate, the First Baseman trails out into the infield to act as the cutoff man. The Third Baseman stays near 3rd base to cover the bag." },
+    { t: "Force Plays vs. Tag Plays", q: "There is a runner on 2nd base only, and a ground ball is hit to the Shortstop. The Shortstop fields the ball and throws it to 3rd base. To get the runner out, what must the Third Baseman do?", a: ["Just step on 3rd base before the runner gets there.", "Tag the runner.", "Tag 3rd base and then immediately throw to 1st base."], ok: 1, why: "Because 1st base was empty, the runner on 2nd was not forced to run. Therefore, it is a tag play, not a force play." },
+    { t: "Infield Fly Rule", q: "There are runners on 1st and 2nd base with only 1 out. The batter pops the ball up high directly above the Shortstop in the infield, and the umpire calls \"Infield Fly!\" What happens?", a: ["The batter is automatically out, even if the Shortstop accidentally drops the ball.", "The play is dead and all base runners must go back to their dugouts.", "The batter is only out if the Shortstop catches the ball."], ok: 0, why: "The Infield Fly Rule protects base runners from an infielder intentionally dropping an easy pop-up to turn a double play. The batter is out immediately once called." },
+    { t: "Tagging Up", q: "There is a runner on 3rd base with 1 out. The batter hits a high fly ball to deep center field, and the Center Fielder catches it for out #2. What must the runner on 3rd base do to score legally?", a: ["Run home immediately when the ball is hit into the air.", "Wait on 3rd base until the outfielder catches the ball (or it touches their glove), then run home.", "Return to the dugout because a caught fly ball ends the play automatically."], ok: 1, why: "On a caught fly ball, runners must \"tag up\" by touching their base after the fielder touches the ball before they can advance to the next base." },
+    { t: "Pitcher Backup Duties", q: "A single is hit into left field with a runner on 2nd base who is rounding 3rd to score. Where should the Pitcher run to help defend the play?", a: ["Stand on the pitcher’s mound and wait for the ball.", "Run behind home plate near the backstop to back up the catcher in case of an overthrow.", "Run over to 3rd base to cover the bag."], ok: 1, why: "Pitchers must move on every ball hit into the outfield! When a play is at home plate, the pitcher lines up behind home plate to stop wild throws or overthrows." },
+    { t: "Uncaught Third Strike (Drop 3rd Strike)", q: "The count is 2 strikes, 2 outs, and 1st base is empty. The pitcher throws strike three, but the Catcher drops the ball in the dirt. Is the batter out?", a: ["Yes, a strikeout is always an out, no matter what happens to the ball.", "No, the batter can try to run to 1st base before the catcher tags them or throws the ball to 1st base.", "Yes, unless the batter was trying to bunt."], ok: 1, why: "On an uncaught third strike with 1st base open—or anytime there are 2 outs—the batter becomes a runner and can attempt to reach 1st base before being put out." },
+    { t: "Base Runner Collision & Obstruction", q: "A ground ball is hit to the Shortstop. As the batter runs down the 1st base line, the First Baseman stands right on top of 1st base without the ball, blocking the base and making the runner slow down. What is this called?", a: ["Interference", "Obstruction", "Good Defense"], ok: 1, why: "\"Obstruction\" is when a defender who does not have the ball—and is not in the process of fielding it—impedes the progress of a base runner. The umpire will award bases accordingly." },
+    { t: "Foul Pole Rules", q: "A batter hits a deep fly ball down the left-field line. The ball flies high into the air and hits the yellow \"foul pole\" past the outfield fence. What is the umpire's ruling?", a: ["Foul Ball", "Ground Rule Double", "Home Run"], ok: 2, why: "Despite its name, the \"foul pole\" is completely in fair territory! If a batted ball hits the pole above the fence line, it is a Fair Ball and a Home Run." },
+    { t: "Outfield Communication", q: "A fly ball is hit right in the gap between the Center Fielder and the Right Fielder. Both fielders run toward it. Who has priority (the final say) on calling and making the catch?", a: ["The Right Fielder", "The Center Fielder", "Whoever yells \"I got it!\" first"], ok: 1, why: "In outfield coverage priority, the Center Fielder is the captain of the outfield and has the right-of-way over both the Left and Right Fielders to avoid collisions." },
+    { t: "Bunt Defense Positioning", q: "Nobody is on base. The batter squares around and lays down a bunt toward 3rd base. The Third Baseman charges in to field the ball. Who is responsible for running over to cover 3rd base?", a: ["The Shortstop", "The Second Baseman", "The Pitcher"], ok: 2, why: "The Pitcher covers 3rd base because the SS goes to 2nd base and the 2nd baseman goes to first base in case the first baseman fields the bunt." },
   ], "iq");
   if (id === "count") return styleQuiz(player, host, [
     { q: "3-1, runner on second. What is the job?", a: ["Expand and hunt a pitch to drive", "Protect at all costs", "Bunt"], ok: 0 },
@@ -469,22 +476,49 @@ function styleStartGame(player, id) {
   if (id === "zone") return styleZone(player, host);
 }
 
+function styleQuizEsc(text) {
+  return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
 function styleQuiz(player, host, cards, name) {
   let i = 0;
   let score = 0;
+  const letters = ["A", "B", "C", "D"];
+  const finish = () => {
+    host.innerHTML = "<p class=\"game-q\">Score " + score + " / " + cards.length + "</p>";
+    styleRecordScore(name, player, score);
+    const board = document.getElementById("styleBoard"); if (board) board.innerHTML = styleGameBoard();
+  };
   const draw = () => {
     const card = cards[i];
-    host.innerHTML = "<p class=\"game-q\">" + card.q + "</p>" + card.a.map((ans, idx) => "<button class=\"btn btn-ghost\" type=\"button\" data-a=\"" + idx + "\">" + ans + "</button> ").join("");
+    const head = "<p class=\"road-kicker\">Question " + (i + 1) + " of " + cards.length + (card.t ? " \u00b7 " + styleQuizEsc(card.t) : "") + "</p>";
+    host.innerHTML = head + "<p class=\"game-q\">" + styleQuizEsc(card.q) + "</p><div class=\"quiz-answers\" style=\"display:flex;flex-direction:column;gap:8px;\">" +
+      card.a.map((ans, idx) => "<button class=\"btn btn-ghost\" type=\"button\" style=\"text-align:left;white-space:normal;\" data-a=\"" + idx + "\">" + letters[idx] + ") " + styleQuizEsc(ans) + "</button>").join("") +
+      "</div><div class=\"quiz-feedback\"></div>";
     host.querySelectorAll("[data-a]").forEach((btn) => btn.addEventListener("click", () => {
-      if (Number(btn.dataset.a) === card.ok) score += 1;
-      i += 1;
-      if (i >= cards.length) {
-        host.innerHTML = "<p>Score " + score + " / " + cards.length + "</p>";
-        styleRecordScore(name, player, score);
-        const board = document.getElementById("styleBoard"); if (board) board.innerHTML = styleGameBoard();
-        return;
+      const pick = Number(btn.dataset.a);
+      const right = pick === card.ok;
+      if (right) score += 1;
+      host.querySelectorAll("[data-a]").forEach((b) => {
+        b.disabled = true;
+        const idx = Number(b.dataset.a);
+        if (idx === card.ok) b.style.borderColor = "#22c55e";
+        else if (idx === pick) b.style.borderColor = "#ef4444";
+      });
+      const last = i + 1 >= cards.length;
+      const fb = host.querySelector(".quiz-feedback");
+      if (fb) {
+        fb.innerHTML = "<p class=\"game-q\" style=\"margin-top:12px;\"><b>" + (right ? "Correct!" : "Not quite.") + "</b> Answer: " + letters[card.ok] + ") " + styleQuizEsc(card.a[card.ok]) + "</p>" +
+          (card.why ? "<p>" + styleQuizEsc(card.why) + "</p>" : "") +
+          "<button class=\"btn\" type=\"button\" data-next>" + (last ? "See score" : "Next question") + "</button>";
+        fb.querySelector("[data-next]").addEventListener("click", () => {
+          i += 1;
+          if (i >= cards.length) finish(); else draw();
+        });
+      } else {
+        i += 1;
+        if (i >= cards.length) finish(); else draw();
       }
-      draw();
     }));
   };
   draw();
