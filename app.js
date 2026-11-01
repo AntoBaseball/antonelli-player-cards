@@ -1829,6 +1829,38 @@ function closerBy(player, key, target, minDeg) {
   if (h.length < 2 || target == null) return false;
   return (Math.abs(h[0] - target) - Math.abs(h[h.length - 1] - target)) >= minDeg - 1e-9;
 }
+function metricNow(player, key) {
+  const v = player && player.metrics && player.metrics[key];
+  if (v == null || Number.isNaN(Number(v))) return null;
+  return Number(v);
+}
+function reached(player, key, min) {
+  const v = metricNow(player, key);
+  return v != null && v + 1e-9 >= min;
+}
+function reachedLower(player, key, max) {
+  const v = metricNow(player, key);
+  return v != null && v <= max + 1e-9;
+}
+function levelPerk(spec) {
+  return {
+    id: spec.id,
+    name: spec.name,
+    icon: spec.icon,
+    category: "Training",
+    priority: spec.priority,
+    criteria: spec.criteria,
+    description: spec.criteria,
+    metricKey: spec.key,
+    test: (p) => spec.lower ? reachedLower(p, spec.key, spec.at) : reached(p, spec.key, spec.at),
+    valueOf: (p) => metricNow(p, spec.key),
+    milestone: (p) => {
+      const v = metricNow(p, spec.key);
+      const shown = spec.digits == null ? String(v) : String(Math.round(v * (10 ** spec.digits)) / (10 ** spec.digits));
+      return `Earned: ${spec.label} hit ${shown}${spec.unit}`;
+    },
+  };
+}
 
 const TRAINING_QUIRKS = [
   { id: "heat-check", name: "Heat Check", icon: "🔥", category: "Training", priority: 96, description: "Bat speed jumped at least 5 mph across this training block.",
@@ -1916,6 +1948,34 @@ const TRAINING_QUIRKS = [
   { id: "cage-rat", name: "Cage Rat", icon: "🏋️", category: "Training", priority: 40, description: "Four or more check-ins logged on at least four different metrics. The work is on the card.",
     test: (p) => metricKeysFor(p.type).filter((k) => logsOf(p, k) >= 4).length >= 4,
     milestone: (p) => `Earned: 4+ check-ins on ${metricKeysFor(p.type).filter((k) => logsOf(p, k) >= 4).length} metrics` },
+  levelPerk({ id: "barrel-spark", name: "Barrel Spark", icon: "🪵", priority: 50, key: "batSpeed", at: 50, digits: 1, unit: " mph", label: "Bat Speed", criteria: "Bat speed reaches 50 mph." }),
+  levelPerk({ id: "barrel-heat", name: "Barrel Heat", icon: "🔥", priority: 60, key: "batSpeed", at: 55, digits: 1, unit: " mph", label: "Bat Speed", criteria: "Bat speed reaches 55 mph." }),
+  levelPerk({ id: "barrel-storm", name: "Barrel Storm", icon: "⛈️", priority: 75, key: "batSpeed", at: 60, digits: 1, unit: " mph", label: "Bat Speed", criteria: "Bat speed reaches 60 mph." }),
+  levelPerk({ id: "barrel-lightning", name: "Barrel Lightning", icon: "⚡", priority: 90, key: "batSpeed", at: 65, digits: 1, unit: " mph", label: "Bat Speed", criteria: "Bat speed reaches 65 mph." }),
+  levelPerk({ id: "exit-spark", name: "Exit Spark", icon: "✨", priority: 51, key: "exitVelo", at: 65, digits: 1, unit: " mph", label: "Exit Velo", criteria: "Exit velocity reaches 65 mph." }),
+  levelPerk({ id: "exit-pop", name: "Exit Pop", icon: "💥", priority: 63, key: "exitVelo", at: 75, digits: 1, unit: " mph", label: "Exit Velo", criteria: "Exit velocity reaches 75 mph." }),
+  levelPerk({ id: "exit-launch", name: "Exit Launch", icon: "🚀", priority: 79, key: "exitVelo", at: 85, digits: 1, unit: " mph", label: "Exit Velo", criteria: "Exit velocity reaches 85 mph." }),
+  levelPerk({ id: "exit-rocket", name: "Exit Rocket", icon: "☄️", priority: 93, key: "exitVelo", at: 95, digits: 1, unit: " mph", label: "Exit Velo", criteria: "Exit velocity reaches 95 mph." }),
+  levelPerk({ id: "first-step", name: "First Step", icon: "👟", priority: 48, key: "tenYard", at: 2.2, lower: true, digits: 2, unit: " s", label: "10-Yard Dash", criteria: "10-yard dash is 2.20 seconds or faster." }),
+  levelPerk({ id: "lane-opener", name: "Lane Opener", icon: "🛤️", priority: 61, key: "tenYard", at: 2.05, lower: true, digits: 2, unit: " s", label: "10-Yard Dash", criteria: "10-yard dash is 2.05 seconds or faster." }),
+  levelPerk({ id: "gap-chaser", name: "Gap Chaser", icon: "💨", priority: 77, key: "tenYard", at: 1.9, lower: true, digits: 2, unit: " s", label: "10-Yard Dash", criteria: "10-yard dash is 1.90 seconds or faster." }),
+  levelPerk({ id: "burner", name: "Burner", icon: "🏎️", priority: 91, key: "tenYard", at: 1.75, lower: true, digits: 2, unit: " s", label: "10-Yard Dash", criteria: "10-yard dash is 1.75 seconds or faster." }),
+  levelPerk({ id: "arm-alive", name: "Arm Alive", icon: "💪", priority: 49, key: "throwVelo", at: 55, digits: 1, unit: " mph", label: "Crow-hop throw", criteria: "Crow-hop throw reaches 55 mph." }),
+  levelPerk({ id: "arm-strong", name: "Arm Strong", icon: "🏹", priority: 62, key: "throwVelo", at: 65, digits: 1, unit: " mph", label: "Crow-hop throw", criteria: "Crow-hop throw reaches 65 mph." }),
+  levelPerk({ id: "arm-cannon", name: "Arm Cannon", icon: "💣", priority: 78, key: "throwVelo", at: 75, digits: 1, unit: " mph", label: "Crow-hop throw", criteria: "Crow-hop throw reaches 75 mph." }),
+  levelPerk({ id: "arm-rocket", name: "Arm Rocket", icon: "🛰️", priority: 92, key: "throwVelo", at: 85, digits: 1, unit: " mph", label: "Crow-hop throw", criteria: "Crow-hop throw reaches 85 mph." }),
+  levelPerk({ id: "first-gas", name: "First Gas", icon: "⛽", priority: 52, key: "fastballVelo", at: 60, digits: 1, unit: " mph", label: "Fastball", criteria: "Fastball velocity reaches 60 mph." }),
+  levelPerk({ id: "more-gas", name: "More Gas", icon: "🛢️", priority: 65, key: "fastballVelo", at: 70, digits: 1, unit: " mph", label: "Fastball", criteria: "Fastball velocity reaches 70 mph." }),
+  levelPerk({ id: "plus-gas", name: "Plus Gas", icon: "💨", priority: 81, key: "fastballVelo", at: 80, digits: 1, unit: " mph", label: "Fastball", criteria: "Fastball velocity reaches 80 mph." }),
+  levelPerk({ id: "top-gas", name: "Top Gas", icon: "🔝", priority: 95, key: "fastballVelo", at: 88, digits: 1, unit: " mph", label: "Fastball", criteria: "Fastball velocity reaches 88 mph." }),
+  levelPerk({ id: "watt-spark", name: "Watt Spark", icon: "💡", priority: 47, key: "powerKw", at: 1.5, digits: 2, unit: " kW", label: "Power", criteria: "Power reaches 1.50 kW." }),
+  levelPerk({ id: "watt-climb", name: "Watt Climb", icon: "📶", priority: 64, key: "powerKw", at: 2.2, digits: 2, unit: " kW", label: "Power", criteria: "Power reaches 2.20 kW." }),
+  levelPerk({ id: "watt-storm", name: "Watt Storm", icon: "🌩️", priority: 83, key: "powerKw", at: 3, digits: 2, unit: " kW", label: "Power", criteria: "Power reaches 3.00 kW." }),
+  levelPerk({ id: "watt-monster", name: "Watt Monster", icon: "👹", priority: 97, key: "powerKw", at: 3.8, digits: 2, unit: " kW", label: "Power", criteria: "Power reaches 3.80 kW." }),
+  levelPerk({ id: "hand-pop", name: "Hand Pop", icon: "👋", priority: 46, key: "peakHandSpeed", at: 18, digits: 1, unit: " mph", label: "Peak Hand Speed", criteria: "Peak hand speed reaches 18 mph." }),
+  levelPerk({ id: "hand-flash", name: "Hand Flash", icon: "📸", priority: 59, key: "peakHandSpeed", at: 20, digits: 1, unit: " mph", label: "Peak Hand Speed", criteria: "Peak hand speed reaches 20 mph." }),
+  levelPerk({ id: "hand-blur", name: "Hand Blur", icon: "🎞️", priority: 73, key: "peakHandSpeed", at: 22, digits: 1, unit: " mph", label: "Peak Hand Speed", criteria: "Peak hand speed reaches 22 mph." }),
+  levelPerk({ id: "hand-lightning", name: "Hand Lightning", icon: "⚡", priority: 89, key: "peakHandSpeed", at: 24, digits: 1, unit: " mph", label: "Peak Hand Speed", criteria: "Peak hand speed reaches 24 mph." }),
 ];
 
 const SHOW_BY_ID = Object.fromEntries(SHOW_QUIRKS.map((q) => [q.id, q]));
@@ -1957,6 +2017,12 @@ function syncEarnedQuirks(player, earnedAt) {
     let milestone = q.description;
     try { milestone = q.milestone(player); } catch (e) { /* keep description */ }
     const rec = { id: q.id, milestone, earnedAt: stamp, seen: false };
+    if (typeof q.valueOf === "function") {
+      try {
+        const value = q.valueOf(player);
+        if (value != null && !Number.isNaN(Number(value))) rec.value = Number(value);
+      } catch (e) { /* the milestone line still has the reading */ }
+    }
     player.earnedQuirks.push(rec);
     added.push(rec);
   });
@@ -1975,16 +2041,18 @@ function unseenEarns(player) {
 }
 
 function displayQuirks(player) {
-  const earned = (player.earnedQuirks || []).map((rec) => {
+  return (player.earnedQuirks || []).map((rec) => {
     const q = TRAINING_BY_ID[rec.id];
     if (!q) return null;
-    return { ...q, kind: "earned", milestone: rec.milestone, earnedAt: rec.earnedAt };
+    return { ...q, kind: "earned", milestone: rec.milestone, earnedAt: rec.earnedAt, value: rec.value };
   }).filter(Boolean).sort((a, b) => b.priority - a.priority);
-  const coach = (player.coachQuirks || []).map((id) => {
-    const q = SHOW_BY_ID[id];
-    return q ? { ...q, kind: "coach", milestone: q.criteria } : null;
-  }).filter(Boolean);
-  return [...earned, ...coach];
+}
+
+function perkCoachView() {
+  const auth = typeof roadAuth === "function" ? roadAuth() : null;
+  if (auth && auth.user && auth.role === "coach") return true;
+  const session = typeof roadSession === "function" ? roadSession() : null;
+  return !!(session && session.mode === "coach");
 }
 
 const SAMPLE_CAREER = {
@@ -3340,7 +3408,7 @@ function perkBadgeHTML(q, opts) {
 }
 
 function backPerksHTML(player, face, cap) {
-  const list = face && Array.isArray(face.quirks) ? face.quirks : (typeof displayQuirks === "function" ? displayQuirks(player) : []);
+  const list = (face && Array.isArray(face.quirks) ? face.quirks : (typeof displayQuirks === "function" ? displayQuirks(player) : [])).filter((q) => q && q.kind !== "coach" && (typeof TRAINING_BY_ID === "undefined" || TRAINING_BY_ID[q.id || q]));
   const rest = list.slice(cap == null ? 3 : cap);
   if (!rest.length) return "";
   const tier = face && face.tier ? face.tier : perkTierOf(player);
@@ -3413,7 +3481,7 @@ function cardHTML(player, large, face, opts) {
   const visual = player.photo
     ? `<img class="card-photo" src="${esc(player.photo)}" alt="Photo of ${esc(player.name)}">`
     : logoPlaceholder();
-  const quirkList = face && Array.isArray(face.quirks) ? face.quirks : displayQuirks(player);
+  const quirkList = (face && Array.isArray(face.quirks) ? face.quirks : displayQuirks(player)).filter((q) => q && q.kind !== "coach" && TRAINING_BY_ID[q.id || q]);
   const perkCap = large ? 3 : 2;
   const quirkShown = quirkList.slice(0, perkCap);
   const quirkHTML = quirkShown.length ? `<div class="card-quirks">${quirkShown.map((q) => perkBadgeHTML(q, { size: "front", caption: false, tier: tier.key })).join("")}</div>` : "";
@@ -4064,21 +4132,24 @@ function metricsTable(player) {
 }
 
 function quirksPanel(player) {
-  const earned = displayQuirks(player).filter((q) => q.kind === "earned");
-  const coach = displayQuirks(player).filter((q) => q.kind === "coach");
+  const earned = displayQuirks(player);
   const tier = perkTierOf(player);
   const row = (q) => `<button type="button" class="quirk-row" data-replay="${esc(q.id)}">
       ${perkBadgeHTML(q, { size: "lg", caption: false, tier: tier })}
-      <span><strong>${esc(q.name)}</strong> <span class="quirk-tag">${q.kind === "coach" ? "Coach Awarded" : "Earned"}</span> <span class="quirk-tag">${esc(q.category)}</span><br>
-      <span class="muted small">${esc(q.description)}</span><br>
+      <span><strong>${esc(q.name)}</strong> <span class="quirk-tag">Earned</span><br>
       <span class="small">${esc(q.milestone || "")}</span></span>
     </button>`;
-  const earnedHTML = earned.length ? earned.map(row).join("") : `<p class="muted small">No training perks yet. They appear automatically when a milestone is crossed, and they stay on the card.</p>`;
-  const coachHTML = coach.length ? coach.map(row).join("") : `<p class="muted small">No coach-awarded perks. Add them in Edit.</p>`;
-  return `<p class="muted small">Earned perks come from training milestones and stay once unlocked. Coach Awarded perks are pinned by a coach. Click an earned perk to open its pack again.</p>
+  const earnedHTML = earned.length ? earned.map(row).join("") : `<p class="muted small">No perks yet. They show up on their own when a tested number crosses a line, and they stay once you open the pack.</p>`;
+  const locked = Math.max(0, TRAINING_QUIRKS.length - earned.length);
+  const mystery = locked ? `<div class="perk-mystery-grid">${Array.from({ length: locked }, () => `<div class="perk-mystery"><b>?</b><span>Locked perk, keep training</span></div>`).join("")}</div>` : "";
+  const coach = perkCoachView() ? `<h4 class="quirk-sub">Coach reference</h4><p class="muted small">Players never see this list or the lines that earn a perk.</p><ul class="perk-coach-list">${TRAINING_QUIRKS.map((q) => {
+    const got = (player.earnedQuirks || []).some((e) => e && e.id === q.id);
+    return `<li><b>${q.icon || ""} ${esc(q.name)}</b> — ${esc(q.criteria || q.description || "")}${got ? " · Earned" : ""}</li>`;
+  }).join("")}</ul>` : "";
+  return `<p class="muted small">Perks are a surprise. They unlock from tested numbers and stay once earned. Tap one you already opened to see it again.</p>
     <div class="quirk-actions"><button class="btn btn-ghost" type="button" id="previewRevealBtn">Open again</button></div>
-    <h4 class="quirk-sub">Earned</h4>${earnedHTML}
-    <h4 class="quirk-sub">Coach Awarded</h4>${coachHTML}`;
+    <h4 class="quirk-sub">Earned · ${earned.length}</h4>${earnedHTML}
+    <h4 class="quirk-sub">Locked · ${locked}</h4>${mystery}${coach}`;
 }
 
 let revealQueue = [];
@@ -4142,7 +4213,7 @@ function later(fn, ms) {
 }
 
 function revealButtonLabel() {
-  if (!packOpened) return "Open Pack";
+  if (!packOpened) return "New perk pack! Tap to open";
   const more = revealPos < revealQueue.length - 1;
   if (revealReplay) return "Close";
   return more ? "Next Perk" : "Add to my card";
@@ -4677,8 +4748,7 @@ function playerFromArchive(card) {
 }
 
 function faceFromArchive(card) {
-  const quirks = (card.perksEarned || []).map((q) => ({ ...q, kind: "earned" }))
-    .concat((card.assignedPerks || []).map((q) => ({ ...q, kind: "coach" })));
+  const quirks = (card.perksEarned || []).map((q) => ({ ...q, kind: "earned" }));
   return {
     overall: card.overall, tier: card.tier, subs: card.subGrades || [],
     ageGroup: card.ageGroup, age: card.age, classYear: card.classYear || "", quirks, quiet: true,
@@ -4723,10 +4793,9 @@ function archiveMetricsTable(card) {
 }
 
 function archivePerks(card) {
-  const row = (q, kind) => `<div class="quirk-row quirk-static">${perkBadgeHTML({ ...q, kind: kind === "Coach Awarded" ? "coach" : "earned" }, { size: "lg", caption: false })}<span><strong>${esc(q.name)}</strong> <span class="quirk-tag">${kind}</span><br><span class="small">${esc(q.milestone || q.description || "")}</span></span></div>`;
-  const earned = (card.perksEarned || []).map((q) => row(q, "Earned")).join("") || `<p class="muted small">No training perks were earned that season.</p>`;
-  const coach = (card.assignedPerks || []).map((q) => row(q, "Coach Awarded")).join("") || `<p class="muted small">No coach-awarded perks on this snapshot.</p>`;
-  return `<p class="muted small">Snapshot of that season. Training perks start over on the new card. Coach-awarded perks stay on the current card too.</p><h4 class="quirk-sub">Earned that season</h4>${earned}<h4 class="quirk-sub">Coach Awarded</h4>${coach}`;
+  const row = (q) => `<div class="quirk-row quirk-static">${perkBadgeHTML({ ...q, kind: "earned" }, { size: "lg", caption: false })}<span><strong>${esc(q.name)}</strong> <span class="quirk-tag">Earned</span><br><span class="small">${esc(q.milestone || q.description || "")}</span></span></div>`;
+  const earned = (card.perksEarned || []).map(row).join("") || `<p class="muted small">No training perks were earned that season.</p>`;
+  return `<p class="muted small">Snapshot of that season. Training perks start over on the new card.</p><h4 class="quirk-sub">Earned that season</h4>${earned}`;
 }
 
 function archiveSide(card) {
@@ -5023,7 +5092,7 @@ function askRollover(playerId) {
   const upNote = TIER_RANK[preview.toTier] > TIER_RANK[preview.fromTier] ? ` The new card reaches ${TIER_LABEL[preview.toTier]}. The reveal spotlights that tier.` : "";
   $("seasonConfirmCopy").innerHTML = `<p>Retire <strong>${esc(preview.fromSeason)} · ${esc(preview.fromGroup)} · ${preview.fromOverall} ${tierWord(preview.fromTier)}</strong>.</p>
     <p>New card <strong>${esc(preview.toSeason)} · ${esc(preview.toGroup)} · projected ${preview.toOverall} ${tierWord(preview.toTier)}</strong>. Age ${preview.fromAge} → ${preview.toAge}.${esc(pinNote)}</p>
-    <p>Metrics carry over and get graded for the new season. Training perks from this season are saved on the retired card, then cleared so they can be earned again. Coach-awarded perks stay on the player. The retired card is never re-graded.</p>
+    <p>Metrics carry over and get graded for the new season. Training perks from this season are saved on the retired card, then cleared so they can be earned again. The retired card is never re-graded.</p>
     <p>${esc(dropNote)}${esc(upNote)}</p>`;
   $("seasonConfirm").hidden = false;
 }
@@ -5357,20 +5426,12 @@ function provisionalPlayer() {
   });
   like.history = history;
   like.earnedQuirks = existing && existing.earnedQuirks ? structuredClone(existing.earnedQuirks) : [];
-  like.coachQuirks = checkedCoachQuirks();
   return like;
 }
 
 function renderEarnPreview() {
   const el = $("quirkEarnPreview");
-  if (!el || !$("f-type")) return;
-  const like = provisionalPlayer();
-  const have = new Set((like.earnedQuirks || []).map((e) => e.id));
-  const fresh = TRAINING_QUIRKS.filter((q) => !have.has(q.id) && q.test(like));
-  const kept = (like.earnedQuirks || []).map((e) => TRAINING_BY_ID[e.id]).filter(Boolean);
-  const freshTxt = fresh.length ? fresh.map((q) => q.name).join(", ") : "none yet";
-  const keptTxt = kept.length ? kept.map((q) => q.name).join(", ") : "none";
-  el.innerHTML = `<strong>Training perks</strong> unlock on their own and stay after they are earned. Already earned: ${esc(keptTxt)}. New if you save now: ${esc(freshTxt)}.`;
+  if (el) el.textContent = "";
 }
 
 function formPlayerLike() {
@@ -5431,7 +5492,6 @@ function openModal(player) {
   const photoInput = $("f-photo"); if (photoInput) photoInput.value = "";
   updatePhotoPreview();
   const seed = isEdit ? player : { type: "hitter", age: 16, ageGroup: "16U", metrics: defaultMetrics("hitter", "16U", 16) };
-  renderQuirkFields(isEdit ? (player.coachQuirks || []) : []);
   const dateEl = $("f-readingDate");
   if (dateEl) {
     const today = todayStamp();
@@ -5811,7 +5871,6 @@ function bindApp() {
   $("playerForm").addEventListener("submit", (e) => {
     e.preventDefault();
     const like = formPlayerLike();
-    like.coachQuirks = checkedCoachQuirks();
     if (!like.name.trim()) { alert("Please enter a player name."); return; }
     const chosen = chosenReadingDate();
     if (!chosen.ok) {

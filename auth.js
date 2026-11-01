@@ -311,7 +311,7 @@ const AntonelliAuth = {
       weight: pub.weight || "",
       hometown: pub.hometown || "",
       photo: pub.photo || "",
-      coachQuirks: Array.isArray(card.quirks) ? card.quirks : [],
+      coachQuirks: [],
       metrics: {},
       history: {},
       readingLog: {},
@@ -367,7 +367,11 @@ const AntonelliAuth = {
         overall: graded.overall,
         tier: tier.key,
         subs: graded.subs || [],
-        quirks: Array.isArray(player.coachQuirks) ? player.coachQuirks : [],
+        quirks: (Array.isArray(player.earnedQuirks) ? player.earnedQuirks : []).map((rec) => {
+          const q = typeof TRAINING_BY_ID !== "undefined" ? TRAINING_BY_ID[rec.id] : null;
+          if (!q) return null;
+          return { id: rec.id, name: q.name, icon: q.icon || "", milestone: rec.milestone || "", kind: "earned" };
+        }).filter(Boolean),
       },
     };
   },
