@@ -1488,6 +1488,15 @@ function roadBoot() {
     arcadeNav.dataset.wired = "1";
     arcadeNav.addEventListener("click", () => roadSetApp("eyes"));
   }
+  const iqNav = document.getElementById("iqNav");
+  if (iqNav && !iqNav.dataset.wired) {
+    iqNav.dataset.wired = "1";
+    iqNav.addEventListener("click", () => {
+      roadSetApp("train");
+      const lib = document.getElementById("iqLibrary");
+      if (lib) lib.scrollIntoView({ block: "start" });
+    });
+  }
   if (bell && !bell.dataset.wired) {
     bell.dataset.wired = "1";
     bell.addEventListener("click", () => {
