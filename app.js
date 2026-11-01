@@ -4253,7 +4253,7 @@ function showRevealStep() {
     flip.classList.remove("is-revealed");
     $("quirkRevealTitle").textContent = "Player Perks";
     $("quirkRevealCount").textContent = count > 1 ? `${count} perks in this pack` : "1 perk in this pack";
-    btn.textContent = "Open Pack";
+    btn.textContent = "New perk pack! Tap to open";
     btn.focus();
     return;
   }
@@ -4304,7 +4304,7 @@ function closeReveal() {
   const stage = document.getElementById && document.getElementById("perkStage");
   if (stage) stage.classList.remove("is-tearing", "is-open", "has-many");
   const btn = document.getElementById && document.getElementById("quirkCollectBtn");
-  if (btn) { btn.disabled = false; btn.textContent = "Open Pack"; }
+  if (btn) { btn.disabled = false; btn.textContent = "New perk pack! Tap to open"; }
   revealQueue = [];
   revealPos = 0;
 }
