@@ -2055,6 +2055,31 @@ function perkCoachView() {
   return !!(session && session.mode === "coach");
 }
 
+/* A perk pack is only for the signed-in player, on their own card.
+   player_accounts stores that id on the profile. Coach, anon, and anyone
+   looking at a different card never get the reveal, and never mark it seen. */
+function signedInOwnPlayerId() {
+  const auth = typeof roadAuth === "function" ? roadAuth() : null;
+  if (!auth || !auth.user || auth.holdingSample || auth.role !== "player") return null;
+  return auth.playerId || null;
+}
+
+function perkPackForSelf(playerId) {
+  return !!playerId && signedInOwnPlayerId() === playerId;
+}
+
+function maybeOfferPerkPack(playerId) {
+  if (!perkPackForSelf(playerId)) {
+    if (!revealReplay) closeReveal();
+    return;
+  }
+  const player = players.find((p) => p.id === playerId);
+  if (!player || player.seasonReveal) return;
+  const unseen = unseenEarns(player);
+  if (!unseen.length) return;
+  startReveal(unseen.map((rec) => ({ playerId: player.id, quirkId: rec.id })));
+}
+
 const SAMPLE_CAREER = {
   "sample-mason-carter": [
     {
@@ -4134,7 +4159,12 @@ function metricsTable(player) {
 function quirksPanel(player) {
   const earned = displayQuirks(player);
   const tier = perkTierOf(player);
-  const row = (q) => `<button type="button" class="quirk-row" data-replay="${esc(q.id)}">
+  const coach = perkCoachView();
+  const row = (q) => coach
+    ? `<div class="quirk-row quirk-static">${perkBadgeHTML(q, { size: "lg", caption: false, tier: tier })}
+      <span><strong>${esc(q.name)}</strong> <span class="quirk-tag">Earned</span><br>
+      <span class="small">${esc(q.milestone || "")}</span></span></div>`
+    : `<button type="button" class="quirk-row" data-replay="${esc(q.id)}">
       ${perkBadgeHTML(q, { size: "lg", caption: false, tier: tier })}
       <span><strong>${esc(q.name)}</strong> <span class="quirk-tag">Earned</span><br>
       <span class="small">${esc(q.milestone || "")}</span></span>
@@ -4142,14 +4172,18 @@ function quirksPanel(player) {
   const earnedHTML = earned.length ? earned.map(row).join("") : `<p class="muted small">No perks yet. They show up on their own when a tested number crosses a line, and they stay once you open the pack.</p>`;
   const locked = Math.max(0, TRAINING_QUIRKS.length - earned.length);
   const mystery = locked ? `<div class="perk-mystery-grid">${Array.from({ length: locked }, () => `<div class="perk-mystery"><b>?</b><span>Locked perk, keep training</span></div>`).join("")}</div>` : "";
-  const coach = perkCoachView() ? `<h4 class="quirk-sub">Coach reference</h4><p class="muted small">Players never see this list or the lines that earn a perk.</p><ul class="perk-coach-list">${TRAINING_QUIRKS.map((q) => {
+  const coachList = coach ? `<h4 class="quirk-sub">Coach reference</h4><p class="muted small">Players never see this list or the lines that earn a perk.</p><ul class="perk-coach-list">${TRAINING_QUIRKS.map((q) => {
     const got = (player.earnedQuirks || []).some((e) => e && e.id === q.id);
     return `<li><b>${q.icon || ""} ${esc(q.name)}</b> — ${esc(q.criteria || q.description || "")}${got ? " · Earned" : ""}</li>`;
   }).join("")}</ul>` : "";
-  return `<p class="muted small">Perks are a surprise. They unlock from tested numbers and stay once earned. Tap one you already opened to see it again.</p>
-    <div class="quirk-actions"><button class="btn btn-ghost" type="button" id="previewRevealBtn">Open again</button></div>
+  const again = coach ? "" : `<div class="quirk-actions"><button class="btn btn-ghost" type="button" id="previewRevealBtn">Open again</button></div>`;
+  const intro = coach
+    ? `<p class="muted small">Earned perks are already open. Players still get one pack the first time they open their own card.</p>`
+    : `<p class="muted small">Perks are a surprise. They unlock from tested numbers and stay once earned. Tap one you already opened to see it again.</p>`;
+  return `${intro}
+    ${again}
     <h4 class="quirk-sub">Earned · ${earned.length}</h4>${earnedHTML}
-    <h4 class="quirk-sub">Locked · ${locked}</h4>${mystery}${coach}`;
+    <h4 class="quirk-sub">Locked · ${locked}</h4>${mystery}${coachList}`;
 }
 
 let revealQueue = [];
@@ -4318,7 +4352,7 @@ function collectReveal() {
   const item = revealQueue[revealPos];
   if (item && !revealReplay) {
     const player = players.find((p) => p.id === item.playerId);
-    if (player && markQuirkSeen(player, item.quirkId)) savePlayers();
+    if (player && perkPackForSelf(item.playerId) && markQuirkSeen(player, item.quirkId)) savePlayers();
   }
   if (revealPos < revealQueue.length - 1) {
     revealPos += 1;
@@ -4986,6 +5020,7 @@ function openProfile(id, opts) {
   const focus = opts && opts.focus ? (document.getElementById(opts.focus) || (opts.focus === "trophyCase" ? document.getElementById("roadTrophies") : null)) : null;
   if (focus) focus.scrollIntoView({ block: "start" });
   else window.scrollTo(0, 0);
+  maybeOfferPerkPack(p.id);
 }
 
 function openRetired(id, index) {
@@ -5112,7 +5147,7 @@ function confirmRollover() {
   savePlayers();
   openProfile(player.id, { tab: "collection" });
   beginSeasonReveals([player.id], () => {
-    if (added.length) startReveal(added.map((rec) => ({ playerId: player.id, quirkId: rec.id })));
+    if (added.length && perkPackForSelf(player.id)) startReveal(added.map((rec) => ({ playerId: player.id, quirkId: rec.id })));
   });
 }
 
@@ -5920,7 +5955,7 @@ function bindApp() {
       : [];
     beginCelebrations(celeb, () => {
       if (typeof roadAfterSave === "function") roadAfterSave(saved, { beforeTier, afterTier, isNew: !existing });
-      if (added.length) startReveal(added.map((rec) => ({ playerId: saved.id, quirkId: rec.id })));
+      if (added.length && perkPackForSelf(saved.id)) startReveal(added.map((rec) => ({ playerId: saved.id, quirkId: rec.id })));
     });
   });
 
@@ -5955,23 +5990,25 @@ function bindApp() {
   if ($("sd-a")) $("sd-a").addEventListener("change", sdRefreshWarn);
   if ($("sd-b")) $("sd-b").addEventListener("change", sdRefreshWarn);
   let earnedDirty = false;
-  const pendingReveal = [];
   const pendingCeleb = [];
   const pendingSeason = [];
   players.forEach((p) => {
     if (!Array.isArray(p.coachQuirks)) p.coachQuirks = [];
     if (ensureSeasonFields(p)) earnedDirty = true;
     if (rolloverIfDue(p)) earnedDirty = true;
-    if (p.seasonReveal) pendingSeason.push(p.id);
-    else {
+    const ownId = signedInOwnPlayerId();
+    if (ownId && p.id === ownId && p.seasonReveal) pendingSeason.push(p.id);
+    else if (ownId && p.id === ownId) {
       const plan = takeGradeCelebration(p);
       if (plan.mark) earnedDirty = true;
       if (plan.kind === "tier-up" || plan.kind === "overall-up") {
         pendingCeleb.push({ ...plan, playerId: p.id, reason: topGainText(p) });
       }
+    } else if (!p.seasonReveal) {
+      const plan = takeGradeCelebration(p);
+      if (plan.mark) earnedDirty = true;
     }
     if (syncEarnedQuirks(p).length) earnedDirty = true;
-    unseenEarns(p).forEach((rec) => pendingReveal.push({ playerId: p.id, quirkId: rec.id }));
   });
   pendingCeleb.sort((a, b) => (a.kind === "tier-up" ? 0 : 1) - (b.kind === "tier-up" ? 0 : 1));
   if (earnedDirty) savePlayers();
@@ -5979,9 +6016,7 @@ function bindApp() {
   renderRoster();
   if (typeof roadBoot === "function") roadBoot();
   beginSeasonReveals(pendingSeason, () => {
-    beginCelebrations(pendingCeleb, () => {
-      if (pendingReveal.length) startReveal(pendingReveal);
-    });
+    beginCelebrations(pendingCeleb, () => {});
   });
 }
 
