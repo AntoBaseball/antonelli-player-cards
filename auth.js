@@ -92,8 +92,8 @@ const AntonelliAuth = {
     if (csv) csv.addEventListener("change", () => this.inviteCsv(csv));
     const upload = document.getElementById("uploadLocalRoster");
     if (upload) upload.addEventListener("click", () => this.uploadLocal());
-    const scoopCsv = document.getElementById("scoopTossCsv");
-    if (scoopCsv) scoopCsv.addEventListener("click", () => this.downloadScoopToss());
+    const testCsv = document.getElementById("testScoresCsv");
+    if (testCsv) testCsv.addEventListener("click", () => this.downloadTestScores());
     const linksBtn = document.getElementById("showJoinLinks");
     if (linksBtn) linksBtn.addEventListener("click", () => this.loadJoinLinks());
     const linksClose = document.getElementById("joinLinksClose");
@@ -500,7 +500,7 @@ const AntonelliAuth = {
       const rows = this.parseCsv(String(reader.result || ""));
       input.value = "";
       if (!rows.length) {
-        this.setAccountStatus("No players found. The header row should be name, team, ageGroup, position, email. Optional columns: broadJump (6'2\", 6-2, or total inches) and scoopToss (mph).");
+        this.setAccountStatus("No players found. The header row should be name, team, ageGroup, position, email. Optional columns: broadJump (6'2\", 6-2, or total inches), scoopToss (mph), and vertical (inches).");
         return;
       }
       this.saveAccounts(rows);
@@ -554,6 +554,10 @@ const AntonelliAuth = {
     if (row.scoopToss != null && typeof parseScoopToss === "function") {
       const scoop = parseScoopToss(row.scoopToss);
       if (scoop != null) extras.scoopToss = scoop;
+    }
+    if (row.vertical != null && typeof parseVertical === "function") {
+      const jump = parseVertical(row.vertical);
+      if (jump != null) extras.vertical = jump;
     }
     let privateRow = { player_id: id };
     const extraKeys = Object.keys(extras);
@@ -802,11 +806,13 @@ const AntonelliAuth = {
     const emailAt = at(["email"]);
     const jumpAt = at(["broadjump", "standingbroadjump", "broad", "sbj", "standingbroad"]);
     const scoopAt = at(["scooptoss", "rotationalscoptoss", "rotationalmedballscoptoss", "scoop"]);
+    const verticalAt = at(["vertical", "verticaljump", "standingvertical", "standingverticaljump"]);
     if (nameAt < 0) return [];
     return lines.slice(1).map((line) => {
       const cells = line.split(",").map((cell) => cell.trim().replace(/^"|"$/g, ""));
       const jump = jumpAt >= 0 && typeof parseBroadJump === "function" ? parseBroadJump(cells[jumpAt]) : null;
       const scoop = scoopAt >= 0 && typeof parseScoopToss === "function" ? parseScoopToss(cells[scoopAt]) : null;
+      const vertical = verticalAt >= 0 && typeof parseVertical === "function" ? parseVertical(cells[verticalAt]) : null;
       return {
         name: cells[nameAt] || "",
         team: teamAt >= 0 ? cells[teamAt] || "" : "",
@@ -815,11 +821,12 @@ const AntonelliAuth = {
         email: emailAt >= 0 ? cells[emailAt] || "" : "",
         broadJump: jump,
         scoopToss: scoop,
+        vertical: vertical,
       };
     }).filter((row) => row.name).slice(0, 200);
   },
 
-  downloadScoopToss() {
+  downloadTestScores() {
     if (this.role !== "coach") {
       this.setAccountStatus("Sign in as a coach first.");
       return;
@@ -829,20 +836,25 @@ const AntonelliAuth = {
       const text = value == null ? "" : String(value);
       return /[",\n]/.test(text) ? '"' + text.replace(/"/g, '""') + '"' : text;
     };
-    const lines = ["name,age,ageGroup,team,scoopToss"];
+    const score = (player, key) => {
+      const raw = player.metrics && player.metrics[key];
+      return raw == null || raw === "" ? "" : raw;
+    };
+    const lines = ["name,age,ageGroup,team,scoopToss,vertical"];
     list.sort((a, b) => String(a.name || "").localeCompare(String(b.name || ""))).forEach((player) => {
-      const raw = player.metrics && player.metrics.scoopToss;
-      const score = raw == null || raw === "" ? "" : raw;
-      lines.push([cell(player.name), cell(player.age), cell(player.ageGroup), cell(player.team), cell(score)].join(","));
+      lines.push([
+        cell(player.name), cell(player.age), cell(player.ageGroup), cell(player.team),
+        cell(score(player, "scoopToss")), cell(score(player, "vertical")),
+      ].join(","));
     });
     const blob = new Blob([lines.join("\n")], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = "antonelli-scoop-toss.csv";
+    link.download = "antonelli-test-scores.csv";
     link.click();
     URL.revokeObjectURL(url);
-    this.setAccountStatus("Scoop toss CSV downloaded. Blank cells have no score yet.");
+    this.setAccountStatus("Test scores CSV downloaded. Blank cells have no score yet.");
   },
 
   async uploadLocal() {

@@ -45,7 +45,7 @@ const STORAGE_KEY = "antonelli-player-cards-v2";
 const LEGACY_STORAGE_KEY = "antonelli-player-cards-v1";
 /* Bump this when SAMPLE_PLAYERS gains players or a new seeded readingLog.
    Untouched sample cards pick up the new version on load. Edited cards do not. */
-const SAMPLE_DATA_VERSION = 2;
+const SAMPLE_DATA_VERSION = 3;
 
 const AGE_GROUP_ORDER = ["10U", "12U", "14U", "16U", "18U", "College", "Pro"];
 
@@ -319,10 +319,11 @@ const METRICS = {
     entryMin: 24, entryMax: 140,
     help: "Standing broad jump. Enter feet and inches (half inches are fine). Higher is better. Graded on the male age table.",
   },
+  /* Ungraded until VERTICAL_TABLE is filled. Chalk-wall jump-and-reach, inches. */
   vertical: {
-    label: "Vertical Jump", unit: " in", step: 0.5, displayOnly: true, mode: "higher",
-    entryMin: 6, entryMax: 45,
-    help: "Vertical jump, inches. Display only. Not part of the overall.",
+    label: "Standing Vertical Jump", unit: " in", step: 0.5, coach: true, mode: "higher", antonelliAge: true,
+    entryMin: 4, entryMax: 45,
+    help: "Chalk wall jump-and-reach. Stand sideways to the wall, feet flat, reach as high as possible with chalked fingertips and mark standing reach. From a standstill (no step, one dip with arm swing allowed), jump and touch as high as possible. Vertical = jump mark minus standing reach. Best of 3.",
   },
   flying10: {
     label: "Flying 10", unit: " s", step: 0.01, displayOnly: true, mode: "lower",
@@ -357,6 +358,7 @@ const PB_DEFS = [
   { key: "battedDistance", label: "Longest Hit", unit: "ft", mode: "max" },
   { key: "broadJump", label: "Broad Jump", unit: "", mode: "max" },
   { key: "scoopToss", label: "Scoop Toss", unit: "mph", mode: "max" },
+  { key: "vertical", label: "Vertical Jump", unit: "in", mode: "max" },
 ];
 const STRENGTH_TESTS = [
   {
@@ -434,7 +436,7 @@ const SAMPLE_PLAYERS = [
     strengthNote: DEFAULT_STRENGTH_NOTE,
     metrics: {
       batSpeed: 69, peakHandSpeed: 22, attackAngle: 12, verticalBatAngle: -28, timeToContact: 0.155, powerKw: 3.9, rotationalAcceleration: 16, onPlaneEfficiency: 76, earlyConnection: 92, connectionAtImpact: 88,
-      tenYard: 1.84, throwVelo: 84, medBall: 24, gripDominant: 118, gripOther: 108, exitVelo: 92, battedDistance: 340, broadJump: 96, vertical: 32, flying10: 1.18,
+      tenYard: 1.84, throwVelo: 84, medBall: 24, gripDominant: 118, gripOther: 108, exitVelo: 92, battedDistance: 340, broadJump: 96, flying10: 1.18,
     },
     history: {
       batSpeed: metricHistory(69, [63, 65, 72]), peakHandSpeed: metricHistory(22, [20, 20.5, 21]),
@@ -464,7 +466,7 @@ const SAMPLE_PLAYERS = [
     strengthNote: DEFAULT_STRENGTH_NOTE,
     metrics: {
       batSpeed: 58, peakHandSpeed: 19, attackAngle: 8, verticalBatAngle: -22, timeToContact: 0.17, powerKw: 2.4, rotationalAcceleration: 11, onPlaneEfficiency: 72, earlyConnection: 90, connectionAtImpact: 89,
-      tenYard: 1.68, throwVelo: 74, medBall: 17, gripDominant: 84, gripOther: 78, exitVelo: 75, battedDistance: 265, broadJump: 84, vertical: 26, flying10: 1.12,
+      tenYard: 1.68, throwVelo: 74, medBall: 17, gripDominant: 84, gripOther: 78, exitVelo: 75, battedDistance: 265, broadJump: 84, flying10: 1.12,
     },
     history: {
       batSpeed: metricHistory(58, [56, 57, 60]), peakHandSpeed: metricHistory(19, [18, 18.5, 18.5]),
@@ -555,7 +557,7 @@ const SAMPLE_PLAYERS = [
     strengthNote: DEFAULT_STRENGTH_NOTE,
     metrics: {
       batSpeed: 66, peakHandSpeed: 21, attackAngle: 10, verticalBatAngle: -26, timeToContact: 0.162, powerKw: 3.2, rotationalAcceleration: 13, onPlaneEfficiency: 74, earlyConnection: 88, connectionAtImpact: 86,
-      tenYard: 1.74, throwVelo: 79, medBall: 21, gripDominant: 102, gripOther: 96, exitVelo: 86, battedDistance: 310, broadJump: 88, vertical: 28, flying10: 1.22,
+      tenYard: 1.74, throwVelo: 79, medBall: 21, gripDominant: 102, gripOther: 96, exitVelo: 86, battedDistance: 310, broadJump: 88, flying10: 1.22,
     },
     history: {
       batSpeed: metricHistory(66, [60, 62, 64]), peakHandSpeed: metricHistory(21, [19, 19.5, 20]),
@@ -610,7 +612,7 @@ const SAMPLE_PLAYERS = [
     strengthNote: DEFAULT_STRENGTH_NOTE,
     metrics: {
       batSpeed: 70, peakHandSpeed: 21.5, attackAngle: 9, verticalBatAngle: -25, timeToContact: 0.16, powerKw: 3.3, rotationalAcceleration: 13.2, onPlaneEfficiency: 75, earlyConnection: 88, connectionAtImpact: 87,
-      tenYard: 1.9, throwVelo: 84, medBall: 20, gripDominant: 100, exitVelo: 87.4, battedDistance: 318, broadJump: 90, vertical: 32, flying10: 1.4,
+      tenYard: 1.9, throwVelo: 84, medBall: 20, gripDominant: 100, exitVelo: 87.4, battedDistance: 318, broadJump: 90, flying10: 1.4,
     },
     history: { exitVelo: metricHistory(87.4, [80, 83, 85]), batSpeed: metricHistory(70, [64, 66, 68]) },
     readingLog: { exitVelo: [{ value: 80, at: "2026-06-02" }, { value: 85, at: "2026-09-20" }, { value: 87.4, at: "2026-10-19" }] },
@@ -629,7 +631,7 @@ const SAMPLE_PLAYERS = [
     strengthNote: DEFAULT_STRENGTH_NOTE,
     metrics: {
       batSpeed: 54, peakHandSpeed: 18, attackAngle: 7, verticalBatAngle: -22, timeToContact: 0.175, powerKw: 2.1, rotationalAcceleration: 10, onPlaneEfficiency: 70, earlyConnection: 86, connectionAtImpact: 85,
-      tenYard: 1.82, throwVelo: 64, medBall: 15, gripDominant: 72, exitVelo: 70, battedDistance: 230, broadJump: 74, vertical: 21, flying10: 1.34,
+      tenYard: 1.82, throwVelo: 64, medBall: 15, gripDominant: 72, exitVelo: 70, battedDistance: 230, broadJump: 74, flying10: 1.34,
     },
     history: {
       batSpeed: metricHistory(54, [50, 51, 53]), exitVelo: metricHistory(70, [64, 66, 68]),
@@ -646,7 +648,7 @@ const SAMPLE_PLAYERS = [
     strengthNote: DEFAULT_STRENGTH_NOTE,
     metrics: {
       batSpeed: 48, peakHandSpeed: 16, attackAngle: 6, verticalBatAngle: -20, timeToContact: 0.185, powerKw: 1.5, rotationalAcceleration: 8, onPlaneEfficiency: 66, earlyConnection: 80, connectionAtImpact: 82,
-      tenYard: 1.95, throwVelo: 58, medBall: 12.5, gripDominant: 58, exitVelo: 62, battedDistance: 180, broadJump: 64, vertical: 18, flying10: 1.46,
+      tenYard: 1.95, throwVelo: 58, medBall: 12.5, gripDominant: 58, exitVelo: 62, battedDistance: 180, broadJump: 64, flying10: 1.46,
     },
     history: {
       batSpeed: metricHistory(48, [44, 45, 47]), exitVelo: metricHistory(62, [56, 58, 60]),
@@ -707,19 +709,19 @@ const SAMPLE_PLAYERS = [
    The card, the signed-in switcher, coach mode, and the team filter all read that field.
    Reset Sample Data rebuilds the roster from SAMPLE_PLAYERS, which includes this list. */
 const SAMPLE_12U_ROSTER = [
-  { id: "sample-giovanni-coffin", name: "Giovanni Coffin", position: "C", secondaryPosition: "", bats: "R", throws: "R", type: "hitter", archetype: "Contact / Leadoff", height: "5'0\"", weight: "102 lbs", hometown: "Medford, MA", exit: 57, bat: 46, sprint: 2.14, throwV: 51, chest: 12.4, grip: 52, broad: 62, vert: 16, fly: 1.58, distance: 165 },
-  { id: "sample-matty-antonelli", name: "Matty Antonelli", position: "SS", secondaryPosition: "2B", bats: "R", throws: "R", type: "hitter", archetype: "Speed / Table-Setter", height: "5'3\"", weight: "112 lbs", hometown: "Boston, MA", exit: 65, bat: 54, sprint: 1.97, throwV: 61, chest: 15.2, grip: 66, broad: 74, vert: 21, fly: 1.42, distance: 195 },
-  { id: "sample-dominik-cacciola", name: "Dominik Cacciola", position: "2B", secondaryPosition: "SS", bats: "R", throws: "R", type: "hitter", archetype: "Gap-to-Gap Hitter", height: "5'1\"", weight: "100 lbs", hometown: "Revere, MA", exit: 55, bat: 47, sprint: 2.08, throwV: 49, chest: 12.8, grip: 54, broad: 64, vert: 17, fly: 1.54, distance: 160 },
-  { id: "sample-grady-currier", name: "Grady Currier", position: "3B", secondaryPosition: "1B", bats: "R", throws: "R", type: "hitter", archetype: "Power Hitter", height: "5'4\"", weight: "125 lbs", hometown: "Quincy, MA", exit: 62, bat: 52, sprint: 2.18, throwV: 58, chest: 14.6, grip: 63, broad: 68, vert: 18, fly: 1.60, distance: 188 },
-  { id: "sample-liam-tainsh", name: "Liam Tainsh", position: "1B", secondaryPosition: "OF", bats: "L", throws: "L", type: "hitter", archetype: "Power Hitter", height: "5'5\"", weight: "128 lbs", hometown: "Somerville, MA", exit: 63, bat: 51, sprint: 2.20, throwV: 47, chest: 13.5, grip: 58, broad: 66, vert: 17, fly: 1.62, distance: 184 },
-  { id: "sample-nico-cavallo", name: "Nico Cavallo", position: "CF", secondaryPosition: "OF", bats: "L", throws: "L", type: "hitter", archetype: "Speed / Table-Setter", height: "5'2\"", weight: "98 lbs", hometown: "Cambridge, MA", exit: 54, bat: 48, sprint: 1.96, throwV: 53, chest: 13.0, grip: 55, broad: 76, vert: 22, fly: 1.40, distance: 155 },
-  { id: "sample-brendan-foley", name: "Brendan Foley", position: "LF", secondaryPosition: "OF", bats: "R", throws: "R", type: "hitter", archetype: "Gap-to-Gap Hitter", height: "5'2\"", weight: "108 lbs", hometown: "Everett, MA", exit: 60, bat: 50, sprint: 2.11, throwV: 56, chest: 14.2, grip: 60, broad: 70, vert: 19, fly: 1.52, distance: 176 },
-  { id: "sample-zach-sorgini", name: "Zach Sorgini", position: "RF", secondaryPosition: "OF", bats: "R", throws: "R", type: "hitter", archetype: "Power Hitter", height: "5'3\"", weight: "118 lbs", hometown: "Malden, MA", exit: 59, bat: 49, sprint: 2.15, throwV: 57, chest: 13.8, grip: 61, broad: 67, vert: 18, fly: 1.56, distance: 172 },
+  { id: "sample-giovanni-coffin", name: "Giovanni Coffin", position: "C", secondaryPosition: "", bats: "R", throws: "R", type: "hitter", archetype: "Contact / Leadoff", height: "5'0\"", weight: "102 lbs", hometown: "Medford, MA", exit: 57, bat: 46, sprint: 2.14, throwV: 51, chest: 12.4, grip: 52, broad: 62, fly: 1.58, distance: 165 },
+  { id: "sample-matty-antonelli", name: "Matty Antonelli", position: "SS", secondaryPosition: "2B", bats: "R", throws: "R", type: "hitter", archetype: "Speed / Table-Setter", height: "5'3\"", weight: "112 lbs", hometown: "Boston, MA", exit: 65, bat: 54, sprint: 1.97, throwV: 61, chest: 15.2, grip: 66, broad: 74, fly: 1.42, distance: 195 },
+  { id: "sample-dominik-cacciola", name: "Dominik Cacciola", position: "2B", secondaryPosition: "SS", bats: "R", throws: "R", type: "hitter", archetype: "Gap-to-Gap Hitter", height: "5'1\"", weight: "100 lbs", hometown: "Revere, MA", exit: 55, bat: 47, sprint: 2.08, throwV: 49, chest: 12.8, grip: 54, broad: 64, fly: 1.54, distance: 160 },
+  { id: "sample-grady-currier", name: "Grady Currier", position: "3B", secondaryPosition: "1B", bats: "R", throws: "R", type: "hitter", archetype: "Power Hitter", height: "5'4\"", weight: "125 lbs", hometown: "Quincy, MA", exit: 62, bat: 52, sprint: 2.18, throwV: 58, chest: 14.6, grip: 63, broad: 68, fly: 1.60, distance: 188 },
+  { id: "sample-liam-tainsh", name: "Liam Tainsh", position: "1B", secondaryPosition: "OF", bats: "L", throws: "L", type: "hitter", archetype: "Power Hitter", height: "5'5\"", weight: "128 lbs", hometown: "Somerville, MA", exit: 63, bat: 51, sprint: 2.20, throwV: 47, chest: 13.5, grip: 58, broad: 66, fly: 1.62, distance: 184 },
+  { id: "sample-nico-cavallo", name: "Nico Cavallo", position: "CF", secondaryPosition: "OF", bats: "L", throws: "L", type: "hitter", archetype: "Speed / Table-Setter", height: "5'2\"", weight: "98 lbs", hometown: "Cambridge, MA", exit: 54, bat: 48, sprint: 1.96, throwV: 53, chest: 13.0, grip: 55, broad: 76, fly: 1.40, distance: 155 },
+  { id: "sample-brendan-foley", name: "Brendan Foley", position: "LF", secondaryPosition: "OF", bats: "R", throws: "R", type: "hitter", archetype: "Gap-to-Gap Hitter", height: "5'2\"", weight: "108 lbs", hometown: "Everett, MA", exit: 60, bat: 50, sprint: 2.11, throwV: 56, chest: 14.2, grip: 60, broad: 70, fly: 1.52, distance: 176 },
+  { id: "sample-zach-sorgini", name: "Zach Sorgini", position: "RF", secondaryPosition: "OF", bats: "R", throws: "R", type: "hitter", archetype: "Power Hitter", height: "5'3\"", weight: "118 lbs", hometown: "Malden, MA", exit: 59, bat: 49, sprint: 2.15, throwV: 57, chest: 13.8, grip: 61, broad: 67, fly: 1.56, distance: 172 },
   { id: "sample-sebastian-white", name: "Sebastian White", position: "RHP", secondaryPosition: "", bats: "R", throws: "R", type: "pitcher", archetype: "Workhorse Starter", height: "5'4\"", weight: "120 lbs", hometown: "Winthrop, MA", fb: 61, spin: 1620, strike: 56, whiff: 20, cap: 48, broad: 68 },
   { id: "sample-anthony-contilli", name: "Anthony Contilli", position: "LHP", secondaryPosition: "", bats: "L", throws: "L", type: "pitcher", archetype: "Pitch-to-Contact Starter", height: "5'1\"", weight: "105 lbs", hometown: "East Boston, MA", fb: 56, spin: 1480, strike: 62, whiff: 16, cap: 44, broad: 62 },
   { id: "sample-noah-bernazzani", name: "Noah Bernazzani", position: "RHP", secondaryPosition: "", bats: "R", throws: "R", type: "pitcher", archetype: "Closer", height: "5'6\"", weight: "130 lbs", hometown: "Braintree, MA", fb: 64, spin: 1740, strike: 52, whiff: 26, cap: 42, broad: 72 },
-  { id: "sample-vincent-merullo", name: "Vincent Merullo", position: "OF", secondaryPosition: "RHP", bats: "R", throws: "R", type: "two-way", archetype: "Two-Way Player", height: "5'3\"", weight: "115 lbs", hometown: "Newton, MA", exit: 58, bat: 49, sprint: 2.06, throwV: 55, chest: 13.2, grip: 57, broad: 65, vert: 17, fly: 1.50, distance: 168, fb: 59, spin: 1560, strike: 55, whiff: 18, cap: 40 },
-  { id: "sample-robbie-stanziani", name: "Robbie Stanziani", position: "UT", secondaryPosition: "3B", bats: "R", throws: "R", type: "hitter", archetype: "Contact / Leadoff", height: "4'11\"", weight: "92 lbs", hometown: "Waltham, MA", exit: 52, bat: 45, sprint: 2.17, throwV: 46, chest: 11.6, grip: 48, broad: 60, vert: 15, fly: 1.64, distance: 148 },
+  { id: "sample-vincent-merullo", name: "Vincent Merullo", position: "OF", secondaryPosition: "RHP", bats: "R", throws: "R", type: "two-way", archetype: "Two-Way Player", height: "5'3\"", weight: "115 lbs", hometown: "Newton, MA", exit: 58, bat: 49, sprint: 2.06, throwV: 55, chest: 13.2, grip: 57, broad: 65, fly: 1.50, distance: 168, fb: 59, spin: 1560, strike: 55, whiff: 18, cap: 40 },
+  { id: "sample-robbie-stanziani", name: "Robbie Stanziani", position: "UT", secondaryPosition: "3B", bats: "R", throws: "R", type: "hitter", archetype: "Contact / Leadoff", height: "4'11\"", weight: "92 lbs", hometown: "Waltham, MA", exit: 52, bat: 45, sprint: 2.17, throwV: 46, chest: 11.6, grip: 48, broad: 60, fly: 1.64, distance: 148 },
 ];
 
 function sample12uPlayer(row, index) {
@@ -743,7 +745,6 @@ function sample12uPlayer(row, index) {
     metrics.gripOther = Math.max(30, row.grip - 4);
     metrics.exitVelo = row.exit;
     metrics.battedDistance = row.distance;
-    metrics.vertical = row.vert;
     metrics.flying10 = row.fly;
   }
   if (row.broad != null) metrics.broadJump = row.broad;
@@ -797,7 +798,6 @@ const SAMPLE_CHART_SPECS = [
   { key: "tenYard", better: "lower", digits: 2 },
   { key: "throwVelo", better: "higher", digits: 1 },
   { key: "broadJump", better: "higher", digits: 0 },
-  { key: "vertical", better: "higher", digits: 0 },
   { key: "flying10", better: "lower", digits: 2 },
   { key: "medBall", better: "higher", digits: 1 },
   { key: "gripDominant", better: "higher", digits: 0 },
@@ -1377,6 +1377,27 @@ function scoopTossCaption(age) {
   return higherTableCaption("Rotational med ball scoop toss, 4 lb, radar mph", age, cuts);
 }
 
+/* Null until Matt approves percentiles built from his players' real chalk-wall jumps.
+   Fill ages 8–18 in the same shape as THROW_TABLE (average, above, good, great, inches).
+   When this is an object, standing vertical jump grades on the age-in-years path and
+   feeds POW beside the broad jump. While it is null the number is display only. */
+const VERTICAL_TABLE = null;
+const VERTICAL_GREAT_SPAN = 4;
+
+function gradeVertical(value, age) {
+  if (!VERTICAL_TABLE) return { grade: null, band: null, year: exitVeloTableAge(age) };
+  return gradeHigherTable(value, age, VERTICAL_TABLE, VERTICAL_GREAT_SPAN, 1);
+}
+function verticalCuts(age) {
+  if (!VERTICAL_TABLE) return null;
+  return higherTableCuts(age, VERTICAL_TABLE, VERTICAL_GREAT_SPAN, 1);
+}
+function verticalCaption(age) {
+  const cuts = verticalCuts(age);
+  if (!cuts) return "Not graded yet. Percentiles will be built from our players' scores, then approved before this number affects Power.";
+  return higherTableCaption("Standing vertical jump, chalk wall, inches", age, cuts);
+}
+
 function broadJumpCaption(age) {
   const cuts = broadJumpCuts(age);
   const rule = "Standing broad jump, males, by age in years, the same age rule as the other Antonelli tables. Under 8 uses age 8. Over 18 uses age 18. P25 starts Average, P50 starts Above Avg, P75 starts Good, P90 starts Great.";
@@ -1394,6 +1415,7 @@ function ageTableScore(key, value, age) {
   if (key === "throwVelo") return gradeThrowVelo(value, age);
   if (key === "broadJump") return gradeBroadJump(value, age);
   if (key === "scoopToss" && SCOOP_TOSS_TABLE) return gradeScoopToss(value, age);
+  if (key === "vertical" && VERTICAL_TABLE) return gradeVertical(value, age);
   return null;
 }
 
@@ -1533,6 +1555,7 @@ function compositeGrade(player, parts) {
 function powParts() {
   const parts = FACE_PARTS.POW.slice();
   if (SCOOP_TOSS_TABLE) parts.push({ key: "scoopToss", weight: 0.12 });
+  if (VERTICAL_TABLE) parts.push({ key: "vertical", weight: 0.12 });
   return parts;
 }
 
@@ -2799,14 +2822,14 @@ function athleticKeys() {
 }
 
 function displayKeys() {
-  return ["battedDistance", "vertical", "flying10"];
+  return ["battedDistance", "flying10"];
 }
 
 function metricKeysFor(type) {
-  const scoop = ["scoopToss"];
-  if (type === "pitcher") return [...PITCHER_KEYS, "broadJump", ...scoop];
-  if (type === "two-way") return [...BLAST_KEYS, ...athleticKeys(), ...displayKeys(), ...PITCHER_KEYS, ...scoop];
-  return [...BLAST_KEYS, ...athleticKeys(), ...displayKeys(), ...scoop];
+  const tests = ["scoopToss", "vertical"];
+  if (type === "pitcher") return [...PITCHER_KEYS, "broadJump", ...tests];
+  if (type === "two-way") return [...BLAST_KEYS, ...athleticKeys(), ...displayKeys(), ...PITCHER_KEYS, ...tests];
+  return [...BLAST_KEYS, ...athleticKeys(), ...displayKeys(), ...tests];
 }
 
 function defaultBlastMetrics(ageGroup) {
@@ -2908,6 +2931,7 @@ function benchmarkCaption(key, ageGroup, age) {
   if (key === "gripDominant") return gripCaption(age);
   if (key === "broadJump") return broadJumpCaption(age);
   if (key === "scoopToss") return scoopTossCaption(age);
+  if (key === "vertical") return verticalCaption(age);
   const m = METRICS[key];
   if (m.displayOnly) return `Display only, ${m.entryMin}–${m.entryMax}${m.unit}. Not graded and not part of the overall.`;
   const coach = coachSpecFor(key);
@@ -3099,6 +3123,15 @@ function formatBroadJump(total) {
 }
 
 /* 6'2", 6'2.5", 6 ft 2 in, 6-2, 6-2.5, or a plain total-inches number. */
+function parseVertical(raw) {
+  if (raw == null) return null;
+  const text = String(raw).trim().toLowerCase().replace(/inches|inch|in\b/g, "").trim();
+  if (!text) return null;
+  const n = Number(text);
+  if (!Number.isFinite(n)) return null;
+  return Math.round(n * 2) / 2;
+}
+
 function parseScoopToss(raw) {
   if (raw == null) return null;
   const text = String(raw).trim().toLowerCase().replace(/mph/g, "").trim();
@@ -3579,6 +3612,14 @@ function broadJumpBackText(player) {
   return antonelliRawLine(player, "broadJump") || formatBroadJump(n);
 }
 
+function verticalBackText(player) {
+  const n = metricNumber(player.metrics && player.metrics.vertical);
+  if (n == null) return "—";
+  const scored = VERTICAL_TABLE ? ageTableScore("vertical", n, player.age) : null;
+  const label = scored && scored.band ? scored.band.label : "";
+  return [formatMetric("vertical", n) + " in", label].filter(Boolean).join(" · ");
+}
+
 function scoopTossBackText(player) {
   const n = metricNumber(player.metrics && player.metrics.scoopToss);
   if (n == null) return "—";
@@ -3653,6 +3694,7 @@ function cardBackHTML(player, face, subs, opts, perkCap) {
     rawBackLine("10-yard dash", tenYardBackText(player)),
     rawBackLine("Broad jump", broadJumpBackText(player)),
     rawBackLine("Scoop toss", scoopTossBackText(player)),
+    rawBackLine("Vertical", verticalBackText(player)),
     rawBackLine("Crow-hop throw", throwBackText(player)),
     rawBackLine("Chest pass", medBallBackText(player)),
     rawBackLine("Grip", gripBackText(player)),
@@ -3666,6 +3708,7 @@ function cardBackHTML(player, face, subs, opts, perkCap) {
     rawBackLine("Capacity", metricNumber(metrics.pitchCapacity) == null ? "—" : `${formatMetric("pitchCapacity", metrics.pitchCapacity)} pitches`),
     player.type === "pitcher" ? rawBackLine("Broad jump", broadJumpBackText(player)) : "",
     player.type === "pitcher" ? rawBackLine("Scoop toss", scoopTossBackText(player)) : "",
+    player.type === "pitcher" ? rawBackLine("Vertical", verticalBackText(player)) : "",
   ].join("") : "";
   const profileBtn = opts && opts.profileButton && player.id
     ? `<button class="btn btn-red back-profile" type="button" data-open="${esc(player.id)}">View Profile</button>`
@@ -3977,7 +4020,7 @@ function renderTierShowcase() {
 
 /* Does well / Work on. Same tested categories as the Where I Started charts.
    Rank uses the overall grade, including the age window. A slower time grades lower.
-   Vertical and flying 10 are charted but not graded, so they stay off these lines.
+   Standing vertical jump and flying 10 are charted but not graded, so they stay off these lines.
    Standing broad jump is graded, so it can land in Does well or Work on. */
 const FOCUS_METRICS = {
   batSpeed: {
@@ -4068,7 +4111,7 @@ const FOCUS_METRICS = {
 
 function focusCatalog(player) {
   const type = player && player.type;
-  const hitting = ["batSpeed", "exitVelo", "tenYard", "throwVelo", "gripDominant", "medBall", "broadJump", "vertical", "flying10"];
+  const hitting = ["batSpeed", "exitVelo", "tenYard", "throwVelo", "gripDominant", "medBall", "broadJump", "flying10"];
   const pitching = ["fastballVelo", "spinRate", "strikePct", "whiffPct", "pitchCapacity"];
   const keys = type === "pitcher" ? pitching : (type === "hitter" ? hitting : hitting.concat(pitching));
   return keys.filter((key) => FOCUS_METRICS[key] && metricNumber(player.metrics && player.metrics[key]) != null);
@@ -5508,6 +5551,7 @@ function renderMetricFields(playerLike) {
       ? `<span class="band-chip ${bandInfo ? "band-" + bandInfo.key : ""}" id="band-${k}">${bandInfo ? esc(bandInfo.label) : "—"}</span>`
       : "";
     if (k === "broadJump") return broadJumpFieldHTML(playerLike, m, stored, has, sliderVal, bounds, grade, bandInfo);
+    if (k === "vertical") return verticalFieldHTML(playerLike, m, stored, has, sliderVal, bounds, grade, bandInfo);
     return `<div class="metric-row">
       <label for="m-${k}">${m.label} <small id="cap-${k}">${esc(m.help)} • ${esc(benchmarkCaption(k, ageGroup, playerLike.age))}</small></label>
       <div class="metric-inputs">
@@ -5520,6 +5564,7 @@ function renderMetricFields(playerLike) {
     </div>`;
   }).join("") + manualBestsFields(playerLike);
   wireBroadJumpFields();
+  wireVerticalFields();
   document.querySelectorAll("[data-metric]").forEach((input) => {
     input.addEventListener("input", () => {
       const k = input.dataset.metric;
@@ -5554,6 +5599,43 @@ function broadJumpFieldHTML(playerLike, m, stored, has, sliderVal, bounds, grade
       ${band}
     </div>
   </div>`;
+}
+
+function verticalFieldHTML(playerLike, m, stored, has, sliderVal, bounds, grade, bandInfo) {
+  const band = `<span class="band-chip ${bandInfo ? "band-" + bandInfo.key : ""}" id="band-vertical">${bandInfo ? esc(bandInfo.label) : "—"}</span>`;
+  return `<div class="metric-row">
+    <label for="m-vertical">${m.label} <small id="cap-vertical">${esc(m.help)} • ${esc(benchmarkCaption("vertical", activeAgeGroup(playerLike), playerLike.age))}</small></label>
+    <div class="metric-inputs metric-jump">
+      <label class="jump-part">Reach <input type="number" id="vert-reach" min="20" max="120" step="0.5" inputmode="decimal" placeholder="in"></label>
+      <label class="jump-part">Touch <input type="number" id="vert-touch" min="20" max="160" step="0.5" inputmode="decimal" placeholder="in"></label>
+      <input type="range" id="range-vertical" data-metric="vertical" min="${bounds.min}" max="${bounds.max}" step="0.5" value="${sliderVal}">
+      <input type="number" id="m-vertical" data-metric="vertical" min="${bounds.min}" max="${bounds.max}" step="0.5" value="${has ? stored : ""}" placeholder="in">
+      <span class="muted small">in</span>
+      <span class="grade-chip" id="grade-vertical">${grade ?? "—"}</span>
+      ${band}
+    </div>
+  </div>`;
+}
+
+function wireVerticalFields() {
+  const reach = $("vert-reach");
+  const touch = $("vert-touch");
+  const num = $("m-vertical");
+  const range = $("range-vertical");
+  if (!reach || !touch || !num) return;
+  const applyMarks = () => {
+    if (reach.value === "" || touch.value === "") return;
+    const stand = Number(reach.value);
+    const mark = Number(touch.value);
+    if (!Number.isFinite(stand) || !Number.isFinite(mark)) return;
+    const jump = Math.round((mark - stand) * 2) / 2;
+    if (jump < 0) return;
+    num.value = String(jump);
+    if (range) range.value = String(jump);
+    num.dispatchEvent(new Event("input", { bubbles: true }));
+  };
+  reach.addEventListener("input", applyMarks);
+  touch.addEventListener("input", applyMarks);
 }
 
 function paintBroadJumpGrade() {

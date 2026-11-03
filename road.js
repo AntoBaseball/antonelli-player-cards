@@ -386,7 +386,7 @@ var ROAD_CHART_HITTING = [
   { key: "tenYard", label: "Sprint", unit: "s", better: "lower", digits: 2 },
   { key: "throwVelo", label: "Throwing Velo", unit: "MPH", better: "higher", digits: 1 },
   { key: "broadJump", label: "Broad Jump", unit: "feet-inches", better: "higher", digits: 0 },
-  { key: "vertical", label: "Vertical", unit: "in", better: "higher", digits: 0 },
+  { key: "vertical", label: "Vertical Jump", unit: "in", better: "higher", digits: 1 },
   { key: "flying10", label: "Flying 10", unit: "s", better: "lower", digits: 2 },
   { key: "medBall", label: "Chest Pass", unit: "ft", better: "higher", digits: 1 },
   { key: "gripDominant", label: "Grip", unit: "lbs", better: "higher", digits: 0 },
@@ -399,6 +399,7 @@ var ROAD_CHART_PITCHING = [
   { key: "whiffPct", label: "Whiff %", unit: "%", better: "higher", digits: 0 },
   { key: "pitchCapacity", label: "Capacity", unit: "pitches", better: "higher", digits: 0 },
   { key: "scoopToss", label: "Scoop Toss", unit: "mph", better: "higher", digits: 1 },
+  { key: "vertical", label: "Vertical Jump", unit: "in", better: "higher", digits: 1 },
 ];
 
 function roadChartCatalog(player) {
