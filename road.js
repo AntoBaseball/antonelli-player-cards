@@ -385,7 +385,7 @@ var ROAD_CHART_HITTING = [
   { key: "batSpeed", label: "Bat Speed", unit: "MPH", better: "higher", digits: 1 },
   { key: "tenYard", label: "Sprint", unit: "s", better: "lower", digits: 2 },
   { key: "throwVelo", label: "Throwing Velo", unit: "MPH", better: "higher", digits: 1 },
-  { key: "broadJump", label: "Broad Jump", unit: "in", better: "higher", digits: 0 },
+  { key: "broadJump", label: "Broad Jump", unit: "feet-inches", better: "higher", digits: 0 },
   { key: "vertical", label: "Vertical", unit: "in", better: "higher", digits: 0 },
   { key: "flying10", label: "Flying 10", unit: "s", better: "lower", digits: 2 },
   { key: "medBall", label: "Chest Pass", unit: "ft", better: "higher", digits: 1 },
@@ -411,6 +411,7 @@ function roadChartCatalog(player) {
 }
 
 function roadFormatStat(spec, value) {
+  if (spec && spec.key === "broadJump" && typeof formatBroadJump === "function") return formatBroadJump(value);
   const n = Number(value);
   if (!Number.isFinite(n)) return "—";
   if (spec.digits === 2) return n.toFixed(2);
@@ -520,6 +521,11 @@ function roadMonthLabel(month, withYear) {
 }
 
 function roadChangeCall(spec, from, to) {
+  if (spec && spec.key === "broadJump") {
+    const raw = Math.round((to - from) * 2) / 2;
+    if (Math.abs(raw) < 0.001) return { num: "0", unit: "", note: "no change", kind: "flat" };
+    return { num: (raw > 0 ? "+" : "−") + Math.abs(raw) + "\"", unit: "", note: "", kind: raw > 0 ? "up" : "down" };
+  }
   const raw = to - from;
   const mag = roadFormatStat(spec, Math.abs(raw));
   if (Math.abs(raw) < 0.001) return { num: "0", unit: spec.unit, note: "no change", kind: "flat" };
@@ -578,9 +584,10 @@ function roadMonthCard(player, spec) {
   const to = points[points.length - 1].value;
   const change = roadChangeCall(spec, from, to);
   const note = change.note ? "<em>" + roadEsc(change.note) + "</em>" : "";
-  return "<article class=\"month-chart\"><h3>" + roadEsc(spec.label) + "</h3><p class=\"month-unit\">" + roadEsc(spec.unit) + "</p>" +
-    "<div class=\"month-facts\"><p><span>Start</span><b>" + roadFormatStat(spec, from) + "<small>" + roadEsc(spec.unit) + "</small></b></p>" +
-    "<p><span>Now</span><b>" + roadFormatStat(spec, to) + "<small>" + roadEsc(spec.unit) + "</small></b></p>" +
+  const factUnit = spec.key === "broadJump" ? "" : spec.unit;
+  return "<article class=\"month-chart\" data-metric=\"" + roadEsc(spec.key) + "\"><h3>" + roadEsc(spec.label) + "</h3><p class=\"month-unit\">" + roadEsc(spec.key === "broadJump" ? "feet-inches" : spec.unit) + "</p>" +
+    "<div class=\"month-facts\"><p><span>Start</span><b>" + roadFormatStat(spec, from) + "<small>" + roadEsc(factUnit) + "</small></b></p>" +
+    "<p><span>Now</span><b>" + roadFormatStat(spec, to) + "<small>" + roadEsc(factUnit) + "</small></b></p>" +
     "<p><span>Change</span><b class=\"is-" + change.kind + "\">" + change.num + "<small>" + roadEsc(change.unit) + "</small>" + note + "</b></p></div>" +
     roadMonthSVG(points, spec) + "</article>";
 }
@@ -640,6 +647,7 @@ function roadNextUpgrade(player) {
       { key: "throwVelo", step: 0.5, dir: 1, unit: "MPH", label: "Crow-hop", max: 6 },
       { key: "medBall", step: 0.5, dir: 1, unit: "ft", label: "Chest pass", max: 6 },
       { key: "gripDominant", step: 1, dir: 1, unit: "lbs", label: "Grip", max: 20 },
+      { key: "broadJump", step: 1, dir: 1, unit: "in", label: "Broad jump", max: 8 },
     ];
   let best = null;
   probes.forEach((probe) => {

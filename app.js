@@ -21,11 +21,13 @@
         THW  5%  crow-hop throw (throwVelo), Antonelli's age-by-age table, not the pitcher scale.
         STR  5%  average of the seated 2 kg chest pass and dominant-hand grip.
         EV  12%  exit velocity (exitVelo), Antonelli's age-by-age table, not Blast.
+        BJ   5%  standing broad jump, male age table, total inches stored, feet-inches shown.
       The 12% comes out of the non-bat-speed Blast buckets in their old ratio.
       Missing SPD, THW, STR, or exit velocity is left out. It is not a zero.
       The card FRONT does not print those buckets. It prints five face grades:
         POW = bat speed 40% + exit velo 30% + Blast power 18% + rotational acceleration 12%
-              (if exit velo is blank, the other three are reweighted)
+              + standing broad jump 15% when a jump is saved
+              (blank pieces are left out and the rest are reweighted)
         CON = time to contact 28% + attack angle 18% + vertical bat angle 12%
               + on-plane 22% + early connection 10% + connection at impact 10%
         SPD, THW, STR as above. No data prints as a dash and stays off the overall.
@@ -43,7 +45,7 @@ const STORAGE_KEY = "antonelli-player-cards-v2";
 const LEGACY_STORAGE_KEY = "antonelli-player-cards-v1";
 /* Bump this when SAMPLE_PLAYERS gains players or a new seeded readingLog.
    Untouched sample cards pick up the new version on load. Edited cards do not. */
-const SAMPLE_DATA_VERSION = 1;
+const SAMPLE_DATA_VERSION = 2;
 
 const AGE_GROUP_ORDER = ["10U", "12U", "14U", "16U", "18U", "College", "Pro"];
 
@@ -310,11 +312,12 @@ const METRICS = {
     entryMin: 40, entryMax: 500,
     help: "Furthest ball off the bat, in feet. Display only. Not graded and not part of the overall. The personal best is the longest one on record.",
   },
-  /* Optional athletic tests. Tracked for quests and leaderboards. Not part of OVR unless a later config says so. */
+  /* Standing broad jump. Stored as total inches. Shown as feet and inches.
+     Graded on BROAD_JUMP_CM (male, age in years). Feeds POW and a small slice of the overall. */
   broadJump: {
-    label: "Broad Jump", unit: " in", step: 1, displayOnly: true, mode: "higher",
+    label: "Standing Broad Jump", unit: "", step: 0.5, coach: true, mode: "higher", antonelliAge: true, feet: true,
     entryMin: 24, entryMax: 140,
-    help: "Standing broad jump, inches. Display only. Not part of the overall.",
+    help: "Standing broad jump. Enter feet and inches (half inches are fine). Higher is better. Graded on the male age table.",
   },
   vertical: {
     label: "Vertical Jump", unit: " in", step: 0.5, displayOnly: true, mode: "higher",
@@ -346,6 +349,7 @@ const PB_DEFS = [
   { key: "throwVelo", label: "Top Throw", unit: "mph", mode: "max" },
   { key: "tenYard", label: "Fastest 10-Yd", unit: "s", mode: "min" },
   { key: "battedDistance", label: "Longest Hit", unit: "ft", mode: "max" },
+  { key: "broadJump", label: "Broad Jump", unit: "", mode: "max" },
 ];
 const STRENGTH_TESTS = [
   {
@@ -480,7 +484,7 @@ const SAMPLE_PLAYERS = [
 
 
     coachQuirks: ["outlier-1", "pressure-cooker"],
-    metrics: { fastballVelo: 90, spinRate: 2450, strikePct: 69, whiffPct: 38, pitchCapacity: 95 },
+    metrics: { fastballVelo: 90, spinRate: 2450, strikePct: 69, whiffPct: 38, pitchCapacity: 95, broadJump: 84 },
     history: {
       fastballVelo: metricHistory(90, [83, 86, 88]), spinRate: metricHistory(2450, [2150, 2280, 2380]),
       strikePct: metricHistory(69, [60, 64, 67]), whiffPct: metricHistory(38, [34, 35, 37]),
@@ -494,7 +498,7 @@ const SAMPLE_PLAYERS = [
 
 
     coachQuirks: ["stopper", "outlier-2"],
-    metrics: { fastballVelo: 91, spinRate: 2480, strikePct: 61, whiffPct: 41, pitchCapacity: 52 },
+    metrics: { fastballVelo: 91, spinRate: 2480, strikePct: 61, whiffPct: 41, pitchCapacity: 52, broadJump: 90 },
     history: {
       fastballVelo: metricHistory(91, [89.5, 90, 90.5]), spinRate: metricHistory(2480, [2300, 2360, 2420]),
       strikePct: metricHistory(61, [57, 59, 60]), whiffPct: metricHistory(41, [34, 36, 39]),
@@ -510,7 +514,7 @@ const SAMPLE_PLAYERS = [
     strengthNote: DEFAULT_STRENGTH_NOTE,
     metrics: {
       batSpeed: 51, peakHandSpeed: 17, attackAngle: 6, verticalBatAngle: -25, timeToContact: 0.19, powerKw: 1.8, rotationalAcceleration: 8.5, onPlaneEfficiency: 64, earlyConnection: 78, connectionAtImpact: 84,
-      tenYard: 2.08, throwVelo: 70, medBall: 15.5, gripDominant: 76, gripOther: 70, exitVelo: 69, battedDistance: 220,
+      tenYard: 2.08, throwVelo: 70, medBall: 15.5, gripDominant: 76, gripOther: 70, exitVelo: 69, battedDistance: 220, broadJump: 70,
       fastballVelo: 76, spinRate: 1950, strikePct: 58, whiffPct: 22, pitchCapacity: 62,
     },
     history: {
@@ -599,7 +603,7 @@ const SAMPLE_PLAYERS = [
     strengthNote: DEFAULT_STRENGTH_NOTE,
     metrics: {
       batSpeed: 70, peakHandSpeed: 21.5, attackAngle: 9, verticalBatAngle: -25, timeToContact: 0.16, powerKw: 3.3, rotationalAcceleration: 13.2, onPlaneEfficiency: 75, earlyConnection: 88, connectionAtImpact: 87,
-      tenYard: 1.9, throwVelo: 84, medBall: 20, gripDominant: 100, exitVelo: 87.4, battedDistance: 318, broadJump: 100, vertical: 32, flying10: 1.4,
+      tenYard: 1.9, throwVelo: 84, medBall: 20, gripDominant: 100, exitVelo: 87.4, battedDistance: 318, broadJump: 90, vertical: 32, flying10: 1.4,
     },
     history: { exitVelo: metricHistory(87.4, [80, 83, 85]), batSpeed: metricHistory(70, [64, 66, 68]) },
     readingLog: { exitVelo: [{ value: 80, at: "2026-06-02" }, { value: 85, at: "2026-09-20" }, { value: 87.4, at: "2026-10-19" }] },
@@ -649,7 +653,7 @@ const SAMPLE_PLAYERS = [
 
 
     coachQuirks: ["outlier-1"],
-    metrics: { fastballVelo: 87, spinRate: 2300, strikePct: 64, whiffPct: 32, pitchCapacity: 80 },
+    metrics: { fastballVelo: 87, spinRate: 2300, strikePct: 64, whiffPct: 32, pitchCapacity: 80, broadJump: 86 },
     history: {
       fastballVelo: metricHistory(87, [82, 84, 85]), spinRate: metricHistory(2300, [2100, 2180, 2240]),
       strikePct: metricHistory(64, [58, 60, 62]), whiffPct: metricHistory(32, [28, 29, 31]),
@@ -663,7 +667,7 @@ const SAMPLE_PLAYERS = [
 
 
     coachQuirks: ["outlier-1"],
-    metrics: { fastballVelo: 93, spinRate: 2500, strikePct: 73, whiffPct: 42, pitchCapacity: 103 },
+    metrics: { fastballVelo: 93, spinRate: 2500, strikePct: 73, whiffPct: 42, pitchCapacity: 103, broadJump: 94 },
     history: { fastballVelo: metricHistory(93, [88, 90, 92]) },
     readingLog: {
       fastballVelo: [{ value: 86, at: "2025-10-02" }, { value: 88, at: "2026-04-11" }, { value: 90, at: "2026-07-18" }, { value: 92, at: "2026-09-20" }, { value: 93, at: "2026-10-18" }],
@@ -676,7 +680,7 @@ const SAMPLE_PLAYERS = [
 
 
     coachQuirks: ["pressure-cooker"],
-    metrics: { fastballVelo: 94.5, spinRate: 2550, strikePct: 74, whiffPct: 44, pitchCapacity: 106 },
+    metrics: { fastballVelo: 94.5, spinRate: 2550, strikePct: 74, whiffPct: 44, pitchCapacity: 106, broadJump: 96 },
     history: { fastballVelo: metricHistory(94.5, [89, 91, 93]) },
     readingLog: {
       fastballVelo: [{ value: 88, at: "2025-09-12" }, { value: 89, at: "2026-04-04" }, { value: 91, at: "2026-07-09" }, { value: 93, at: "2026-09-14" }, { value: 94.5, at: "2026-10-16" }],
@@ -704,9 +708,9 @@ const SAMPLE_12U_ROSTER = [
   { id: "sample-nico-cavallo", name: "Nico Cavallo", position: "CF", secondaryPosition: "OF", bats: "L", throws: "L", type: "hitter", archetype: "Speed / Table-Setter", height: "5'2\"", weight: "98 lbs", hometown: "Cambridge, MA", exit: 54, bat: 48, sprint: 1.96, throwV: 53, chest: 13.0, grip: 55, broad: 76, vert: 22, fly: 1.40, distance: 155 },
   { id: "sample-brendan-foley", name: "Brendan Foley", position: "LF", secondaryPosition: "OF", bats: "R", throws: "R", type: "hitter", archetype: "Gap-to-Gap Hitter", height: "5'2\"", weight: "108 lbs", hometown: "Everett, MA", exit: 60, bat: 50, sprint: 2.11, throwV: 56, chest: 14.2, grip: 60, broad: 70, vert: 19, fly: 1.52, distance: 176 },
   { id: "sample-zach-sorgini", name: "Zach Sorgini", position: "RF", secondaryPosition: "OF", bats: "R", throws: "R", type: "hitter", archetype: "Power Hitter", height: "5'3\"", weight: "118 lbs", hometown: "Malden, MA", exit: 59, bat: 49, sprint: 2.15, throwV: 57, chest: 13.8, grip: 61, broad: 67, vert: 18, fly: 1.56, distance: 172 },
-  { id: "sample-sebastian-white", name: "Sebastian White", position: "RHP", secondaryPosition: "", bats: "R", throws: "R", type: "pitcher", archetype: "Workhorse Starter", height: "5'4\"", weight: "120 lbs", hometown: "Winthrop, MA", fb: 61, spin: 1620, strike: 56, whiff: 20, cap: 48 },
-  { id: "sample-anthony-contilli", name: "Anthony Contilli", position: "LHP", secondaryPosition: "", bats: "L", throws: "L", type: "pitcher", archetype: "Pitch-to-Contact Starter", height: "5'1\"", weight: "105 lbs", hometown: "East Boston, MA", fb: 56, spin: 1480, strike: 62, whiff: 16, cap: 44 },
-  { id: "sample-noah-bernazzani", name: "Noah Bernazzani", position: "RHP", secondaryPosition: "", bats: "R", throws: "R", type: "pitcher", archetype: "Closer", height: "5'6\"", weight: "130 lbs", hometown: "Braintree, MA", fb: 64, spin: 1740, strike: 52, whiff: 26, cap: 42 },
+  { id: "sample-sebastian-white", name: "Sebastian White", position: "RHP", secondaryPosition: "", bats: "R", throws: "R", type: "pitcher", archetype: "Workhorse Starter", height: "5'4\"", weight: "120 lbs", hometown: "Winthrop, MA", fb: 61, spin: 1620, strike: 56, whiff: 20, cap: 48, broad: 68 },
+  { id: "sample-anthony-contilli", name: "Anthony Contilli", position: "LHP", secondaryPosition: "", bats: "L", throws: "L", type: "pitcher", archetype: "Pitch-to-Contact Starter", height: "5'1\"", weight: "105 lbs", hometown: "East Boston, MA", fb: 56, spin: 1480, strike: 62, whiff: 16, cap: 44, broad: 62 },
+  { id: "sample-noah-bernazzani", name: "Noah Bernazzani", position: "RHP", secondaryPosition: "", bats: "R", throws: "R", type: "pitcher", archetype: "Closer", height: "5'6\"", weight: "130 lbs", hometown: "Braintree, MA", fb: 64, spin: 1740, strike: 52, whiff: 26, cap: 42, broad: 72 },
   { id: "sample-vincent-merullo", name: "Vincent Merullo", position: "OF", secondaryPosition: "RHP", bats: "R", throws: "R", type: "two-way", archetype: "Two-Way Player", height: "5'3\"", weight: "115 lbs", hometown: "Newton, MA", exit: 58, bat: 49, sprint: 2.06, throwV: 55, chest: 13.2, grip: 57, broad: 65, vert: 17, fly: 1.50, distance: 168, fb: 59, spin: 1560, strike: 55, whiff: 18, cap: 40 },
   { id: "sample-robbie-stanziani", name: "Robbie Stanziani", position: "UT", secondaryPosition: "3B", bats: "R", throws: "R", type: "hitter", archetype: "Contact / Leadoff", height: "4'11\"", weight: "92 lbs", hometown: "Waltham, MA", exit: 52, bat: 45, sprint: 2.17, throwV: 46, chest: 11.6, grip: 48, broad: 60, vert: 15, fly: 1.64, distance: 148 },
 ];
@@ -732,10 +736,10 @@ function sample12uPlayer(row, index) {
     metrics.gripOther = Math.max(30, row.grip - 4);
     metrics.exitVelo = row.exit;
     metrics.battedDistance = row.distance;
-    metrics.broadJump = row.broad;
     metrics.vertical = row.vert;
     metrics.flying10 = row.fly;
   }
+  if (row.broad != null) metrics.broadJump = row.broad;
   if (row.type !== "hitter") {
     metrics.fastballVelo = row.fb;
     metrics.spinRate = row.spin;
@@ -1290,12 +1294,77 @@ function gradeThrowVelo(value, age) { return gradeHigherTable(value, age, THROW_
 function throwVeloCuts(age) { return higherTableCuts(age, THROW_TABLE, THROW_GREAT_SPAN, 0); }
 function throwVeloCaption(age) { return higherTableCaption("Antonelli's crow-hop throw table", age, throwVeloCuts(age)); }
 
+/* Standing broad jump, males, centimeters, P10 / P25 / P50 / P75 / P90.
+   Ages 13–18 are the standards Matt measured.
+   Ages 8–12 are a Coach-Matt-approved-pending extrapolation of the 13–14
+   trend: about 11–12 cm lower per year, with the P10-to-P90 gap shrinking
+   slightly each year younger. P50 is 161, 149, 138, 127, 116.
+   The grade uses total inches (cm / 2.54). Screens never show centimeters.
+   Same age rule as the other Antonelli tables: the player's age in years,
+   under 8 uses 8, over 18 uses 18. P25 opens Average, P50 opens Above Avg,
+   P75 opens Good, and P90 opens Great. */
+const BROAD_JUMP_CM = {
+  8:  { p10: 81.2, p25: 99.0, p50: 116.0, p75: 134.1, p90: 152.6 },
+  9:  { p10: 89.6, p25: 108.8, p50: 127.0, p75: 146.0, p90: 165.3 },
+  10: { p10: 98.0, p25: 118.6, p50: 138.0, p75: 157.8, p90: 177.9 },
+  11: { p10: 106.4, p25: 128.4, p50: 149.0, p75: 169.7, p90: 190.6 },
+  12: { p10: 115.6, p25: 139.1, p50: 161.0, p75: 182.7, p90: 204.5 },
+  13: { p10: 125.0, p25: 150.0, p50: 173.3, p75: 196.0, p90: 218.7 },
+  14: { p10: 135.4, p25: 162.1, p50: 186.9, p75: 210.7, p90: 234.4 },
+  15: { p10: 143.6, p25: 171.5, p50: 197.0, p75: 221.4, p90: 245.5 },
+  16: { p10: 149.1, p25: 177.7, p50: 203.4, p75: 227.8, p90: 251.8 },
+  17: { p10: 153.4, p25: 182.2, p50: 207.8, p75: 231.8, p90: 255.4 },
+  18: { p10: 157.1, p25: 185.8, p50: 210.9, p75: 234.4, p90: 257.4 },
+};
+const BROAD_CM_PER_INCH = 2.54;
+
+function broadJumpInches(cm) {
+  return Math.round((Number(cm) / BROAD_CM_PER_INCH) * 10) / 10;
+}
+
+const BROAD_JUMP_TABLE = Object.fromEntries(Object.entries(BROAD_JUMP_CM).map(([age, row]) => {
+  const p25 = broadJumpInches(row.p25);
+  const p50 = broadJumpInches(row.p50);
+  const p75 = broadJumpInches(row.p75);
+  const p90 = broadJumpInches(row.p90);
+  const justUnder = (n) => Math.round((n - 0.1) * 10) / 10;
+  return [age, {
+    average: [p25, justUnder(p50)],
+    above: [p50, justUnder(p75)],
+    good: [p75, justUnder(p90)],
+    great: p90,
+    span: Math.max(4, Math.round((p90 - p75) * 10) / 10),
+  }];
+}));
+
+function gradeBroadJump(value, age) {
+  const year = exitVeloTableAge(age);
+  if (year == null) return { grade: null, band: null, year: null };
+  const row = BROAD_JUMP_TABLE[year];
+  return gradeHigherTable(value, age, { [year]: row }, row.span, 1);
+}
+function broadJumpCuts(age) {
+  const year = exitVeloTableAge(age);
+  if (year == null) return null;
+  const row = BROAD_JUMP_TABLE[year];
+  return higherTableCuts(age, { [year]: row }, row.span, 1);
+}
+function broadJumpCaption(age) {
+  const cuts = broadJumpCuts(age);
+  const rule = "Standing broad jump, males, by age in years, the same age rule as the other Antonelli tables. Under 8 uses age 8. Over 18 uses age 18. P25 starts Average, P50 starts Above Avg, P75 starts Good, P90 starts Great.";
+  if (!cuts) return rule;
+  const clampNote = cuts.usedFloor ? " This age uses the 8 row." : cuts.usedCeiling ? " This age uses the 18 row." : "";
+  const show = (n) => formatBroadJump(n);
+  return `${rule}${clampNote} Age ${cuts.year}: Below Avg under ${show(cuts.average[0])}, Average ${show(cuts.average[0])}–${show(cuts.average[1])}, Above Avg ${show(cuts.above[0])}–${show(cuts.above[1])}, Good ${show(cuts.good[0])}–${show(cuts.good[1])}, Great ${show(cuts.great)}+ (99 at ${show(cuts.greatCap)}).`;
+}
+
 function ageTableScore(key, value, age) {
   if (key === "exitVelo") return gradeExitVelo(value, age);
   if (key === "tenYard") return gradeTenYard(value, age);
   if (key === "medBall") return gradeMedBall(value, age);
   if (key === "gripDominant") return gradeGrip(value, age);
   if (key === "throwVelo") return gradeThrowVelo(value, age);
+  if (key === "broadJump") return gradeBroadJump(value, age);
   return null;
 }
 
@@ -1392,6 +1461,7 @@ const FACE_PARTS = {
     { key: "exitVelo", weight: 0.30 },
     { key: "powerKw", weight: 0.18 },
     { key: "rotationalAcceleration", weight: 0.12 },
+    { key: "broadJump", weight: 0.15 },
   ],
   CON: [
     { key: "timeToContact", weight: 0.28 },
@@ -1412,6 +1482,7 @@ const FACE_ORDER = [
 const BAT_OVERALL_WEIGHT = 0.40;
 const OPTIONAL_OVERALL = { SPD: 0.06, THW: 0.05, STR: 0.05 };
 const EXIT_OVERALL_WEIGHT = 0.12;
+const BROAD_OVERALL_WEIGHT = 0.05;
 const BLAST_POOL_WEIGHTS = { PWR: 0.22, PLANE: 0.18, QUICK: 0.14, CONN: 0.06 };
 
 function compositeGrade(player, parts) {
@@ -1445,37 +1516,41 @@ function faceGradesFor(player) {
    With no exit velocity, those Blast buckets share the same leftover as before.
    With none of the optionals and every Blast bucket present, this matches
    overallFromSubgrades on the five Blast buckets. */
-function hitterWeightMap(blastSubs, faceSubs, exitGrade) {
+function hitterWeightMap(blastSubs, faceSubs, exitGrade, broadGrade) {
   const blast = Object.fromEntries(blastSubs.map((row) => [row.key, row.grade]));
   const face = Object.fromEntries(faceSubs.map((row) => [row.key, row.grade]));
-  const map = { BAT: 0, PWR: 0, PLANE: 0, QUICK: 0, CONN: 0, SPD: 0, THW: 0, STR: 0, EV: 0 };
+  const map = { BAT: 0, PWR: 0, PLANE: 0, QUICK: 0, CONN: 0, SPD: 0, THW: 0, STR: 0, EV: 0, BJ: 0 };
   const optKeys = ["SPD", "THW", "STR"].filter((key) => face[key] != null);
   const optW = optKeys.reduce((sum, key) => sum + OPTIONAL_OVERALL[key], 0);
   const exitW = exitGrade == null ? 0 : EXIT_OVERALL_WEIGHT;
+  const broadW = broadGrade == null ? 0 : BROAD_OVERALL_WEIGHT;
   if (blast.BAT == null) {
     const present = Object.entries(BLAST_POOL_WEIGHTS).filter(([key]) => blast[key] != null);
-    const tw = present.reduce((sum, [, weight]) => sum + weight, 0) + optW + exitW;
+    const tw = present.reduce((sum, [, weight]) => sum + weight, 0) + optW + exitW + broadW;
     if (!tw) return map;
     present.forEach(([key, weight]) => { map[key] = weight / tw; });
     optKeys.forEach((key) => { map[key] = OPTIONAL_OVERALL[key] / tw; });
     if (exitW) map.EV = exitW / tw;
+    if (broadW) map.BJ = broadW / tw;
     return map;
   }
   map.BAT = BAT_OVERALL_WEIGHT;
   const present = Object.entries(BLAST_POOL_WEIGHTS).filter(([key]) => blast[key] != null);
   const presentW = present.reduce((sum, [, weight]) => sum + weight, 0);
-  const pool = 1 - BAT_OVERALL_WEIGHT - optW - exitW;
+  const pool = 1 - BAT_OVERALL_WEIGHT - optW - exitW - broadW;
   if (presentW > 0 && pool > 0) present.forEach(([key, weight]) => { map[key] = pool * (weight / presentW); });
   optKeys.forEach((key) => { map[key] = OPTIONAL_OVERALL[key]; });
   if (exitW) map.EV = exitW;
+  if (broadW) map.BJ = broadW;
   return map;
 }
 
-function hitterOverall(blastSubs, faceSubs, exitGrade) {
-  const weights = hitterWeightMap(blastSubs, faceSubs, exitGrade);
+function hitterOverall(blastSubs, faceSubs, exitGrade, broadGrade) {
+  const weights = hitterWeightMap(blastSubs, faceSubs, exitGrade, broadGrade);
   const grades = Object.fromEntries(blastSubs.map((row) => [row.key, row.grade]));
   faceSubs.forEach((row) => { grades[row.key] = row.grade; });
   grades.EV = exitGrade;
+  grades.BJ = broadGrade;
   let sum = 0;
   let tw = 0;
   Object.entries(weights).forEach(([key, weight]) => {
@@ -1497,7 +1572,8 @@ function gradesFor(player) {
   const blast = subGradesFor(player, "hitter");
   const face = faceGradesFor(player);
   const exitGrade = gradeExitVelo(player.metrics && player.metrics.exitVelo, player.age).grade;
-  const hitting = hitterOverall(blast, face, exitGrade);
+  const broadGrade = gradeBroadJump(player.metrics && player.metrics.broadJump, player.age).grade;
+  const hitting = hitterOverall(blast, face, exitGrade, broadGrade);
   if (player.type === "two-way") {
     const pitching = subGradesFor(player, "pitcher");
     const overall = clamp(Math.round((hitting + overallFromSubgrades(pitching)) / 2), 20, 99);
@@ -1856,8 +1932,10 @@ function levelPerk(spec) {
     valueOf: (p) => metricNow(p, spec.key),
     milestone: (p) => {
       const v = metricNow(p, spec.key);
-      const shown = spec.digits == null ? String(v) : String(Math.round(v * (10 ** spec.digits)) / (10 ** spec.digits));
-      return `Earned: ${spec.label} hit ${shown}${spec.unit}`;
+      const shown = typeof spec.format === "function"
+        ? spec.format(v)
+        : (spec.digits == null ? String(v) : String(Math.round(v * (10 ** spec.digits)) / (10 ** spec.digits)));
+      return `Earned: ${spec.label} hit ${shown}${spec.format ? "" : spec.unit}`;
     },
   };
 }
@@ -1976,6 +2054,13 @@ const TRAINING_QUIRKS = [
   levelPerk({ id: "hand-flash", name: "Hand Flash", icon: "📸", priority: 59, key: "peakHandSpeed", at: 20, digits: 1, unit: " mph", label: "Peak Hand Speed", criteria: "Peak hand speed reaches 20 mph." }),
   levelPerk({ id: "hand-blur", name: "Hand Blur", icon: "🎞️", priority: 73, key: "peakHandSpeed", at: 22, digits: 1, unit: " mph", label: "Peak Hand Speed", criteria: "Peak hand speed reaches 22 mph." }),
   levelPerk({ id: "hand-lightning", name: "Hand Lightning", icon: "⚡", priority: 89, key: "peakHandSpeed", at: 24, digits: 1, unit: " mph", label: "Peak Hand Speed", criteria: "Peak hand speed reaches 24 mph." }),
+  { id: "extra-bounce", name: "Extra Bounce", icon: "🏀", category: "Training", priority: 71, description: "Standing broad jump is up at least 6 inches across this training block.",
+    test: (p) => { const g = gainOf(p, "broadJump"); return g != null && g + 1e-9 >= 6; },
+    milestone: (p) => `Earned: Broad jump +${Math.round(gainOf(p, "broadJump"))}" this training block` },
+  levelPerk({ id: "spring-load", name: "Spring Load", icon: "🌱", priority: 53, key: "broadJump", at: 72, digits: 1, unit: "", label: "Broad jump", criteria: "Standing broad jump reaches 6'0\".", format: (v) => formatBroadJump(v) }),
+  levelPerk({ id: "pogo", name: "Pogo", icon: "🐇", priority: 67, key: "broadJump", at: 80, digits: 1, unit: "", label: "Broad jump", criteria: "Standing broad jump reaches 6'8\".", format: (v) => formatBroadJump(v) }),
+  levelPerk({ id: "launch-pad", name: "Launch Pad", icon: "🚀", priority: 85, key: "broadJump", at: 88, digits: 1, unit: "", label: "Broad jump", criteria: "Standing broad jump reaches 7'4\".", format: (v) => formatBroadJump(v) }),
+  levelPerk({ id: "sky-walker", name: "Sky Walker", icon: "☁️", priority: 99, key: "broadJump", at: 96, digits: 1, unit: "", label: "Broad jump", criteria: "Standing broad jump reaches 8'0\".", format: (v) => formatBroadJump(v) }),
 ];
 
 const SHOW_BY_ID = Object.fromEntries(SHOW_QUIRKS.map((q) => [q.id, q]));
@@ -2669,7 +2754,7 @@ function seedSampleEarns() {
 seedSampleEarns();
 
 function athleticKeys() {
-  const keys = ["tenYard", "throwVelo", "exitVelo"];
+  const keys = ["tenYard", "throwVelo", "exitVelo", "broadJump"];
   STRENGTH_TESTS.forEach((test) => {
     if (test.hands) keys.push(...test.hands);
     else keys.push(test.id);
@@ -2678,11 +2763,11 @@ function athleticKeys() {
 }
 
 function displayKeys() {
-  return ["battedDistance", "broadJump", "vertical", "flying10"];
+  return ["battedDistance", "vertical", "flying10"];
 }
 
 function metricKeysFor(type) {
-  if (type === "pitcher") return PITCHER_KEYS.slice();
+  if (type === "pitcher") return [...PITCHER_KEYS, "broadJump"];
   if (type === "two-way") return [...BLAST_KEYS, ...athleticKeys(), ...displayKeys(), ...PITCHER_KEYS];
   return [...BLAST_KEYS, ...athleticKeys(), ...displayKeys()];
 }
@@ -2742,6 +2827,13 @@ function defaultAthleticMetrics(ageGroup, age) {
       if (seeded != null) out[key] = seeded;
       return;
     }
+    if (key === "broadJump") {
+      const years = age != null && age !== "" ? age : representativeAge(group);
+      const cuts = broadJumpCuts(years);
+      const seeded = defaultHigherMid(cuts, 0.5);
+      if (seeded != null) out[key] = seeded;
+      return;
+    }
     if (key === "medBall" || key === "throwVelo" || key === "gripDominant") {
       const years = age != null && age !== "" ? age : representativeAge(group);
       const cuts = key === "medBall" ? medBallCuts(years) : key === "throwVelo" ? throwVeloCuts(years) : gripCuts(years);
@@ -2777,6 +2869,7 @@ function benchmarkCaption(key, ageGroup, age) {
   if (key === "medBall") return medBallCaption(age);
   if (key === "throwVelo") return throwVeloCaption(age);
   if (key === "gripDominant") return gripCaption(age);
+  if (key === "broadJump") return broadJumpCaption(age);
   const m = METRICS[key];
   if (m.displayOnly) return `Display only, ${m.entryMin}–${m.entryMax}${m.unit}. Not graded and not part of the overall.`;
   const coach = coachSpecFor(key);
@@ -2874,6 +2967,7 @@ function personalBests(player) {
 function formatPbValue(def, value) {
   if (value == null || Number.isNaN(Number(value))) return "--";
   const n = Number(value);
+  if (def.key === "broadJump") return formatBroadJump(n);
   if (def.key === "tenYard") return n.toFixed(2);
   if (Number.isInteger(n)) return String(n);
   return String(Math.round(n * 10) / 10);
@@ -2881,7 +2975,7 @@ function formatPbValue(def, value) {
 
 function pbLine(def, best) {
   if (!best) return "--";
-  return `${formatPbValue(def, best.value)} ${def.unit}`;
+  return [formatPbValue(def, best.value), def.unit].filter(Boolean).join(" ");
 }
 
 function appendReading(player, key, value, at) {
@@ -2943,9 +3037,46 @@ function markNewPersonalBests(player, before) {
   });
 }
 
+function splitBroadJump(total) {
+  const n = metricNumber(total);
+  if (n == null) return { feet: "", inches: "" };
+  const abs = Math.abs(n);
+  let feet = Math.floor(abs / 12);
+  let inches = Math.round((abs - feet * 12) * 2) / 2;
+  if (inches >= 12) { feet += 1; inches = 0; }
+  return { feet, inches };
+}
+
+function formatBroadJump(total) {
+  const parts = splitBroadJump(total);
+  if (parts.feet === "") return "—";
+  const inch = Number.isInteger(parts.inches) ? String(parts.inches) : parts.inches.toFixed(1);
+  return `${parts.feet}'${inch}"`;
+}
+
+/* 6'2", 6'2.5", 6 ft 2 in, 6-2, 6-2.5, or a plain total-inches number. */
+function parseBroadJump(raw) {
+  if (raw == null) return null;
+  const text = String(raw).trim().toLowerCase()
+    .replace(/[“”]/g, "\"")
+    .replace(/[‘’]/g, "'")
+    .replace(/inches|inch/g, "in")
+    .replace(/feet|foot/g, "ft");
+  if (!text) return null;
+  const half = (n) => Math.round(Number(n) * 2) / 2;
+  let match = text.match(/^(\d+)\s*(?:'|ft)\s*(\d+(?:\.\d+)?)?\s*(?:"|in)?$/);
+  if (match) return half(Number(match[1]) * 12 + Number(match[2] || 0));
+  match = text.match(/^(\d+)\s*-\s*(\d+(?:\.\d+)?)$/);
+  if (match) return half(Number(match[1]) * 12 + Number(match[2]));
+  match = text.match(/^(\d+(?:\.\d+)?)$/);
+  if (match) return half(Number(match[1]));
+  return null;
+}
+
 function formatMetric(key, value) {
   if (value == null || value === "" || Number.isNaN(Number(value))) return "—";
   const n = Number(value);
+  if (key === "broadJump") return formatBroadJump(n);
   if (key === "timeToContact") return n.toFixed(3);
   if (key === "tenYard") return n.toFixed(2);
   if (key === "medBall") return n.toFixed(1);
@@ -3256,7 +3387,9 @@ function deltaHTML(key, history, ageGroup) {
   const diff = Math.round((cur - prev) * 1000) / 1000;
   if (diff === 0) return '<span class="delta-flat">0</span>';
   const good = metricImproved(key, prev, cur, ageGroup);
-  return `<span class="${good ? "delta-up" : "delta-down"}">${diff > 0 ? "▲ +" : "▼ "}${diff}</span>`;
+  const amount = key === "broadJump" ? `${Math.abs(diff)}"` : String(diff);
+  const prefix = diff > 0 ? "▲ +" : "▼ ";
+  return `<span class="${good ? "delta-up" : "delta-down"}">${prefix}${key === "broadJump" ? amount : diff}</span>`;
 }
 
 function metricBand(key, value, ageYears, grade) {
@@ -3387,10 +3520,16 @@ function throwBackText(player) {
   return protocolBackText("throwVelo", player.metrics && player.metrics.throwVelo, CROW_HOP_BACK, player);
 }
 
+function broadJumpBackText(player) {
+  const n = metricNumber(player.metrics && player.metrics.broadJump);
+  if (n == null) return "—";
+  return antonelliRawLine(player, "broadJump") || formatBroadJump(n);
+}
+
 function personalBestsHTML(player) {
   if (!player || player.type === "pitcher") return "";
   const rows = personalBests(player).map((row) => {
-    const value = row.career ? `${formatPbValue(row, row.career.value)} ${row.unit}` : "--";
+    const value = row.career ? pbLine(row, row.career) : "--";
     const badge = row.fresh ? `<em class="pb-new">NEW PB</em>` : "";
     return `<div class="pb-row"><span>${esc(row.label)}</span><b>${esc(value)}${badge}</b></div>`;
   }).join("");
@@ -3400,8 +3539,8 @@ function personalBestsHTML(player) {
 function personalBestsPanel(player) {
   if (!player || player.type === "pitcher") return "";
   const rows = personalBests(player).map((row) => {
-    const season = row.season ? `${formatPbValue(row, row.season.value)} ${row.unit}` : "--";
-    const career = row.career ? `${formatPbValue(row, row.career.value)} ${row.unit}` : "--";
+    const season = row.season ? pbLine(row, row.season) : "--";
+    const career = row.career ? pbLine(row, row.career) : "--";
     const when = row.career && row.career.at ? (typeof roadPrettyDate === "function" ? roadPrettyDate(row.career.at) : row.career.at.slice(0, 10)) : "--";
     const badge = row.fresh ? ` <em class="pb-new">NEW PB</em>` : "";
     const note = row.manualUsed ? ` <span class="muted">coach</span>` : "";
@@ -3451,6 +3590,7 @@ function cardBackHTML(player, face, subs, opts, perkCap) {
     rawBackLine("Bat speed", metricNumber(metrics.batSpeed) == null ? "—" : `${formatMetric("batSpeed", metrics.batSpeed)} mph`),
     rawBackLine("Exit velo", exitVeloBackText(player)),
     rawBackLine("10-yard dash", tenYardBackText(player)),
+    rawBackLine("Broad jump", broadJumpBackText(player)),
     rawBackLine("Crow-hop throw", throwBackText(player)),
     rawBackLine("Chest pass", medBallBackText(player)),
     rawBackLine("Grip", gripBackText(player)),
@@ -3462,6 +3602,7 @@ function cardBackHTML(player, face, subs, opts, perkCap) {
     rawBackLine("Strike %", metricNumber(metrics.strikePct) == null ? "—" : `${formatMetric("strikePct", metrics.strikePct)}%`),
     rawBackLine("Whiff %", metricNumber(metrics.whiffPct) == null ? "—" : `${formatMetric("whiffPct", metrics.whiffPct)}%`),
     rawBackLine("Capacity", metricNumber(metrics.pitchCapacity) == null ? "—" : `${formatMetric("pitchCapacity", metrics.pitchCapacity)} pitches`),
+    player.type === "pitcher" ? rawBackLine("Broad jump", broadJumpBackText(player)) : "",
   ].join("") : "";
   const profileBtn = opts && opts.profileButton && player.id
     ? `<button class="btn btn-red back-profile" type="button" data-open="${esc(player.id)}">View Profile</button>`
@@ -3773,7 +3914,8 @@ function renderTierShowcase() {
 
 /* Does well / Work on. Same tested categories as the Where I Started charts.
    Rank uses the overall grade, including the age window. A slower time grades lower.
-   Broad jump, vertical, and flying 10 are charted but not graded, so they stay off these lines. */
+   Vertical and flying 10 are charted but not graded, so they stay off these lines.
+   Standing broad jump is graded, so it can land in Does well or Work on. */
 const FOCUS_METRICS = {
   batSpeed: {
     label: "Bat speed", unit: "mph", digits: 1,
@@ -3812,10 +3954,10 @@ const FOCUS_METRICS = {
     steps: ["Seated 2 kg chest passes into a wall, 3×8", "Full rest between sets", "Then 10 max-intent throws", "2–3 times a week"],
   },
   broadJump: {
-    label: "Broad jump", unit: "in", digits: 0,
-    why: "Add max-effort jumps 2–3 times a week.",
-    drill: "5×3 standing broad jumps for distance, full rest between sets, after A-skips and bounds.",
-    steps: ["Warm up with A-skips and bounds", "5×3 standing broad jumps for distance", "Full rest between sets", "2–3 times a week"],
+    label: "Broad jump", unit: "", digits: 0, feet: true,
+    why: "Jump training 2x/week.",
+    drill: "Jump training 2x/week: 3x5 broad jumps for max distance + box jumps.",
+    steps: ["Jump training 2 times a week", "3×5 broad jumps for max distance", "Box jumps", "Full rest between sets"],
   },
   vertical: {
     label: "Vertical", unit: "in", digits: 0,
@@ -3870,6 +4012,7 @@ function focusCatalog(player) {
 }
 
 function focusFigure(spec, value) {
+  if (spec.feet) return formatBroadJump(value);
   const n = Number(value);
   if (spec.digits === 2) return n.toFixed(2);
   if (spec.digits === 0) return String(Math.round(n));
@@ -3879,6 +4022,7 @@ function focusFigure(spec, value) {
 
 function focusNumber(spec, value) {
   const num = focusFigure(spec, value);
+  if (spec.feet || !spec.unit) return num;
   return spec.unit === "%" ? num + "%" : num + " " + spec.unit;
 }
 
@@ -4151,7 +4295,7 @@ function metricsTable(player) {
   }).join("");
   const note = player.type === "pitcher"
     ? "Pitcher grades are 20–99 against the coach benchmarks in METRICS. Those ranges are not published Blast numbers."
-    : `Blast rows use the published window for <strong>${esc(ageGroup)}</strong>. Exit velocity, the 10-yard dash, the crow-hop throw, the seated 2 kg chest pass, and dominant-hand grip use Antonelli's age-by-age tables (the player's age in years, not this age group). Grip is the dominant hand only: Dominant hand · Jamar-style dynamometer · best of 2–3. A saved other-hand number is ignored. STR averages the chest pass with that grip. Pitcher fastball velocity stays on the coach scale. A saved 60-yard time is not used. Batted-ball distance is display only: it is not graded and it is not part of POW or the overall. Personal bests on the card back use the career log, not just this season's sparkline.`;
+    : `Blast rows use the published window for <strong>${esc(ageGroup)}</strong>. Exit velocity, the 10-yard dash, the standing broad jump, the crow-hop throw, the seated 2 kg chest pass, and dominant-hand grip use Antonelli's age-by-age tables (the player's age in years, not this age group). The broad jump is stored in inches and shown as feet and inches. It feeds POW when a jump is saved. Grip is the dominant hand only: Dominant hand · Jamar-style dynamometer · best of 2–3. A saved other-hand number is ignored. STR averages the chest pass with that grip. Pitcher fastball velocity stays on the coach scale. A saved 60-yard time is not used. Batted-ball distance is display only: it is not graded and it is not part of POW or the overall. Personal bests on the card back use the career log, not just this season's sparkline.`;
   return `<div class="table-scroll"><table><thead><tr><th>Metric</th><th>Current</th><th>Previous</th><th>Change</th><th>History</th><th>Band</th><th>Grade</th></tr></thead><tbody>${rows}</tbody></table></div>
   <p class="muted small">${note}</p>`;
 }
@@ -4692,6 +4836,7 @@ function ageTableBar(player, label, key, title) {
 function athleticBars(player) {
   const grip = strengthResults(player).find((row) => row.id === "grip");
   return tenYardBar(player)
+    + ageTableBar(player, "BROAD", "broadJump", "Standing broad jump")
     + ageTableBar(player, "THROW", "throwVelo", "Crow-hop throw")
     + ageTableBar(player, "MED", "medBall", "Seated 2 kg chest pass")
     + attrBar("GRIP", grip ? grip.grade : null, "Dominant hand · Jamar-style dynamometer · best of 2–3", grip && grip.band);
@@ -4709,6 +4854,7 @@ function attributePanel(player) {
   if (player.type !== "hitter") {
     groups.push({ title: player.type === "two-way" ? "Pitching tools" : "Tools", bars: toolBars(g.pitcherSubs || g.subs) });
     groups.push({ title: "Pitch grades", bars: metricBars(player, PITCH_BAR_KEYS) });
+    if (player.type === "pitcher") groups.push({ title: "Explosive", bars: ageTableBar(player, "BROAD", "broadJump", "Standing broad jump") });
   }
   return groups.map((group) => `<section class="attr-group"><h3>${esc(group.title)}</h3><div class="attr-strip">${group.bars}</div></section>`).join("")
     + `<p class="muted small">Bar height is the 20–99 grade. Red is Below Average, bronze is Average, gold is Good, green is Great, cyan is Elite. Hover a bar for the band name.</p>`;
@@ -4885,8 +5031,8 @@ function openProfile(id, opts) {
   const built = p.type === "pitcher"
     ? "Pitcher overall uses velocity 30%, breaking stuff 25%, command 30%, and stamina 15%."
     : p.type === "two-way"
-      ? `Hitting half is graded at <strong>${esc(group)}</strong>. Bat speed stays 40% of that half. Exit velocity is about 12% when it is filled in, from Antonelli's age table, and it also feeds POW. SPD is the 10-yard dash on Antonelli's age table. THW is the crow-hop throw on that same table. STR averages the seated 2 kg chest pass and dominant-hand grip, both on that table. THW and STR drop out when blank. Pitcher velocity stays on the coach scale. Overall averages the hitter grade and the pitcher grade. The front shows POW, CON, SPD, THW, and STR.`
-      : `Graded at <strong>${esc(group)}</strong>. Bat speed is 40% of the hitter overall. Exit velocity is about 12% when it is filled in, from Antonelli's age table, not Blast, and it also feeds POW. SPD is the 10-yard dash on that same age table. THW is the crow-hop throw on that table. STR averages the seated 2 kg chest pass and dominant-hand grip. THW and STR are left out when those tests are blank. The front reads POW, CON, SPD, THW, STR.`;
+      ? `Hitting half is graded at <strong>${esc(group)}</strong>. Bat speed stays 40% of that half. Exit velocity is about 12% when it is filled in, from Antonelli's age table, and it also feeds POW. Standing broad jump feeds POW and about 5% of that half when a jump is saved. SPD is the 10-yard dash on Antonelli's age table. THW is the crow-hop throw on that same table. STR averages the seated 2 kg chest pass and dominant-hand grip, both on that table. THW and STR drop out when blank. Pitcher velocity stays on the coach scale. Overall averages the hitter grade and the pitcher grade. The front shows POW, CON, SPD, THW, and STR.`
+      : `Graded at <strong>${esc(group)}</strong>. Bat speed is 40% of the hitter overall. Exit velocity is about 12% when it is filled in, from Antonelli's age table, not Blast, and it also feeds POW. Standing broad jump feeds POW and about 5% of the overall when a jump is saved. SPD is the 10-yard dash on that same age table. THW is the crow-hop throw on that table. STR averages the seated 2 kg chest pass and dominant-hand grip. THW and STR are left out when those tests are blank. The front reads POW, CON, SPD, THW, STR.`;
   const fact = (label, value) => `<div class="show-fact"><b>${value}</b><span>${label}</span></div>`;
   $("rosterView").hidden = true;
   $("profileView").hidden = false;
@@ -5298,6 +5444,7 @@ function renderMetricFields(playerLike) {
     const band = m.coach || m.blast
       ? `<span class="band-chip ${bandInfo ? "band-" + bandInfo.key : ""}" id="band-${k}">${bandInfo ? esc(bandInfo.label) : "—"}</span>`
       : "";
+    if (k === "broadJump") return broadJumpFieldHTML(playerLike, m, stored, has, sliderVal, bounds, grade, bandInfo);
     return `<div class="metric-row">
       <label for="m-${k}">${m.label} <small id="cap-${k}">${esc(m.help)} • ${esc(benchmarkCaption(k, ageGroup, playerLike.age))}</small></label>
       <div class="metric-inputs">
@@ -5309,6 +5456,7 @@ function renderMetricFields(playerLike) {
       </div>
     </div>`;
   }).join("") + manualBestsFields(playerLike);
+  wireBroadJumpFields();
   document.querySelectorAll("[data-metric]").forEach((input) => {
     input.addEventListener("input", () => {
       const k = input.dataset.metric;
@@ -5327,6 +5475,82 @@ function renderMetricFields(playerLike) {
       updateLivePreview();
     });
   });
+}
+
+function broadJumpFieldHTML(playerLike, m, stored, has, sliderVal, bounds, grade, bandInfo) {
+  const parts = has ? splitBroadJump(stored) : { feet: "", inches: "" };
+  const band = `<span class="band-chip ${bandInfo ? "band-" + bandInfo.key : ""}" id="band-broadJump">${bandInfo ? esc(bandInfo.label) : "—"}</span>`;
+  return `<div class="metric-row">
+    <label for="jump-ft">${m.label} <small id="cap-broadJump">${esc(m.help)} • ${esc(benchmarkCaption("broadJump", activeAgeGroup(playerLike), playerLike.age))}</small></label>
+    <div class="metric-inputs metric-jump">
+      <input type="range" id="range-broadJump" data-metric="broadJump" min="${bounds.min}" max="${bounds.max}" step="0.5" value="${sliderVal}">
+      <label class="jump-part">ft <input type="number" id="jump-ft" min="0" max="12" step="1" inputmode="numeric" value="${parts.feet}" placeholder="ft"></label>
+      <label class="jump-part">in <input type="number" id="jump-in" min="0" max="11.5" step="0.5" inputmode="decimal" value="${parts.inches}" placeholder="in"></label>
+      <input type="hidden" id="m-broadJump" data-metric="broadJump" value="${has ? stored : ""}">
+      <span class="grade-chip" id="grade-broadJump">${grade ?? "—"}</span>
+      ${band}
+    </div>
+  </div>`;
+}
+
+function paintBroadJumpGrade() {
+  const hidden = $("m-broadJump");
+  if (!hidden) return;
+  const age = parseInt($("f-age").value, 10);
+  const gradeEl = $("grade-broadJump");
+  const bandEl = $("band-broadJump");
+  const cap = $("cap-broadJump");
+  if (cap) cap.textContent = `${METRICS.broadJump.help} • ${broadJumpCaption(age)}`;
+  if (hidden.value === "") {
+    if (gradeEl) gradeEl.textContent = "—";
+    if (bandEl) { bandEl.textContent = "—"; bandEl.className = "band-chip"; }
+    return;
+  }
+  const scored = gradeBroadJump(hidden.value, age);
+  if (gradeEl) gradeEl.textContent = scored.grade ?? "—";
+  if (bandEl) {
+    bandEl.textContent = scored.band ? scored.band.label : "—";
+    bandEl.className = scored.band ? `band-chip band-${scored.band.key}` : "band-chip";
+  }
+}
+
+function setBroadJumpTotal(total, from) {
+  const hidden = $("m-broadJump");
+  const range = $("range-broadJump");
+  const feet = $("jump-ft");
+  const inches = $("jump-in");
+  if (!hidden) return;
+  if (total == null || Number.isNaN(Number(total))) {
+    hidden.value = "";
+  } else {
+    const n = Math.round(Number(total) * 2) / 2;
+    hidden.value = String(n);
+    if (range && from !== "range") range.value = String(n);
+    if (from !== "parts") {
+      const parts = splitBroadJump(n);
+      if (feet) feet.value = parts.feet;
+      if (inches) inches.value = parts.inches;
+    }
+  }
+  paintBroadJumpGrade();
+  if (typeof updateLivePreview === "function") updateLivePreview();
+}
+
+function wireBroadJumpFields() {
+  const feet = $("jump-ft");
+  const inches = $("jump-in");
+  const range = $("range-broadJump");
+  if (!feet || !inches) return;
+  const fromParts = () => {
+    if (feet.value === "" && inches.value === "") { setBroadJumpTotal(null, "parts"); return; }
+    const ft = Number(feet.value || 0);
+    const inch = Number(inches.value || 0);
+    if (!Number.isFinite(ft) || !Number.isFinite(inch)) return;
+    setBroadJumpTotal(ft * 12 + inch, "parts");
+  };
+  feet.addEventListener("input", fromParts);
+  inches.addEventListener("input", fromParts);
+  if (range) range.addEventListener("input", () => setBroadJumpTotal(range.value, "range"));
 }
 
 function draftManualBests(playerLike) {
@@ -5350,13 +5574,13 @@ function manualBestsFields(playerLike) {
   const rows = PB_DEFS.map((def) => {
     const cur = manual[def.key];
     const step = METRICS[def.key] ? METRICS[def.key].step : 1;
-    const shown = cur && cur.value != null ? cur.value : "";
+    const shown = cur && cur.value != null ? (def.key === "broadJump" ? formatBroadJump(cur.value) : cur.value) : "";
+    const field = def.key === "broadJump"
+      ? `<input type="text" id="pb-${def.key}" data-pb="${def.key}" value="${shown === "" ? "" : esc(shown)}" placeholder="6'2&quot; or 74">`
+      : `<input type="number" id="pb-${def.key}" data-pb="${def.key}" step="${step}" value="${shown === "" ? "" : esc(shown)}" placeholder="blank"><span class="muted small">${esc(def.unit)}</span>`;
     return `<div class="metric-row">
-      <label for="pb-${def.key}">${esc(def.label)} <small>Optional coach override. It counts only when it beats the recorded log${def.mode === "min" ? " — a lower time" : ""}.</small></label>
-      <div class="metric-inputs">
-        <input type="number" id="pb-${def.key}" data-pb="${def.key}" step="${step}" value="${shown === "" ? "" : esc(shown)}" placeholder="blank">
-        <span class="muted small">${esc(def.unit)}</span>
-      </div>
+      <label for="pb-${def.key}">${esc(def.label)} <small>Optional coach override. It counts only when it beats the recorded log${def.mode === "min" ? " — a lower time" : ""}${def.key === "broadJump" ? ". Feet and inches, like 6'2\" or 6-2, or total inches." : ""}.</small></label>
+      <div class="metric-inputs">${field}</div>
     </div>`;
   }).join("");
   return `<h4 class="form-section">Personal best overrides</h4>
@@ -5371,7 +5595,7 @@ function readManualBests(existing, readingDate) {
   PB_DEFS.forEach((def) => {
     const el = document.getElementById(`pb-${def.key}`);
     if (!el || el.value === "") return;
-    const n = metricNumber(el.value);
+    const n = def.key === "broadJump" ? parseBroadJump(el.value) : metricNumber(el.value);
     if (n == null) return;
     const old = prev[def.key];
     const kept = old && old.at && !readingDateError(old.at, today) ? String(old.at).slice(0, 10) : today;
@@ -5432,6 +5656,7 @@ function refreshExitVeloReadout() {
   refreshAntonelliReadout("throwVelo", gradeThrowVelo, throwVeloCaption);
   refreshAntonelliReadout("medBall", gradeMedBall, medBallCaption);
   refreshAntonelliReadout("gripDominant", gradeGrip, gripCaption);
+  paintBroadJumpGrade();
 }
 
 function checkedCoachQuirks() {
@@ -5572,6 +5797,7 @@ function sdRawGap(key, trailer, leader) {
   if (!have(trailer) || !have(leader)) return "";
   const need = mode === "lower" ? Number(trailer.metrics[key]) - Number(leader.metrics[key]) : Number(leader.metrics[key]) - Number(trailer.metrics[key]);
   if (!(need > 0)) return "";
+  if (key === "broadJump") return ` · +${Math.round(need * 2) / 2}"`;
   const shown = formatMetric(key, need);
   return mode === "lower" ? ` · ${shown}${meta.unit} quicker` : ` · +${shown}${meta.unit}`;
 }
@@ -5659,7 +5885,7 @@ function buildShowdown(a, b) {
   const overallWinner = overall && overall.winner !== "tie" ? overall.winner : "tie";
   const an = String(a.name || "A").split(" ")[0];
   const bn = String(b.name || "B").split(" ")[0];
-  const note = "Grades are vs each player's own age group. Exit velocity, the 10-yard dash, the crow-hop throw, the seated 2 kg chest pass, and dominant-hand grip use Antonelli's age-in-years tables, not that age group and not Blast. Pitcher fastball velocity stays on the coach scale. Raw numbers are the actual readings, side by side."
+  const note = "Grades are vs each player's own age group. Exit velocity, the 10-yard dash, the standing broad jump, the crow-hop throw, the seated 2 kg chest pass, and dominant-hand grip use Antonelli's age-in-years tables, not that age group and not Blast. The broad jump is shown in feet and inches. Pitcher fastball velocity stays on the coach scale. Raw numbers are the actual readings, side by side."
     + (a.type !== b.type ? " Only categories on both cards are scored. A dash is not on that card, and it is not a loss." : "");
   return {
     ok: true,

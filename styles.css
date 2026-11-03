@@ -696,6 +696,8 @@ th{font-size:11px;letter-spacing:.7px;text-transform:uppercase;color:var(--muted
 .metric-inputs{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .metric-inputs input[type=range]{width:170px;padding:0}
 .metric-inputs input[type=number]{width:92px}
+.metric-jump .jump-part{display:flex;align-items:center;gap:4px;font-size:12px;font-weight:800;color:var(--muted)}
+.metric-jump .jump-part input{width:64px}
 .live-preview{margin:16px 0;padding:14px;border-radius:14px;background:#0a0a0a;border:1px solid var(--gold);color:var(--pale-gold);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center}
 .live-preview b{font-size:28px}
 .form-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px}

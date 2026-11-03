@@ -274,6 +274,11 @@ const AntonelliAuth = {
     if (typeof players !== "undefined" && Array.isArray(players)) {
       players.splice(0, players.length, ...next);
     }
+    if (typeof syncEarnedQuirks === "function") {
+      let earnedDirty = false;
+      next.forEach((player) => { if (syncEarnedQuirks(player).length) earnedDirty = true; });
+      if (earnedDirty && typeof savePlayers === "function") savePlayers();
+    }
     if (typeof renderRoster === "function") renderRoster();
     if (globalThis.Social) {
       if (this.user) await Social.start();
@@ -493,7 +498,7 @@ const AntonelliAuth = {
       const rows = this.parseCsv(String(reader.result || ""));
       input.value = "";
       if (!rows.length) {
-        this.setAccountStatus("No players found. The header row should be name, team, ageGroup, position, email.");
+        this.setAccountStatus("No players found. The header row should be name, team, ageGroup, position, email. An optional broadJump column accepts 6'2\", 6-2, or total inches.");
         return;
       }
       this.saveAccounts(rows);
@@ -541,7 +546,29 @@ const AntonelliAuth = {
       position: row.position || "",
     }, { onConflict: "id" });
     if (playerError) throw playerError;
-    const { error: privateError } = await this.client.from("player_private").upsert({ player_id: id }, { onConflict: "player_id" });
+    const jump = typeof parseBroadJump === "function" ? parseBroadJump(row.broadJump) : null;
+    let privateRow = { player_id: id };
+    if (jump != null) {
+      const existing = await this.client.from("player_private").select("metrics, history, reading_log, document").eq("player_id", id).maybeSingle();
+      if (existing.error) throw existing.error;
+      const prev = existing.data || {};
+      const metrics = Object.assign({}, prev.metrics || {}, { broadJump: jump });
+      const history = Object.assign({}, prev.history || {});
+      const prior = Array.isArray(history.broadJump) ? history.broadJump.slice() : [];
+      if (!prior.length || prior[prior.length - 1] !== jump) prior.push(jump);
+      history.broadJump = prior.slice(-6);
+      const reading = Object.assign({}, prev.reading_log || {});
+      const log = Array.isArray(reading.broadJump) ? reading.broadJump.slice() : [];
+      const last = log[log.length - 1];
+      if (!last || Number(last.value) !== jump) log.push({ value: jump, at: new Date().toISOString().slice(0, 10) });
+      reading.broadJump = log;
+      const document = Object.assign({}, prev.document || {});
+      document.metrics = Object.assign({}, document.metrics || {}, { broadJump: jump });
+      document.history = Object.assign({}, document.history || {}, { broadJump: history.broadJump });
+      document.readingLog = Object.assign({}, document.readingLog || {}, { broadJump: reading.broadJump });
+      privateRow = { player_id: id, metrics, history, reading_log: reading, document };
+    }
+    const { error: privateError } = await this.client.from("player_private").upsert(privateRow, { onConflict: "player_id" });
     if (privateError) throw privateError;
     const { error: accountError } = await this.client.from("player_accounts").upsert({
       player_id: id,
@@ -760,15 +787,18 @@ const AntonelliAuth = {
     const ageAt = at(["agegroup", "age"]);
     const posAt = at(["position"]);
     const emailAt = at(["email"]);
+    const jumpAt = at(["broadjump", "standingbroadjump", "broad", "sbj", "standingbroad"]);
     if (nameAt < 0) return [];
     return lines.slice(1).map((line) => {
-      const cells = line.split(",").map((cell) => cell.trim());
+      const cells = line.split(",").map((cell) => cell.trim().replace(/^"|"$/g, ""));
+      const jump = jumpAt >= 0 && typeof parseBroadJump === "function" ? parseBroadJump(cells[jumpAt]) : null;
       return {
         name: cells[nameAt] || "",
         team: teamAt >= 0 ? cells[teamAt] || "" : "",
         ageGroup: ageAt >= 0 ? cells[ageAt] || "" : "",
         position: posAt >= 0 ? cells[posAt] || "" : "",
         email: emailAt >= 0 ? cells[emailAt] || "" : "",
+        broadJump: jump,
       };
     }).filter((row) => row.name).slice(0, 200);
   },

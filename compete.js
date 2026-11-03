@@ -9,7 +9,7 @@ var COMPETE_METRICS = [
   { key: "exitVelo", label: "Exit Velo", unit: "MPH", better: "higher" },
   { key: "tenYard", label: "Sprint", unit: "s", better: "lower" },
   { key: "throwVelo", label: "Throwing Velo", unit: "MPH", better: "higher" },
-  { key: "broadJump", label: "Broad Jump", unit: "in", better: "higher" },
+  { key: "broadJump", label: "Broad Jump", unit: "in", better: "higher", feet: true },
   { key: "vertical", label: "Vertical", unit: "in", better: "higher" },
   { key: "flying10", label: "Flying 10", unit: "s", better: "lower" },
 ];
@@ -43,6 +43,13 @@ var COMPETE_ALUMNI = [
 
 function competeEsc(s) {
   return typeof esc === "function" ? esc(s) : String(s ?? "");
+}
+
+function competeShown(key, value) {
+  if (key === "broadJump" && typeof formatBroadJump === "function") return formatBroadJump(value);
+  const spec = COMPETE_METRICS.find((m) => m.key === key);
+  const unit = spec && spec.unit ? " " + spec.unit : "";
+  return value + unit;
 }
 
 function competeRoster() {
@@ -235,7 +242,7 @@ function competeAwards() {
     { id: "improved", name: "Most Improved", icon: "📈", tip: "Biggest exit-velo gain this month, after the power leader.", player: take(byGain) },
     { id: "iron", name: "Iron Man", icon: "🧱", tip: "Longest current training streak.", player: take(byStreak) },
     { id: "worker", name: "Hardest Worker", icon: "🛠️", tip: "Most XP banked. Development, not just the test.", player: take(byXp) },
-    { id: "jump", name: "Broad Jump", icon: "🦘", tip: "Longest standing broad jump. Not part of overall.", player: take(byJump) },
+    { id: "jump", name: "Broad Jump", icon: "🦘", tip: "Longest standing broad jump.", player: take(byJump) },
     { id: "potw", name: "Player of the Week", icon: "⭐", tip: "Training days this week. Spread so one star does not take the row.", player: take(byStreak) },
     { id: "potm", name: "Player of the Month", icon: "🗓️", tip: "A permanent monthly card. This month's development pick.", player: take(byGain) },
   ].filter((row) => row.player);
@@ -591,7 +598,7 @@ function competePaint() {
   const rival = competeRival(me);
   const boards = ["exitVelo", "batSpeed", "tenYard", "throwVelo", "broadJump"].map((key) => {
     const spec = COMPETE_METRICS.find((m) => m.key === key) || { label: key, unit: "" };
-    const rows = competeSorted(key).slice(0, 5).map((p, i) => "<div class=\"lb-row\"><span class=\"lb-who\"><span class=\"lb-rank\">" + (i + 1) + ".</span><span class=\"lb-name\">" + competeEsc(p.name) + "</span></span><b>" + competeNum(p, key) + " " + spec.unit + "</b></div>").join("");
+    const rows = competeSorted(key).slice(0, 5).map((p, i) => "<div class=\"lb-row\"><span class=\"lb-who\"><span class=\"lb-rank\">" + (i + 1) + ".</span><span class=\"lb-name\">" + competeEsc(p.name) + "</span></span><b>" + competeShown(key, competeNum(p, key)) + "</b></div>").join("");
     return "<div class=\"trophy-card\"><h3>" + spec.label + "</h3><div class=\"lb-list\">" + rows + "</div></div>";
   }).join("");
   const improved = competeRoster().slice().sort((a, b) => competeExitDelta(b, 30) - competeExitDelta(a, 30)).slice(0, 5);
@@ -712,7 +719,7 @@ function competeProfileHTML(player) {
   const reactBtns = viewer && viewer.id !== player.id ? COMPETE_REACTIONS.map((emoji) => "<button class=\"react-btn\" type=\"button\" data-react=\"" + emoji + "\">" + emoji + "</button>").join(" ") : "<p>Reactions are for teammates. Switch signed-in player to leave one.</p>";
   const timeline = competeTimeline(player).map((row) => "<li><b>" + competeEsc(competePrettyDate(row.at)) + "</b><span>" + competeEsc(row.text) + "</span></li>").join("");
   const records = competeRecords(player, "exitVelo");
-  const board = records.board.map((row, i) => "<div class=\"lb-row\"><span>" + (i + 1) + ". " + competeEsc(row.name) + (row.alumni ? " · alumni" : "") + "</span><b>" + row.value + " " + records.spec.unit + "</b></div>").join("");
+  const board = records.board.map((row, i) => "<div class=\"lb-row\"><span>" + (i + 1) + ". " + competeEsc(row.name) + (row.alumni ? " · alumni" : "") + "</span><b>" + competeShown(records.spec.key, row.value) + "</b></div>").join("");
   const ages = ((player.road && player.road.ageCards) || []).map((card) => "<article class=\"age-card\"><b>" + card.overall + "</b><span>AGE " + card.age + "</span><small>" + competeEsc(card.season || "") + "</small></article>").join("");
   const ageNote = ages ? "<p class=\"coach-line\">A lower overall on an older age card means the standard for that age was different. It does not mean the player got worse.</p>" : "";
   const alumni = COMPETE_ALUMNI.map((a) => "<div class=\"trophy-card\"><b>" + competeEsc(a.name) + " · " + competeEsc(a.pos) + "</b><p>" + competeEsc(a.start) + " → " + competeEsc(a.end) + "</p><p>" + competeEsc(a.college) + " · final card " + a.ovr + "</p></div>").join("");
