@@ -329,6 +329,12 @@ const METRICS = {
     entryMin: 0.9, entryMax: 2.4,
     help: "Flying 10-yard, seconds. Lower is better. Display only. Not part of the overall.",
   },
+  /* Ungraded until SCOOP_TOSS_TABLE is filled in. Same 4 lb ball for every player. */
+  scoopToss: {
+    label: "Rotational Scoop Toss", unit: " mph", step: 0.5, coach: true, mode: "higher", antonelliAge: true,
+    entryMin: 10, entryMax: 70,
+    help: "Rotational med ball scoop toss, 4 lb ball, radar velocity in mph. Higher is better. Not graded yet: percentiles will be built from our players' scores.",
+  },
 };
 
 /* Strength tests that feed STR. STR is the unweighted average of the tests
@@ -350,6 +356,7 @@ const PB_DEFS = [
   { key: "tenYard", label: "Fastest 10-Yd", unit: "s", mode: "min" },
   { key: "battedDistance", label: "Longest Hit", unit: "ft", mode: "max" },
   { key: "broadJump", label: "Broad Jump", unit: "", mode: "max" },
+  { key: "scoopToss", label: "Scoop Toss", unit: "mph", mode: "max" },
 ];
 const STRENGTH_TESTS = [
   {
@@ -1349,6 +1356,27 @@ function broadJumpCuts(age) {
   const row = BROAD_JUMP_TABLE[year];
   return higherTableCuts(age, { [year]: row }, row.span, 1);
 }
+/* Null until Matt approves percentiles built from his players' real scoop-toss scores.
+   Fill ages 8–18 in the same shape as THROW_TABLE (average, above, good, great, mph).
+   When this is an object, scoop toss grades on the age-in-years path and feeds POW
+   beside the broad jump. While it is null the number is display only. */
+const SCOOP_TOSS_TABLE = null;
+const SCOOP_TOSS_GREAT_SPAN = 5;
+
+function gradeScoopToss(value, age) {
+  if (!SCOOP_TOSS_TABLE) return { grade: null, band: null, year: exitVeloTableAge(age) };
+  return gradeHigherTable(value, age, SCOOP_TOSS_TABLE, SCOOP_TOSS_GREAT_SPAN, 1);
+}
+function scoopTossCuts(age) {
+  if (!SCOOP_TOSS_TABLE) return null;
+  return higherTableCuts(age, SCOOP_TOSS_TABLE, SCOOP_TOSS_GREAT_SPAN, 1);
+}
+function scoopTossCaption(age) {
+  const cuts = scoopTossCuts(age);
+  if (!cuts) return "Not graded yet. Percentiles will be built from our players' scores, then approved before this number affects Power.";
+  return higherTableCaption("Rotational med ball scoop toss, 4 lb, radar mph", age, cuts);
+}
+
 function broadJumpCaption(age) {
   const cuts = broadJumpCuts(age);
   const rule = "Standing broad jump, males, by age in years, the same age rule as the other Antonelli tables. Under 8 uses age 8. Over 18 uses age 18. P25 starts Average, P50 starts Above Avg, P75 starts Good, P90 starts Great.";
@@ -1365,6 +1393,7 @@ function ageTableScore(key, value, age) {
   if (key === "gripDominant") return gradeGrip(value, age);
   if (key === "throwVelo") return gradeThrowVelo(value, age);
   if (key === "broadJump") return gradeBroadJump(value, age);
+  if (key === "scoopToss" && SCOOP_TOSS_TABLE) return gradeScoopToss(value, age);
   return null;
 }
 
@@ -1500,12 +1529,19 @@ function compositeGrade(player, parts) {
   return total ? Math.round(sum / total) : null;
 }
 
+/* Scoop toss joins Power only after SCOOP_TOSS_TABLE is set. A blank grade is left out. */
+function powParts() {
+  const parts = FACE_PARTS.POW.slice();
+  if (SCOOP_TOSS_TABLE) parts.push({ key: "scoopToss", weight: 0.12 });
+  return parts;
+}
+
 function faceGradesFor(player) {
   const ageGroup = activeAgeGroup(player);
   const spd = normalizeMetric("tenYard", player.metrics && player.metrics.tenYard, ageGroup, player.age);
   const thw = normalizeMetric("throwVelo", player.metrics && player.metrics.throwVelo, ageGroup, player.age);
   const str = strengthGrade(player);
-  const grades = { POW: compositeGrade(player, FACE_PARTS.POW), CON: compositeGrade(player, FACE_PARTS.CON), SPD: spd, THW: thw, STR: str };
+  const grades = { POW: compositeGrade(player, powParts()), CON: compositeGrade(player, FACE_PARTS.CON), SPD: spd, THW: thw, STR: str };
   return FACE_ORDER.map((row) => ({ key: row.key, label: row.label, grade: grades[row.key] }));
 }
 
@@ -2767,9 +2803,10 @@ function displayKeys() {
 }
 
 function metricKeysFor(type) {
-  if (type === "pitcher") return [...PITCHER_KEYS, "broadJump"];
-  if (type === "two-way") return [...BLAST_KEYS, ...athleticKeys(), ...displayKeys(), ...PITCHER_KEYS];
-  return [...BLAST_KEYS, ...athleticKeys(), ...displayKeys()];
+  const scoop = ["scoopToss"];
+  if (type === "pitcher") return [...PITCHER_KEYS, "broadJump", ...scoop];
+  if (type === "two-way") return [...BLAST_KEYS, ...athleticKeys(), ...displayKeys(), ...PITCHER_KEYS, ...scoop];
+  return [...BLAST_KEYS, ...athleticKeys(), ...displayKeys(), ...scoop];
 }
 
 function defaultBlastMetrics(ageGroup) {
@@ -2870,6 +2907,7 @@ function benchmarkCaption(key, ageGroup, age) {
   if (key === "throwVelo") return throwVeloCaption(age);
   if (key === "gripDominant") return gripCaption(age);
   if (key === "broadJump") return broadJumpCaption(age);
+  if (key === "scoopToss") return scoopTossCaption(age);
   const m = METRICS[key];
   if (m.displayOnly) return `Display only, ${m.entryMin}–${m.entryMax}${m.unit}. Not graded and not part of the overall.`;
   const coach = coachSpecFor(key);
@@ -2944,8 +2982,14 @@ function careerPbRows(player, key) {
   return rows;
 }
 
+function pbDefsFor(player) {
+  if (!player) return [];
+  const keys = new Set(metricKeysFor(player.type));
+  return PB_DEFS.filter((def) => keys.has(def.key));
+}
+
 function personalBests(player) {
-  return PB_DEFS.map((def) => {
+  return pbDefsFor(player).map((def) => {
     const season = pickBest(def.mode, seasonPbRows(player, def.key));
     let career = pickBest(def.mode, careerPbRows(player, def.key));
     const manual = player && player.manualBests && player.manualBests[def.key];
@@ -3055,6 +3099,15 @@ function formatBroadJump(total) {
 }
 
 /* 6'2", 6'2.5", 6 ft 2 in, 6-2, 6-2.5, or a plain total-inches number. */
+function parseScoopToss(raw) {
+  if (raw == null) return null;
+  const text = String(raw).trim().toLowerCase().replace(/mph/g, "").trim();
+  if (!text) return null;
+  const n = Number(text);
+  if (!Number.isFinite(n)) return null;
+  return Math.round(n * 2) / 2;
+}
+
 function parseBroadJump(raw) {
   if (raw == null) return null;
   const text = String(raw).trim().toLowerCase()
@@ -3526,8 +3579,16 @@ function broadJumpBackText(player) {
   return antonelliRawLine(player, "broadJump") || formatBroadJump(n);
 }
 
+function scoopTossBackText(player) {
+  const n = metricNumber(player.metrics && player.metrics.scoopToss);
+  if (n == null) return "—";
+  const scored = SCOOP_TOSS_TABLE ? ageTableScore("scoopToss", n, player.age) : null;
+  const label = scored && scored.band ? scored.band.label : "";
+  return [formatMetric("scoopToss", n) + " mph", label].filter(Boolean).join(" · ");
+}
+
 function personalBestsHTML(player) {
-  if (!player || player.type === "pitcher") return "";
+  if (!player) return "";
   const rows = personalBests(player).map((row) => {
     const value = row.career ? pbLine(row, row.career) : "--";
     const badge = row.fresh ? `<em class="pb-new">NEW PB</em>` : "";
@@ -3537,7 +3598,7 @@ function personalBestsHTML(player) {
 }
 
 function personalBestsPanel(player) {
-  if (!player || player.type === "pitcher") return "";
+  if (!player) return "";
   const rows = personalBests(player).map((row) => {
     const season = row.season ? pbLine(row, row.season) : "--";
     const career = row.career ? pbLine(row, row.career) : "--";
@@ -3591,6 +3652,7 @@ function cardBackHTML(player, face, subs, opts, perkCap) {
     rawBackLine("Exit velo", exitVeloBackText(player)),
     rawBackLine("10-yard dash", tenYardBackText(player)),
     rawBackLine("Broad jump", broadJumpBackText(player)),
+    rawBackLine("Scoop toss", scoopTossBackText(player)),
     rawBackLine("Crow-hop throw", throwBackText(player)),
     rawBackLine("Chest pass", medBallBackText(player)),
     rawBackLine("Grip", gripBackText(player)),
@@ -3603,6 +3665,7 @@ function cardBackHTML(player, face, subs, opts, perkCap) {
     rawBackLine("Whiff %", metricNumber(metrics.whiffPct) == null ? "—" : `${formatMetric("whiffPct", metrics.whiffPct)}%`),
     rawBackLine("Capacity", metricNumber(metrics.pitchCapacity) == null ? "—" : `${formatMetric("pitchCapacity", metrics.pitchCapacity)} pitches`),
     player.type === "pitcher" ? rawBackLine("Broad jump", broadJumpBackText(player)) : "",
+    player.type === "pitcher" ? rawBackLine("Scoop toss", scoopTossBackText(player)) : "",
   ].join("") : "";
   const profileBtn = opts && opts.profileButton && player.id
     ? `<button class="btn btn-red back-profile" type="button" data-open="${esc(player.id)}">View Profile</button>`
@@ -5569,9 +5632,9 @@ function draftManualBests(playerLike) {
 }
 
 function manualBestsFields(playerLike) {
-  if (!playerLike || playerLike.type === "pitcher") return "";
+  if (!playerLike) return "";
   const manual = draftManualBests(playerLike);
-  const rows = PB_DEFS.map((def) => {
+  const rows = pbDefsFor(playerLike).map((def) => {
     const cur = manual[def.key];
     const step = METRICS[def.key] ? METRICS[def.key].step : 1;
     const shown = cur && cur.value != null ? (def.key === "broadJump" ? formatBroadJump(cur.value) : cur.value) : "";
@@ -5589,10 +5652,10 @@ function manualBestsFields(playerLike) {
 
 function readManualBests(existing, readingDate) {
   const prev = (existing && existing.manualBests) || {};
-  if (typeof document === "undefined" || !document.getElementById || !document.getElementById("pb-exitVelo")) return prev;
+  if (typeof document === "undefined" || !document.querySelector || !document.querySelector("[data-pb]")) return prev;
   const next = {};
   const today = clampReadingDate(readingDate);
-  PB_DEFS.forEach((def) => {
+  pbDefsFor({ type: ($("f-type") && $("f-type").value) || "hitter" }).forEach((def) => {
     const el = document.getElementById(`pb-${def.key}`);
     if (!el || el.value === "") return;
     const n = def.key === "broadJump" ? parseBroadJump(el.value) : metricNumber(el.value);

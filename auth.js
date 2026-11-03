@@ -92,6 +92,8 @@ const AntonelliAuth = {
     if (csv) csv.addEventListener("change", () => this.inviteCsv(csv));
     const upload = document.getElementById("uploadLocalRoster");
     if (upload) upload.addEventListener("click", () => this.uploadLocal());
+    const scoopCsv = document.getElementById("scoopTossCsv");
+    if (scoopCsv) scoopCsv.addEventListener("click", () => this.downloadScoopToss());
     const linksBtn = document.getElementById("showJoinLinks");
     if (linksBtn) linksBtn.addEventListener("click", () => this.loadJoinLinks());
     const linksClose = document.getElementById("joinLinksClose");
@@ -498,7 +500,7 @@ const AntonelliAuth = {
       const rows = this.parseCsv(String(reader.result || ""));
       input.value = "";
       if (!rows.length) {
-        this.setAccountStatus("No players found. The header row should be name, team, ageGroup, position, email. An optional broadJump column accepts 6'2\", 6-2, or total inches.");
+        this.setAccountStatus("No players found. The header row should be name, team, ageGroup, position, email. Optional columns: broadJump (6'2\", 6-2, or total inches) and scoopToss (mph).");
         return;
       }
       this.saveAccounts(rows);
@@ -546,26 +548,37 @@ const AntonelliAuth = {
       position: row.position || "",
     }, { onConflict: "id" });
     if (playerError) throw playerError;
+    const extras = {};
     const jump = typeof parseBroadJump === "function" ? parseBroadJump(row.broadJump) : null;
+    if (jump != null) extras.broadJump = jump;
+    if (row.scoopToss != null && typeof parseScoopToss === "function") {
+      const scoop = parseScoopToss(row.scoopToss);
+      if (scoop != null) extras.scoopToss = scoop;
+    }
     let privateRow = { player_id: id };
-    if (jump != null) {
+    const extraKeys = Object.keys(extras);
+    if (extraKeys.length) {
       const existing = await this.client.from("player_private").select("metrics, history, reading_log, document").eq("player_id", id).maybeSingle();
       if (existing.error) throw existing.error;
       const prev = existing.data || {};
-      const metrics = Object.assign({}, prev.metrics || {}, { broadJump: jump });
+      const metrics = Object.assign({}, prev.metrics || {}, extras);
       const history = Object.assign({}, prev.history || {});
-      const prior = Array.isArray(history.broadJump) ? history.broadJump.slice() : [];
-      if (!prior.length || prior[prior.length - 1] !== jump) prior.push(jump);
-      history.broadJump = prior.slice(-6);
       const reading = Object.assign({}, prev.reading_log || {});
-      const log = Array.isArray(reading.broadJump) ? reading.broadJump.slice() : [];
-      const last = log[log.length - 1];
-      if (!last || Number(last.value) !== jump) log.push({ value: jump, at: new Date().toISOString().slice(0, 10) });
-      reading.broadJump = log;
+      const today = new Date().toISOString().slice(0, 10);
+      extraKeys.forEach((key) => {
+        const value = extras[key];
+        const prior = Array.isArray(history[key]) ? history[key].slice() : [];
+        if (!prior.length || prior[prior.length - 1] !== value) prior.push(value);
+        history[key] = prior.slice(-6);
+        const log = Array.isArray(reading[key]) ? reading[key].slice() : [];
+        const last = log[log.length - 1];
+        if (!last || Number(last.value) !== value) log.push({ value: value, at: today });
+        reading[key] = log;
+      });
       const document = Object.assign({}, prev.document || {});
-      document.metrics = Object.assign({}, document.metrics || {}, { broadJump: jump });
-      document.history = Object.assign({}, document.history || {}, { broadJump: history.broadJump });
-      document.readingLog = Object.assign({}, document.readingLog || {}, { broadJump: reading.broadJump });
+      document.metrics = Object.assign({}, document.metrics || {}, extras);
+      document.history = Object.assign({}, document.history || {}, history);
+      document.readingLog = Object.assign({}, document.readingLog || {}, reading);
       privateRow = { player_id: id, metrics, history, reading_log: reading, document };
     }
     const { error: privateError } = await this.client.from("player_private").upsert(privateRow, { onConflict: "player_id" });
@@ -788,10 +801,12 @@ const AntonelliAuth = {
     const posAt = at(["position"]);
     const emailAt = at(["email"]);
     const jumpAt = at(["broadjump", "standingbroadjump", "broad", "sbj", "standingbroad"]);
+    const scoopAt = at(["scooptoss", "rotationalscoptoss", "rotationalmedballscoptoss", "scoop"]);
     if (nameAt < 0) return [];
     return lines.slice(1).map((line) => {
       const cells = line.split(",").map((cell) => cell.trim().replace(/^"|"$/g, ""));
       const jump = jumpAt >= 0 && typeof parseBroadJump === "function" ? parseBroadJump(cells[jumpAt]) : null;
+      const scoop = scoopAt >= 0 && typeof parseScoopToss === "function" ? parseScoopToss(cells[scoopAt]) : null;
       return {
         name: cells[nameAt] || "",
         team: teamAt >= 0 ? cells[teamAt] || "" : "",
@@ -799,8 +814,35 @@ const AntonelliAuth = {
         position: posAt >= 0 ? cells[posAt] || "" : "",
         email: emailAt >= 0 ? cells[emailAt] || "" : "",
         broadJump: jump,
+        scoopToss: scoop,
       };
     }).filter((row) => row.name).slice(0, 200);
+  },
+
+  downloadScoopToss() {
+    if (this.role !== "coach") {
+      this.setAccountStatus("Sign in as a coach first.");
+      return;
+    }
+    const list = typeof players !== "undefined" ? players.slice() : [];
+    const cell = (value) => {
+      const text = value == null ? "" : String(value);
+      return /[",\n]/.test(text) ? '"' + text.replace(/"/g, '""') + '"' : text;
+    };
+    const lines = ["name,age,ageGroup,team,scoopToss"];
+    list.sort((a, b) => String(a.name || "").localeCompare(String(b.name || ""))).forEach((player) => {
+      const raw = player.metrics && player.metrics.scoopToss;
+      const score = raw == null || raw === "" ? "" : raw;
+      lines.push([cell(player.name), cell(player.age), cell(player.ageGroup), cell(player.team), cell(score)].join(","));
+    });
+    const blob = new Blob([lines.join("\n")], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "antonelli-scoop-toss.csv";
+    link.click();
+    URL.revokeObjectURL(url);
+    this.setAccountStatus("Scoop toss CSV downloaded. Blank cells have no score yet.");
   },
 
   async uploadLocal() {
